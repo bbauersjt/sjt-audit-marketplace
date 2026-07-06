@@ -2,7 +2,7 @@
 
 This repo holds two kinds of things:
 
-1. **4 plugins** indexed by a marketplace (`sjt-skills`) — installed with `/plugin` commands.
+1. **3 plugins** indexed by a marketplace (`sjt-skills`) — installed with `/plugin` commands.
 2. **2 loose skills** — installed by copying into your personal skills dir (`~/.claude/skills/`).
 
 `install.ps1` does the loose-skill copy for you and prints the plugin commands. Or follow
@@ -19,7 +19,6 @@ Install straight from GitHub:
 /plugin install fs-review@sjt-skills
 /plugin install suralink-binder@sjt-skills
 /plugin install cch-axcess-suite@sjt-skills
-/plugin install chrome-bridge@sjt-skills
 ```
 
 Installed skills load namespaced, e.g. `fs-review:commercial-fs-review`.
@@ -32,11 +31,12 @@ Installed skills load namespaced, e.g. `fs-review:commercial-fs-review`.
 | `fs-review` | commercial-fs-review, ebp-fs-review, govt-fs-review, nonprofit-fs-review |
 | `suralink-binder` | suralink, suralink-sync, binder-organize |
 | `cch-axcess-suite` | cch-axcess, cch-form-fill, cch-risk-assessment |
-| `chrome-bridge` | MCP transport into an authenticated Chrome session (the relay + MV3 extension the Suralink and CCH plugins use). Install on its own if you just want the bridge. |
 
-**`chrome-bridge` needs two manual steps** the plugin can't do for you: `pip install -r
-requirements.txt` in `chrome-bridge-plugin/`, and loading `chrome-bridge-plugin/extension/`
-as an unpacked extension in Chrome. See `chrome-bridge-plugin/README.md`.
+**The Suralink and CCH Axcess plugins need the Chrome bridge**, which lives in its own repo:
+[`bbauersjt/sjt-chrome-bridge`](https://github.com/bbauersjt/sjt-chrome-bridge). Install it
+with `/plugin marketplace add bbauersjt/sjt-chrome-bridge` then
+`/plugin install chrome-bridge@sjt-chrome-bridge` (plus the pip + unpacked-extension steps in
+that repo's README).
 
 ## Part 2 — the 2 loose skills (run in PowerShell)
 

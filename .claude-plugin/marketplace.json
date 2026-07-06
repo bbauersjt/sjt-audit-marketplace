@@ -20,11 +20,6 @@
       "name": "cch-axcess-suite",
       "source": "./cch-axcess-suite",
       "description": "CCH Axcess / Knowledge Coach automation, risk assessment, and form filling."
-    },
-    {
-      "name": "chrome-bridge",
-      "source": "./chrome-bridge-plugin",
-      "description": "MCP transport into an authenticated Chrome session — the local relay + MV3 extension the Suralink and CCH Axcess plugins rely on. Install on its own if you just need the bridge."
     }
   ]
 }

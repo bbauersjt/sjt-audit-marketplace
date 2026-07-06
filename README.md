@@ -11,7 +11,6 @@ Inside Claude Code:
 /plugin install fs-review@sjt-skills
 /plugin install suralink-binder@sjt-skills
 /plugin install cch-axcess-suite@sjt-skills
-/plugin install chrome-bridge@sjt-skills
 ```
 
 Install only what you need — each plugin is independent. Full steps, the loose-skill
@@ -24,7 +23,9 @@ installer, and the `chrome-bridge` setup notes are in [INSTALL.md](INSTALL.md).
 | `fs-review` | Technical proof & review of financial statements — commercial, nonprofit, governmental, EBP |
 | `suralink-binder` | Suralink portal pull, local mirror sync, and 4-digit indexed binder filing |
 | `cch-axcess-suite` | CCH Axcess / Knowledge Coach automation, risk assessment, and form filling |
-| `chrome-bridge` | MCP transport into an authenticated Chrome session (the relay the Suralink & CCH plugins use) |
+
+The `suralink-binder` and `cch-axcess-suite` plugins talk to Chrome through the **Chrome
+bridge**, which ships as its own repo: [bbauersjt/sjt-chrome-bridge](https://github.com/bbauersjt/sjt-chrome-bridge).
 
 Loose skills (copied into `~/.claude/skills/` via `install.ps1`): `audit-sampling`, `trial-balance-prep`.
 

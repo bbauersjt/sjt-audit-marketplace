@@ -7,9 +7,9 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $target = Join-Path $env:USERPROFILE '.claude\skills'
 
 # Marketplace plugin names (for the printed /plugin install commands).
-$plugins = @('fs-review', 'suralink-binder', 'cch-axcess-suite', 'chrome-bridge')
+$plugins = @('fs-review', 'suralink-binder', 'cch-axcess-suite')
 # Folders to skip when discovering loose skills (plugin dirs + the marketplace dir).
-$skip    = @('fs-review', 'suralink-binder', 'cch-axcess-suite', 'chrome-bridge-plugin', '.claude-plugin')
+$skip    = @('fs-review', 'suralink-binder', 'cch-axcess-suite', '.claude-plugin')
 
 New-Item -ItemType Directory -Force -Path $target | Out-Null
 
@@ -32,5 +32,5 @@ Write-Host "Loose skills done. Now install the plugins inside Claude Code:" -For
 Write-Host "  /plugin marketplace add `"$here`""
 foreach ($p in $plugins) { Write-Host "  /plugin install $p@sjt-skills" }
 Write-Host ""
-Write-Host "Note: chrome-bridge also needs 'pip install -r requirements.txt' and the unpacked" -ForegroundColor DarkGray
-Write-Host "      Chrome extension loaded — see chrome-bridge-plugin\README.md." -ForegroundColor DarkGray
+Write-Host "Note: the suralink-binder and cch-axcess-suite plugins need the Chrome bridge," -ForegroundColor DarkGray
+Write-Host "      which lives in its own repo: github.com/bbauersjt/sjt-chrome-bridge" -ForegroundColor DarkGray
