@@ -1,0 +1,32 @@
+{
+  "operation": "tb_report_settings",
+  "purpose": "Fetch the enum dictionary for the TB create body — report types, settings flag keys, selection mode keys. Endpoint is global (no clientId in URL) — same enum applies to every engagement.",
+  "host": "workbench-api.cchaxcess.com",
+  "method": "GET",
+  "path": "/v1/trialbalancereport/reporttypesandsettings",
+  "transport": "XMLHttpRequest",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept"],
+  "response_shape": {
+    "trialBalanceReportTypes": [
+      {"key": "SummaryByGroup", "value": "Summary by groups", "isSelected": true},
+      {"key": "SummaryBySubGroup", "value": "Summary by groups and sub-groups", "isSelected": false},
+      {"key": "AccountDetail", "value": "Summary by groups, sub-groups and accounts", "isSelected": false}
+    ],
+    "trialBalanceReportSettings": [
+      {"key": "IncludeNetIncome"},
+      {"key": "IncludeSumOfAccountGroups"},
+      {"key": "HideUnusedGroupsAndSubgroups"},
+      {"key": "HideAccountsWithZeroBalances"}
+    ],
+    "trialBalanceReportSelection": [
+      {"key": "IncludeCurrentandFutureGroups", "isSelected": true},
+      {"key": "IncludeSelectedGroups"}
+    ]
+  },
+  "gotchas": [
+    "Global endpoint — no clientId in path. Same enum returned regardless of engagement.",
+    "Source of truth for the ReportType field and the boolean flag keys used in the TB create body."
+  ],
+  "validated_on": ["2026-05-24"],
+  "script_function": "scripts.reports.tb_report_settings(headers)"
+}

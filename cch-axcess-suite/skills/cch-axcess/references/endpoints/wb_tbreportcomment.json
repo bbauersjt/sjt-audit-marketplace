@@ -1,0 +1,76 @@
+{
+  "operation": "wb_tbreportcomment",
+  "subdomain": "workbench-api.cchaxcess.com",
+  "auth": "workbench-api is NOT reachable with KC localStorage tokens (KC-tab fetch AND XHR both fail, status 0). Use the ENGAGEMENT tab + monkeypatch-captured headers (Authorization + IDToken + locale + traceparent); injected XHR then works (live 200, 2026-06-04).",
+  "triple_fire": false,
+  "refresh_required": true,
+  "scripts": [
+    "scripts.leadsheet.tbreport_resolve_report_id",
+    "scripts.leadsheet.tbreport_row_probe_js",
+    "scripts.leadsheet.tbreport_post_comment",
+    "scripts.leadsheet.tbreport_delete_comment"
+  ],
+  "notes": [
+    "REF (Remarks-column) annotations on TB reports. Separate API from FP-API bubble comments; REF values flow NOWHERE else (one-directional mirror is system-lead->TB-report for bubbles/tickmarks only).",
+    "columnId is POSITIONAL: Remarks_1 -> 1, Remarks_2 -> 2. RENAME-PROOF (live-captured 2026-06-04: column renamed 'REF' still posts columnId 1). Identify the column by Remarks_{N} id, never header text.",
+    "Edit = re-POST (upsert by referenceId+columnId). The upsert is SILENT \u2014 check for an existing value and prompt the user first.",
+    "PREFLIGHT: tbreportedit GET -> reportFormat.columns must contain a type='Remarks' entry; columns:[] = CCH defaults = NO REF column (native cpComments is NOT a REF column). Add via editReports PATCH (wb_editreports.json).",
+    "Report deep-link: /en-US/engagement/{clientId}/tbreports/{reportGuid}/period/{engagementId}/subsidiaryParentId/0 \u2014 depth-irrelevant, never tree-walk."
+  ],
+  "report_id_resolution": {
+    "method": "WPM row lookup (NOT tbreportedit)",
+    "truth": "The integer reportId = the report's WPM documentId ('tbreports/{int}' rows). The tbreportedit GET body has NO usable id field (live re-confirmed 2026-06-04) \u2014 use it only for the Step-0 REF-column preflight.",
+    "preflight_GET": "/v1/trialbalancereport/tbreportedit/{clientId}/{engagementGuid}/{reportGuid}",
+    "reportGuid_source": "report URL path /tbreports/{reportGuid}/... or the tbreports/{clientId} listing"
+  },
+  "row_id_resolution": {
+    "method": "ag-grid DOM probe \u2014 no API call (scripts.leadsheet.tbreport_row_probe_js); scroll row into view first",
+    "referenceType_by_row_level (LIVE-CAPTURED 2026-06-04 \u2014 supersedes blanket Group->FinancialSubGroup)": {
+      "fund row": {
+        "referenceType": "Fund",
+        "referenceGuid": "REQUIRED"
+      },
+      "group total row": {
+        "referenceType": "FinancialGroup",
+        "referenceId": "financialGroupId",
+        "referenceGuid": "omit"
+      },
+      "subgroup row": {
+        "referenceType": "FinancialSubGroup",
+        "referenceGuid": "omit"
+      }
+    },
+    "native_POST_sample_2026-06-04": {
+      "reportId": 32387,
+      "engagementId": 100736,
+      "columnId": 1,
+      "referenceId": 782869,
+      "referenceType": "FinancialGroup",
+      "periodId": 392557,
+      "comment": "E-1"
+    }
+  },
+  "create_or_edit": {
+    "method": "POST",
+    "path": "/v1/trialbalancereportcomment/{clientId}/{reportId}",
+    "body": {
+      "reportId": "integer",
+      "engagementId": "integer",
+      "columnId": "1 (REF) | 2 (REF2)",
+      "referenceId": "integer (data.id)",
+      "referenceGuid": "GUID \u2014 Fund rows only; omit for FinancialSubGroup",
+      "referenceType": "'Fund' | 'FinancialGroup' (group rows) | 'FinancialSubGroup' (subgroup rows) \u2014 by ROW LEVEL",
+      "periodId": "integer \u2014 carries the ENGAGEMENT id (naming gotcha)",
+      "comment": "string"
+    },
+    "response": {
+      "reportCommentReferenceId": "integer \u2014 store for DELETE (note: differs from FP-API commentReferenceId)"
+    }
+  },
+  "delete": {
+    "method": "DELETE",
+    "path": "/v1/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}",
+    "body": null,
+    "response": "empty body, HTTP 200"
+  }
+}

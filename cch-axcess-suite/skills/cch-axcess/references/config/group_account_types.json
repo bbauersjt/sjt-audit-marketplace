@@ -1,0 +1,17 @@
+{
+  "purpose": "Static map of CCH financialprep-api accountType + accountTypeClassification IDs (1..5 / 1..10). Mirrors GET /v1.0/FinancialGroup/{clientId}/groupaccounttypes - bundle saves a round-trip when you already know the classification by name or abbreviation.",
+  "captured_from": "engagement 90773, 2026-05-25",
+  "abbreviation_drives_behavior": "Brett's rule: the UI shows a friendly classification name but the SYSTEM cares about the accountType abbreviation (A/L/E/R/X). The classification name is a UX layer over the int ID.",
+  "rows": [
+    {"accountTypeId": 1, "accountType": "Asset",     "abbr": "A", "classificationId": 1,  "classification": "Current Assets"},
+    {"accountTypeId": 1, "accountType": "Asset",     "abbr": "A", "classificationId": 2,  "classification": "Non-Current Assets"},
+    {"accountTypeId": 2, "accountType": "Liability", "abbr": "L", "classificationId": 3,  "classification": "Current Liabilities"},
+    {"accountTypeId": 2, "accountType": "Liability", "abbr": "L", "classificationId": 4,  "classification": "Non-Current Liabilities"},
+    {"accountTypeId": 3, "accountType": "Equity",    "abbr": "E", "classificationId": 5,  "classification": "Equity"},
+    {"accountTypeId": 4, "accountType": "Revenue",   "abbr": "R", "classificationId": 6,  "classification": "Revenues"},
+    {"accountTypeId": 4, "accountType": "Revenue",   "abbr": "R", "classificationId": 7,  "classification": "Cost of Revenue"},
+    {"accountTypeId": 4, "accountType": "Revenue",   "abbr": "R", "classificationId": 8,  "classification": "Other Income"},
+    {"accountTypeId": 5, "accountType": "Expense",   "abbr": "X", "classificationId": 9,  "classification": "Operating Expenses"},
+    {"accountTypeId": 5, "accountType": "Expense",   "abbr": "X", "classificationId": 10, "classification": "Other Expenses"}
+  ]
+}

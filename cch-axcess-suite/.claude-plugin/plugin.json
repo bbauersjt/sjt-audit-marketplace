@@ -1,0 +1,10 @@
+{
+  "name": "cch-axcess-suite",
+  "description": "Work inside CCH Axcess / Knowledge Coach: platform automation (binders, workpapers, TB/JE, groupings), the risk-assessment brain (AUD-100 → KBA-400 → KBA-502 → audit programs), and planning/audit-program form filling.",
+  "version": "1.0.0",
+  "author": {
+    "name": "SJT Group CPA",
+    "email": "bbauer@sjtgroupcpa.com"
+  },
+  "keywords": ["audit", "cch-axcess", "knowledge-coach", "risk-assessment", "workpapers", "planning"]
+}

@@ -1,0 +1,54 @@
+{
+  "operation": "funds_fund_types",
+  "purpose": "List, upsert, and delete Fund Types (governmental/NFP fund accounting). Top-level grouping of funds (e.g. Governmental Funds, Proprietary Funds).",
+  "host": "workbench-api.cchaxcess.com",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/v1/FundType/{clientId}",
+      "script_function": "scripts.funds.list_fund_types(client_id, headers)"
+    },
+    "upsert": {
+      "method": "PUT",
+      "path": "/v1/FundType",
+      "script_function": "scripts.funds.upsert_fund_types(client_id, fund_types, headers)"
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/v1/FundType/{clientId}/{fundTypeId}",
+      "script_function": "scripts.funds.delete_fund_type(client_id, fund_type_id, headers)"
+    },
+    "check_delete_eligible": {
+      "method": "GET",
+      "path": "/v1/FundType/{clientId}/iseligiblefordelete/{fundTypeId}",
+      "script_function": "scripts.funds.check_delete_eligible_fund_type(client_id, fund_type_id, headers)",
+      "response": "bare JSON boolean (true | false)"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept", "Content-Type (writes only - http_runner auto-adds)"],
+  "id_field_naming_gotcha": "Body field `engagementId` carries the clientId (first integer in the engagement URL), NOT the engagementId. Standard workbench-api misnaming - see architecture.md.",
+  "request_body_shape_put": {
+    "engagementId": "int (actually clientId)",
+    "fundTypes": [
+      {
+        "id": "int (OMIT this key entirely for new entries - FundType does NOT accept id=0 like Fund/FundSubType do)",
+        "index": "string (e.g. '01', '02')",
+        "name": "string"
+      }
+    ]
+  },
+  "response_shape_get": {
+    "kind": "bare array (NO {result:[]} wrapper)",
+    "rows": [
+      {"fundTypeId": "int", "fundTypeIndex": "string", "fundTypeName": "string"}
+    ],
+    "field_name_asymmetry": "GET returns prefixed field names; PUT body expects bare names. Use scripts.funds.normalize_fund_types() to convert."
+  },
+  "semantics": {
+    "put_is_whole_list_replace": "PUT replaces the entire fundTypes collection - BUT empty-array PUT is a silent no-op (server safety). To actually delete a row, use the DELETE endpoint.",
+    "new_entry_id_convention": "Omit the id key. FundType rejects id=0.",
+    "delete_behavior": "Single-row DELETE. Returns 200 with empty body. Returns 400 with {messages: ['You cannot delete this fund type while fund(s) or fund subtype(s) remain assigned to it.']} if dependents exist. Server enforces independently of the eligibility GET - that GET is UX-only.",
+    "ui_quirk": "CCH UI fires one PUT per 'Add Fund Type' click rather than batching. Programmatic callers can batch in one PUT."
+  },
+  "verification": "After upsert, GET /v1/FundType/{clientId} and confirm the new row appears with a server-assigned id. After delete, GET and confirm the row is gone."
+}

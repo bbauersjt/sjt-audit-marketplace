@@ -1,0 +1,133 @@
+audit_type,cch_title,binding_key,plain_name,aud_form,category,distinctive
+ASB,Commercial,CASH,Cash,AUD-801,balance,0
+ASB,Commercial,AR,Accounts Receivable / Revenue,AUD-803,balance,0
+ASB,Commercial,INVENTORY,Inventory & COGS,AUD-804,balance,0
+ASB,Commercial,PP,Prepaids / Deferred / Other,AUD-805,balance,0
+ASB,Commercial,INTANG,Intangibles,AUD-806,balance,0
+ASB,Commercial,PPE,Property & Equipment,AUD-807,balance,0
+ASB,Commercial,AP,Accounts Payable & Purchases,AUD-808,balance,0
+ASB,Commercial,OL,Payroll & Other Liabilities,AUD-809,balance,0
+ASB,Commercial,INCTAX,Income Taxes / UBI,AUD-810,balance,1
+ASB,Commercial,DEBT,Debt & Debt Service,AUD-811,balance,0
+ASB,Commercial,EQUITY,Equity / Net Assets / Net Position,AUD-812,balance,0
+ASB,Commercial,OTHREV,Other Income & Expense,AUD-813,balance,0
+ASB,Commercial,JE2,Journal Entries,AUD-814,risk,0
+ASB,Commercial,RPTRNS2,Related Party Transactions,AUD-815,risk,0
+ASB,Commercial,FAIRVALUE2,Fair Value Measurements,AUD-816,risk,0
+ASB,Commercial,VIE2,Variable Interest Entities,AUD-817,balance,1
+ASB,Commercial,STOCK,Share-Based Payments,AUD-818,balance,1
+ASB,Commercial,COMMIT,Commitments & Contingencies,AUD-819,risk,0
+ASB,Commercial,ESTIMATES,Accounting Estimates,AUD-820,risk,0
+ASB,Commercial,CONCENT,Concentrations,AUD-821,risk,0
+ASB,Commercial,BUSINESS,Business Combinations,AUD-822,balance,0
+HOA,Commercial,CASH,Cash,AUD-801,balance,0
+HOA,Commercial,AR,Accounts Receivable / Revenue,AUD-803,balance,0
+HOA,Commercial,INVENTORY,Inventory & COGS,AUD-804,balance,0
+HOA,Commercial,PP,Prepaids / Deferred / Other,AUD-805,balance,0
+HOA,Commercial,INTANG,Intangibles,AUD-806,balance,0
+HOA,Commercial,PPE,Property & Equipment,AUD-807,balance,0
+HOA,Commercial,AP,Accounts Payable & Purchases,AUD-808,balance,0
+HOA,Commercial,OL,Payroll & Other Liabilities,AUD-809,balance,0
+HOA,Commercial,INCTAX,Income Taxes / UBI,AUD-810,balance,1
+HOA,Commercial,DEBT,Debt & Debt Service,AUD-811,balance,0
+HOA,Commercial,EQUITY,Equity / Net Assets / Net Position,AUD-812,balance,0
+HOA,Commercial,OTHREV,Other Income & Expense,AUD-813,balance,0
+HOA,Commercial,JE2,Journal Entries,AUD-814,risk,0
+HOA,Commercial,RPTRNS2,Related Party Transactions,AUD-815,risk,0
+HOA,Commercial,FAIRVALUE2,Fair Value Measurements,AUD-816,risk,0
+HOA,Commercial,VIE2,Variable Interest Entities,AUD-817,balance,1
+HOA,Commercial,STOCK,Share-Based Payments,AUD-818,balance,1
+HOA,Commercial,COMMIT,Commitments & Contingencies,AUD-819,risk,0
+HOA,Commercial,ESTIMATES,Accounting Estimates,AUD-820,risk,0
+HOA,Commercial,CONCENT,Concentrations,AUD-821,risk,0
+HOA,Commercial,BUSINESS,Business Combinations,AUD-822,balance,0
+CNS,Construction,CASH,Cash,AUD-801,balance,0
+CNS,Construction,AR,Accounts Receivable / Revenue,AUD-803,balance,0
+CNS,Construction,INVENTORY,Inventory & COGS,AUD-804,balance,0
+CNS,Construction,PP,Prepaids / Deferred / Other,AUD-805,balance,0
+CNS,Construction,INTANG,Intangibles,AUD-806,balance,0
+CNS,Construction,PPE,Property & Equipment,AUD-807,balance,0
+CNS,Construction,AP,Accounts Payable & Purchases,AUD-808,balance,0
+CNS,Construction,OL,Payroll & Other Liabilities,AUD-809,balance,0
+CNS,Construction,INCTAX,Income Taxes / UBI,AUD-810,balance,0
+CNS,Construction,DEBT,Debt & Debt Service,AUD-811,balance,0
+CNS,Construction,EQUITY,Equity / Net Assets / Net Position,AUD-812,balance,0
+CNS,Construction,OTHREV,Other Income & Expense,AUD-813,balance,0
+CNS,Construction,JE2,Journal Entries,AUD-814,risk,0
+CNS,Construction,RPTRNS2,Related Party Transactions,AUD-815,risk,0
+CNS,Construction,FAIRVALUE2,Fair Value Measurements,AUD-816,risk,0
+CNS,Construction,VIE2,Variable Interest Entities,AUD-818,balance,0
+CNS,Construction,CONTRACT,Uncompleted / Completed Contracts,AUD-817,balance,1
+CNS,Construction,STOCK,Share-Based Payments,AUD-819,balance,0
+CNS,Construction,COMMIT,Commitments & Contingencies,AUD-820,risk,0
+CNS,Construction,ESTIMATES,Accounting Estimates,AUD-821,risk,0
+CNS,Construction,CONCENT,Concentrations,AUD-822,risk,0
+CNS,Construction,BUSINESS,Business Combinations,AUD-823,balance,0
+EBP,Employee Benefit Plans,CASH,Cash,AUD-801,balance,0
+EBP,Employee Benefit Plans,AR,Contributions Received and Receivable,AUD-803,balance,1
+EBP,Employee Benefit Plans,OTHASSET,Other Assets/Deposits/Reserves/Operating Assets,AUD-804,balance,1
+EBP,Employee Benefit Plans,PARTICIPANTNOTES,Participant Notes Receivable,AUD-805,balance,1
+EBP,Employee Benefit Plans,AP,Accounts Payable & Purchases,AUD-806,balance,0
+EBP,Employee Benefit Plans,BENEFIT,Benefit Payments,AUD-809,balance,1
+EBP,Employee Benefit Plans,AUD810,Tax Status of the Plan,AUD-810,balance,1
+EBP,Employee Benefit Plans,DEBT,Debt & Debt Service,AUD-807,balance,0
+EBP,Employee Benefit Plans,CHANGES,Change in Provider/Mgmt,AUD-811,balance,1
+EBP,Employee Benefit Plans,OTHREV,Other Income & Expense,AUD-808,balance,0
+EBP,Employee Benefit Plans,JE2,Journal Entries,AUD-812,risk,0
+EBP,Employee Benefit Plans,RPTRNS2,Related Party Transactions,AUD-813,risk,0
+EBP,Employee Benefit Plans,AUD815,Minutes & Other Records,AUD-815,balance,1
+EBP,Employee Benefit Plans,FAIRVALUE2,Fair Value Measurements,AUD-816,risk,0
+EBP,Employee Benefit Plans,COMMIT,Commitments & Contingencies,AUD-817,risk,0
+EBP,Employee Benefit Plans,ESTIMATES,Accounting Estimates,AUD-818,risk,0
+EBP,Employee Benefit Plans,CONCENT,Concentrations,AUD-819,risk,0
+EBP,Employee Benefit Plans,INVEST,Investments (Non-Certified/Full Scope),AUD-802A,balance,1
+EBP,Employee Benefit Plans,LIMITED,Investments (Certified/ERISA 103(a)(3)(C)),AUD-802B,balance,1
+EBP,Employee Benefit Plans,PARTICIPANTA,Participant Data & Accounts (DC),AUD-814A,balance,1
+EBP,Employee Benefit Plans,PARTICIPANTBEN,Participant Data (Defined Benefit),AUD-814B,balance,1
+EBP,Employee Benefit Plans,PARTICIPANTHW,Participant Data (Health & Welfare),AUD-814C,balance,1
+EBP,Employee Benefit Plans,BENEFITOBLIG,Benefit Obligations (DB incl. H&W),AUD-814D,balance,1
+ALG,Governmental,CASH,Cash,AUD-801,balance,0
+ALG,Governmental,INVEST,Investments,AUD-802,balance,0
+ALG,Governmental,ERR,Exchange Revenue & Receivables,AUD-803,balance,1
+ALG,Governmental,INVENTORY,Inventory & COGS,AUD-805,balance,0
+ALG,Governmental,NER,Nonexchange Revenue,AUD-804,balance,1
+ALG,Governmental,PP,Prepaids / Deferred / Other,AUD-806,balance,0
+ALG,Governmental,PPE,Property & Equipment,AUD-807,balance,0
+ALG,Governmental,AP,Accounts Payable & Purchases,AUD-808,balance,0
+ALG,Governmental,OL,Payroll & Other Liabilities,AUD-809,balance,0
+ALG,Governmental,DEBT,Debt & Debt Service,AUD-810,balance,0
+ALG,Governmental,EQUITY,Equity / Net Assets / Net Position,AUD-811,balance,0
+ALG,Governmental,OTHREV,Other Income & Expense,AUD-812,balance,0
+ALG,Governmental,JE2,Journal Entries,AUD-813,risk,0
+ALG,Governmental,RPTRNS2,Related Party Transactions,AUD-814,risk,0
+ALG,Governmental,FAIRVALUE2,Fair Value Measurements,AUD-815,risk,0
+ALG,Governmental,INTERFUND,Interfund Transactions,AUD-816,balance,1
+ALG,Governmental,BUDGET2,Budgets,AUD-817,balance,1
+ALG,Governmental,DERIVATIVE,Derivative Instruments,AUD-818,balance,1
+ALG,Governmental,COMMIT,Commitments & Contingencies,AUD-821,risk,0
+ALG,Governmental,SELF,Self-Insurance,AUD-819,balance,1
+ALG,Governmental,ESTIMATES,Accounting Estimates,AUD-822,risk,0
+ALG,Governmental,LANDFILL,Municipal Solid Waste Landfill,AUD-820,balance,1
+ALG,Governmental,CONCENT,Concentrations,AUD-823,risk,0
+NPO,Not-for-Profit,CASH,Cash,AUD-801,balance,0
+NPO,Not-for-Profit,INVEST,Investments,AUD-802,balance,0
+NPO,Not-for-Profit,AR,Accounts Receivable / Revenue,AUD-803,balance,0
+NPO,Not-for-Profit,SPLITINTX,Split-Interest Agreements,AUD-804,balance,1
+NPO,Not-for-Profit,INVENTORY,Inventory & COGS,AUD-806,balance,0
+NPO,Not-for-Profit,REVANDRECEIVABLESX,"Contributions, Support, Program Rev",AUD-805,balance,1
+NPO,Not-for-Profit,PP,Prepaids / Deferred / Other,AUD-807,balance,0
+NPO,Not-for-Profit,INTANG,Intangibles,AUD-808,balance,0
+NPO,Not-for-Profit,PPE,Property & Equipment,AUD-809,balance,0
+NPO,Not-for-Profit,AP,Accounts Payable & Purchases,AUD-810,balance,0
+NPO,Not-for-Profit,OL,Payroll & Other Liabilities,AUD-811,balance,0
+NPO,Not-for-Profit,INCTAX,Income Taxes / UBI,AUD-812,balance,1
+NPO,Not-for-Profit,DEBT,Debt & Debt Service,AUD-813,balance,0
+NPO,Not-for-Profit,EQUITY,Equity / Net Assets / Net Position,AUD-814,balance,0
+NPO,Not-for-Profit,OTHREV,Other Income & Expense,AUD-815,balance,0
+NPO,Not-for-Profit,JE2,Journal Entries,AUD-816,risk,0
+NPO,Not-for-Profit,RPTRNS2,Related Party Transactions,AUD-817,risk,0
+NPO,Not-for-Profit,FAIRVALUE2,Fair Value Measurements,AUD-818,risk,0
+NPO,Not-for-Profit,COMMIT,Commitments & Contingencies,AUD-819,risk,0
+NPO,Not-for-Profit,ESTIMATES,Accounting Estimates,AUD-820,risk,0
+NPO,Not-for-Profit,CONCENT,Concentrations,AUD-821,risk,0
+NPO,Not-for-Profit,BUSINESS,Business Combinations,AUD-822,balance,0

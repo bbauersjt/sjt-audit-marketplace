@@ -1,0 +1,29 @@
+{
+  "operation": "kc_read_form",
+  "purpose": "Read a KC form's full schema + current answer state.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "method": "GET",
+  "path": "/api/Workpaper/{engagementGuid}/{workpaperId}",
+  "headers_required": ["Authorization", "IdToken", "Accept"],
+  "response_shape": {
+    "result": {
+      "name": "string",
+      "ceid": "string",
+      "dataBindingKey": "string (e.g. CASH, INVEST, AR — same as area code)",
+      "titleId": "GUID",
+      "elements": "JSON-ENCODED STRING — must json.loads. Layout array (HTML blocks, Tables, Tips, Paragraphs).",
+      "collections": "JSON-ENCODED STRING — must json.loads. Array of {path, objectList} — the answer data."
+    },
+    "statusCode": 200
+  },
+  "field_decode_rules": {
+    "answered": "renderProperty.state == 3 AND renderProperty.isValueDefault == false. Fresh forms are state 0 everywhere.",
+    "default_state": "state == 0 + isValueDefault == true means UNANSWERED — `value` may show recommendedAnswer, ignore it",
+    "field_kind_taxonomy": "renderProperty.propertyType (int) is the field-kind discriminator, refined by floatieType + option-list length. 0=Answer(text if list empty / select if Radio / multiselect if CheckBox), 1=text(comment/description), 2=label(read-only Question/Name/HTML), 3=signoff(performedby/dates), 5=linked(system keys/IDs/cross-form values, read-only). Writable kinds: text, select, multiselect, signoff. See scripts.kc.classify_property / inventory_form.",
+    "floatieItemList_shape": "ALWAYS an object {isCustomizable, list}, NEVER a bare array. Present on EVERY field, so presence != dropdown. Options are at floatieItemList.list; empty list = free text. Each item is {key, value, isCustom} — the item's KEY is the valueKey to send on write (verified: writing valueKey='yes' on a Yes/No field is accepted).",
+    "multiselect_write": "CheckBox multiselect = one UpdateProperty POST, value + valueKey semicolon-joined, full-state replacement. Server normalizes a trailing semicolon off.",
+    "renderProperty_key_case": "Inconsistent across forms (Question/question, Answer/answer). Match case-insensitively when reading. Preserve original case when writing back.",
+    "object_gating": "objectList[i].visible is the tailoring-question gating flag. After writing a section TQ, re-read — the server recomputes visible on dependent rows. Don't write into visible:false rows."
+  },
+  "script_function": "scripts.kc.read_form(eng_guid, wp_id, headers) -> decode_form -> inventory_form"
+}

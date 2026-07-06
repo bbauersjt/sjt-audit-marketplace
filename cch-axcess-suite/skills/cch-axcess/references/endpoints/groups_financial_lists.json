@@ -1,0 +1,37 @@
+{
+  "operation": "groups_financial_lists",
+  "purpose": "List, create, and (presumed) update grouping lists. A 'financial list' is the container - each engagement has at least the default 'FS Financial' list and may have multiple custom lists.",
+  "host": "financialprep-api.cchaxcess.com",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/v1.0/financialList/{clientId}",
+      "script_function": "scripts.groups.list_financial_lists(client_id, headers)"
+    },
+    "create": {
+      "method": "POST",
+      "path": "/v1.0/financialList",
+      "script_function": "scripts.groups.create_financial_list(client_id, number, name, headers)"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept", "Content-Type (writes only - http_runner auto-adds)"],
+  "request_body_shape_create": {
+    "number": "string DIGITS ONLY ('01','03','11') - non-numeric -> 400 'Only Number are accepted'. ('FS' exists only as a system-seeded default.)",
+    "name": "string (display name)",
+    "engagementId": "int (actually clientId)",
+    "_create_response": "POST returns {id: <int>} directly (no re-GET needed)"
+  },
+  "DO_NOT_AUTOMATE_set_default": "⛔ TOMBSTONE 2026-05-31: changing the default grouping list is DESTRUCTIVE — it DELETES all notes/annotations/tickmarks tied to the previously-default list (unrecoverable, Kymera-class risk). Set-default must be a manual USER click in the UI; the skill will NOT implement it and the mutation endpoint is intentionally LEFT UNCAPTURED. Reading isDefault = fine; writing it = forbidden.",
+  "response_shape_get": {
+    "kind": "object wrapper",
+    "envelope": {"financialLists": "array"},
+    "rows": [
+      {"id": "int (the financialListId)", "number": "string", "name": "string", "isDefault": "bool"}
+    ]
+  },
+  "field_naming_quirk": "The user-facing index is called `number` here, NOT `index`. Funds and TB groups use `index`. Keep this straight when scripting.",
+  "open_follow_ups": [
+    "delete endpoint not captured",
+    "rename mechanic not captured (probably PATCH or PUT to /v1.0/financialList/{listId})"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "operation": "wpm_folder_get",
+  "purpose": "List contents of a folder. TWO sibling endpoints exist \u2014 they are NOT interchangeable.",
+  "host": "workpapermanagementapi.cchaxcess.com",
+  "endpoints": {
+    "contents": {
+      "method": "GET",
+      "path": "/v1/NewEngagementView/{clientId}/{locationId}/{engagementId}",
+      "returns": "FULL folder contents: subfolders AND filed documents (type in {Folder, KCForms, LeadSheet, Report, Workpaper}).",
+      "use_for": "Mapping/inventorying a binder, finding filed workpapers. THIS is scripts.wpm.folder_get and scripts.binder_map.",
+      "pseudo_folder_ids": {
+        "-1": "Unfiled Workpapers",
+        "-2": "Unfiled Reports",
+        "-3": "Unfiled Leadsheets",
+        "-4": "Unfiled KC Forms (often 204 No Content when empty)"
+      }
+    },
+    "folders_only": {
+      "method": "GET",
+      "path": "/v1/NewEngagementView/folder/{clientId}/{locationId}/?isV1KC=true",
+      "returns": "Child FOLDERS only \u2014 every row is type=Folder. Filed documents are OMITTED.",
+      "use_for": "Tree-node expansion in the UI. DO NOT use to inventory contents \u2014 it silently loses every document and returns 200.",
+      "gotcha": "This is the call that fires when you click to expand a node in the binder tree, so it is what gets captured first. Easy to grab by mistake."
+    }
+  },
+  "transport": "XMLHttpRequest from engagement origin (fetch fails CORS)",
+  "headers_required": [
+    "Authorization",
+    "IDToken",
+    "USERLocale",
+    "Accept-Language",
+    "CountryCode",
+    "Accept"
+  ],
+  "row_shape": "{ engagementId, locationId, parentLocationId, index, type, name, documentIndex, documentId, reportId, fileId, fileExtension, documentStatus, formStatus, children[], isChildExist, ... }",
+  "row_id_field_by_type": {
+    "Workpaper": "documentId (or fileId)",
+    "LeadSheet": "documentId",
+    "KCForms": "documentId",
+    "Report": "reportId",
+    "Folder": "locationId"
+  },
+  "notes": [
+    "The contents endpoint returns subfolders inline as type=Folder rows; documents are top-level rows, NOT nested in a row's children[] (children[] stays empty in practice).",
+    "Workpaper rows carry the extension in BOTH name and fileExtension \u2014 dedupe when rendering.",
+    "Full folder skeleton (incl. empty folders) comes from /v1/NewEngagementView/folders/{clientId} = scripts.wpm.folder_tree."
+  ],
+  "script_function": "scripts.wpm.folder_get(client_id, eng_id, folder_id, headers)  |  scripts.binder_map.build_map_js(client_id, eng_id)",
+  "response_kind": "FLAT JSON ARRAY of rows - no {lineItems} / {result} wrapper. json.loads(body) is the array.",
+  "locale_headers_gotcha": "USERLocale / Accept-Language / CountryCode are REQUIRED. Without them: status 200 + empty array [] for EVERY folder (silent failure; confirmed 2026-06-03). scripts.wpm merges http_runner.WPM_LOCALE_HEADERS automatically."
+}

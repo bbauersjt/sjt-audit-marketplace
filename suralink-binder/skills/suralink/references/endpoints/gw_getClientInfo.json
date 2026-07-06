@@ -1,0 +1,32 @@
+{
+  "operation": "getClientInfo — a client's engagement list",
+  "method": "POST",
+  "url": "https://app.suralink.com/gateways/{a-t}Gateway.php",
+  "auth": "session cookie + gateway secret + live csrf pair",
+  "body": {
+    "secret": "aud1tMgr! (static)",
+    "controller": "/Controllers/Auditors/Clients",
+    "command": "getClientInfo",
+    "clientId": "the per-client integer id",
+    "csrf_token": "read live from window.csrf",
+    "csrf_hash_offset": "read live from window.csrf"
+  },
+  "success": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "data": {
+        "groupId": "internal group id",
+        "html": "HTML fragment of the client's engagement + reports tables"
+      }
+    }
+  },
+  "parsing": "In data.html, engagement rows are tr[id='clientRow_{clientId}_engagements_row_{auditId}']. The auditId is in the row id. Row class carries state (Active/Inactive/Archived). Cell .engagementName = label, cell .customId = engagement code. Skip the ..._row_empty placeholder.",
+  "errors": {
+    "missingParameter / Invalid Csrf Token": "stale csrf — re-read window.csrf",
+    "401": "session expired"
+  },
+  "notes": "This is the client -> engagements map. Sibling auditIds under one clientId are the same client's different-year audits.",
+  "script": "scripts/suralink.py :: get_client_engagements_js",
+  "validated": "2026-05-23 — client 1121161 returned 3 active engagements (Audit 2023/2024/2025)"
+}

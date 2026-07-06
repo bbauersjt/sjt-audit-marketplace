@@ -1,0 +1,21 @@
+{
+  "operation": "fileProxy — download a file",
+  "method": "GET",
+  "url": "https://api.suralink.com/v2/fileProxy",
+  "auth": "session cookie; fetch with credentials:'include'",
+  "query": {
+    "fId": "file id — the file object's `id` (integer). fId=-1 is a no-op ping returning {\"success\":true}.",
+    "aId": "auditId of the engagement",
+    "rId": "the canonical 8-digit request id the file belongs to. MUST match or the call is rejected."
+  },
+  "success": {
+    "status": 200,
+    "body": "raw file bytes, with the file's real Content-Type (e.g. application/pdf). No Content-Disposition attachment header."
+  },
+  "errors": {
+    "403": "{\"error\":\"forbidden\",\"message\":\"User has no access to this engagement\"} — rId did not match the file's request, or aId is wrong",
+    "401": "session expired / not logged in"
+  },
+  "script": "scripts/suralink.py :: file_proxy_url, download_file_js, fetch_file_b64_js",
+  "validated": "2026-05-22, audit 2774111 — returned an intact 717607-byte PDF"
+}

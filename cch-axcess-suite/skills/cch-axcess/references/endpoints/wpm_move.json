@@ -1,0 +1,42 @@
+{
+  "operation": "wpm_move",
+  "purpose": "Move folders / leadsheets / KC forms / reports under a new parent. Batch native (folderParentLineItems is array).",
+  "host": "workpapermanagementapi.cchaxcess.com",
+  "method": "PUT",
+  "path": "/v1/NewEngagementView/{clientId}/folder/parent",
+  "transport": "XMLHttpRequest (fetch fails CORS preflight from engagement origin)",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept", "Content-Type"],
+  "header_case_notes": {"IDToken": "ALL-CAPS on WPM"},
+  "body_template": {
+    "engagementId": "{clientId}  // misnamed — value is the Axcess clientId, not engagementId",
+    "folderParentLineItems": [
+      {
+        "engagementId": "{clientId}",
+        "locationId": "see semantics_by_object_type",
+        "parentLocationId": "see semantics_by_object_type",
+        "objectId": "{documentId or reportId, null for Folder}",
+        "objectType": "Folder | LeadSheet | KCForms | Report",
+        "periodId": "''"
+      }
+    ]
+  },
+  "semantics_by_object_type": {
+    "LeadSheet|KCForms|Report": {
+      "locationId": "DESTINATION parent locationId",
+      "parentLocationId": "the object's OWN current locationId",
+      "objectId": "documentId (KCForms/LeadSheet) or reports/{type} (Report)"
+    },
+    "Folder": {
+      "locationId": "the folder's OWN current locationId",
+      "parentLocationId": "DESTINATION parent locationId",
+      "objectId": "null"
+    }
+  },
+  "gotchas": [
+    "Move PRESERVES the index (AX-14 confirmed) and the locationId is stable across moves - Move does NOT clear anything. There is no Set-Index-after-move requirement EXCEPT for genuinely new forms that arrived with a null/empty index; for those, Set-Index AFTER the move. The old 'Move CLEARS the index' claim is WRONG and was removed.",
+    "Leadsheet moves trigger an auto-file cascade — other unfiled leadsheets with matching sub-folder indexes also get filed. One move can have wide effects.",
+    "Folder-style payload returns 200 but is a silent no-op when objectType == 'KCForms'. Use LeadSheet-style swap for KCForms."
+  ],
+  "validated_on": ["APNM 2025-05-07 (LeadSheet cascade, KCForms move, Report move)"],
+  "script_function": "scripts.wpm.move(client_id, items, headers)  # items is list of (object_type, own_loc, dest_loc, object_id)"
+}

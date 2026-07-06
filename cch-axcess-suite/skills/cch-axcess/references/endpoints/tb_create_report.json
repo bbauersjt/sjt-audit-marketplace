@@ -1,0 +1,74 @@
+{
+  "operation": "tb_create_report",
+  "purpose": "Create a Trial Balance report. Lands in Unfiled Reports. Filing into a binder folder (Move + Set-Index) is a separate step.",
+  "host": "workbench-api.cchaxcess.com",
+  "method": "POST",
+  "path": "/v1/trialbalancereport/createReports",
+  "transport": "XMLHttpRequest",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept", "Content-Type"],
+  "body_template": {
+    "engagementGuid": "<engagementGuid — from KC GetBinder.result.id>",
+    "engagementId": "<clientId — misnamed field per platform-wide naming gotcha>",
+    "reportGuid": null,
+    "reportIndex": "<binder index e.g. '1100' or empty string>",
+    "reportName": "<required, free text>",
+    "includeSelectedGroups": false,
+    "IncludeCurrentandFutureGroups": true,
+    "TrialBalance": "Financial",
+    "GroupingListId": 1,
+    "FinancialGroupsIncluded": [],
+    "TaxGroupsIncluded": null,
+    "ReportType": "SummaryByGroup | SummaryBySubGroup | AccountDetail",
+    "reportFormat": {"columns": "[] for CCH defaults, or list of column objects — see column_object_shape below"},
+    "consolidatedEngagementId": null,
+    "ReportSettings": {
+      "IncludeNetIncome": false,
+      "HideAccountsWithZeroBalances": false,
+      "HideUnusedGroupsAndSubgroups": false,
+      "subsidiariesInRows": false,
+      "subsidiariesInColumns": false,
+      "isConsolidateEng": false,
+      "periodId": "<engagementId — the real one>",
+      "journalEntryDetails": true,
+      "showClassifiedReport": false,
+      "IncludeSumOfAccountGroups": null
+    },
+    "fundSettings": null
+  },
+  "batch_support": false,
+  "enums": {
+    "ReportType": ["SummaryByGroup", "SummaryBySubGroup", "AccountDetail"],
+    "TrialBalance": "name of the engagement's TB; default 'Financial' works for non-consolidated engagements",
+    "column_types": "see references/config/tb_column_types.json — Unadjusted, Adjusted, Aje, Final, Remarks confirmed; Reclassified/Tax/PAJE/variance variants likely exist but not yet captured"
+  },
+  "column_object_shape": {
+    "id": "string — composite per type, e.g. 'Unadjusted_Current', 'Unadjusted_PriorPeriod_1', 'Aje_Current', 'Final_PriorPeriod_1', 'Remarks_1'",
+    "type": "string — Unadjusted | Adjusted | Aje | Final | Remarks | ...",
+    "name": "string — display name, e.g. 'Unadjusted Balance', 'Adjusted Journal Entry', 'Final Balance', 'Remarks 1'",
+    "abbrev": "string — short label, e.g. 'UNADJ', 'AJE', 'FINAL', 'RM1'",
+    "variance": "null in all captured columns; presumed to populate for variance-type columns",
+    "order": "int — 1-based column position",
+    "periodId": "int — engagement period id (e.g. 381325 = current year, 381324 = prior year)",
+    "periodEndDate": "string — 'YYYY-MM-DD'",
+    "isDeleted": "bool — false for active columns; removed columns appear to be filtered out client-side before POST, not sent as isDeleted=true",
+    "engagementId": "int — ONLY present on columns where type='Remarks' (other types omit this field)"
+  },
+  "gotchas": [
+    "Body field `engagementId` carries the clientId value (not the engagementId). Same naming gotcha as WPM. Always read by value, not field name.",
+    "ReportSettings.periodId carries the real engagementId.",
+    "All-groups mode: includeSelectedGroups=false + IncludeCurrentandFutureGroups=true + FinancialGroupsIncluded=[] (EMPTY ARRAY, NOT null).",
+    "Selected-groups mode: invert all three — includeSelectedGroups=true + IncludeCurrentandFutureGroups=false + FinancialGroupsIncluded=[ids].",
+    "report_index populates the workpaper's index attribute, but does NOT auto-file into a binder folder. Move + Set-Index after via scripts.wpm.",
+    "IncludeSumOfAccountGroups: when unchecked it serializes as null (not false); when checked it serializes as true. Other ReportSettings booleans serialize as false/true normally.",
+    "reportFormat.columns: send [] to let CCH use engagement defaults; supply a list of column dicts to override. Column types with type='Remarks' must include an `engagementId` field; other types must NOT include that field.",
+    "Removing a column from the UI selection does NOT appear in the body as isDeleted=true — the column is simply omitted from the columns array."
+  ],
+  "verification": "GET /v1/trialbalancereport/tbreports/{clientId} — new reportGuid + reportName should appear in the response array.",
+  "validated_on": [
+    "APNM 2025, client 97509, engagement 381325, 2026-05-24 — original Investments slice (groups=[755937], AccountDetail)",
+    "APNM 2025, 2026-05-24 — Full TB all-groups (SummaryByGroup)",
+    "APNM 2025, 2026-05-24 — All flags ON (IncludeNetIncome, HideUnusedGroupsAndSubgroups, IncludeSumOfAccountGroups) + SummaryBySubGroup",
+    "APNM 2025, 2026-05-24 — Custom columns (Unadjusted prior + current, Aje, Final current + prior, Remarks)"
+  ],
+  "script_function": "scripts.reports.create_tb_report(client_id, engagement_id, engagement_guid, report_name, headers, **opts)"
+}

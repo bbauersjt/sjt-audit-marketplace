@@ -1,109 +1,30 @@
 {
-  "name": "sjt-audit-skills",
+  "name": "sjt-skills",
   "owner": {
     "name": "SJT Group CPA",
     "email": "bbauer@sjtgroupcpa.com"
   },
-  "description": "SJT Group CPA audit skills for Claude Code — CCH Axcess automation, risk assessment, FS reviews, sampling, and workpaper tooling.",
+  "description": "SJT Group CPA audit skill bundles.",
   "plugins": [
     {
-      "name": "sjt-audit-sampling",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-audit-sampling"
-      },
-      "description": "Plan and pull audit samples from a trial balance — FS substantive, walkthrough, EBP, and single-audit samples.",
-      "homepage": "https://github.com/bbauersjt/sjt-audit-sampling"
+      "name": "fs-review",
+      "source": "./fs-review",
+      "description": "FS technical proof & review — commercial, nonprofit, governmental, EBP."
     },
     {
-      "name": "sjt-binder-organize",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-binder-organize"
-      },
-      "description": "Files audit documents into 4-digit indexed CCH Axcess binder sections.",
-      "homepage": "https://github.com/bbauersjt/sjt-binder-organize"
+      "name": "suralink-binder",
+      "source": "./suralink-binder",
+      "description": "Suralink portal pull + local mirror + indexed binder filing."
     },
     {
-      "name": "sjt-cch-axcess",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-cch-axcess"
-      },
-      "description": "Backend-first automation for the CCH Axcess audit platform — binders, Knowledge Coach forms, TB/JE reports.",
-      "homepage": "https://github.com/bbauersjt/sjt-cch-axcess"
+      "name": "cch-axcess-suite",
+      "source": "./cch-axcess-suite",
+      "description": "CCH Axcess / Knowledge Coach automation, risk assessment, and form filling."
     },
     {
-      "name": "sjt-cch-form-fill",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-cch-form-fill"
-      },
-      "description": "Fills CCH Axcess Knowledge Coach planning forms and audit program steps with context-aware, firm-standard answers.",
-      "homepage": "https://github.com/bbauersjt/sjt-cch-form-fill"
-    },
-    {
-      "name": "sjt-cch-risk-assessment",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-cch-risk-assessment"
-      },
-      "description": "Risk-assessment engine for CCH Axcess audits — drives the AUD-100 to KBA-400 to KBA-502 to audit-program cascade.",
-      "homepage": "https://github.com/bbauersjt/sjt-cch-risk-assessment"
-    },
-    {
-      "name": "sjt-commercial-fs-review",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-commercial-fs-review"
-      },
-      "description": "Technical proof and review of commercial / private-company financial statements under U.S. GAAP.",
-      "homepage": "https://github.com/bbauersjt/sjt-commercial-fs-review"
-    },
-    {
-      "name": "sjt-ebp-fs-review",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-ebp-fs-review"
-      },
-      "description": "Technical proof and review of employee benefit plan (ERISA) financial statements and audit reports.",
-      "homepage": "https://github.com/bbauersjt/sjt-ebp-fs-review"
-    },
-    {
-      "name": "sjt-govt-fs-review",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-govt-fs-review"
-      },
-      "description": "Technical proof and review of governmental financial statements — CAFR/ACFR, Single Audit, Yellow Book/GASB.",
-      "homepage": "https://github.com/bbauersjt/sjt-govt-fs-review"
-    },
-    {
-      "name": "sjt-nonprofit-fs-review",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-nonprofit-fs-review"
-      },
-      "description": "Technical proof and review of nonprofit financial statements under U.S. GAAP (ASC 958).",
-      "homepage": "https://github.com/bbauersjt/sjt-nonprofit-fs-review"
-    },
-    {
-      "name": "sjt-workpaper-formatter",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-workpaper-formatter"
-      },
-      "description": "Creates and formats audit workpapers in the firm's standard house style.",
-      "homepage": "https://github.com/bbauersjt/sjt-workpaper-formatter"
-    },
-    {
-      "name": "sjt-workpapers",
-      "source": {
-        "source": "github",
-        "repo": "bbauersjt/sjt-workpapers"
-      },
-      "description": "Builds audit workpapers in the firm's house style with reference libraries (incl. CCH XTbLink TB linking).",
-      "homepage": "https://github.com/bbauersjt/sjt-workpapers"
+      "name": "chrome-bridge",
+      "source": "./chrome-bridge-plugin",
+      "description": "MCP transport into an authenticated Chrome session — the local relay + MV3 extension the Suralink and CCH Axcess plugins rely on. Install on its own if you just need the bridge."
     }
   ]
 }

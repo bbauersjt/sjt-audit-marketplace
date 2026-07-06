@@ -1,0 +1,50 @@
+{
+  "operation": "je_create_report",
+  "purpose": "Create one or more Journal Entry reports (AJE, TJE, PAJE, RJE). Lands in Unfiled Reports.",
+  "host": "workbench-api.cchaxcess.com",
+  "method": "POST",
+  "path": "/v1/JournalEntryReport",
+  "transport": "XMLHttpRequest",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept", "Content-Type"],
+  "body_template_separate": {
+    "engagementId": "<clientId — misnamed field per platform-wide naming gotcha>",
+    "reportGuid": null,
+    "periodId": "<engagementId — the real one>",
+    "reportIndex": "<binder index or empty string>",
+    "reportName": "<required, free text>",
+    "SeparateReports": [1],
+    "CombinedReports": [],
+    "fundSettings": null
+  },
+  "body_template_combined": {
+    "engagementId": "<clientId — misnamed field per platform-wide naming gotcha>",
+    "reportGuid": null,
+    "periodId": "<engagementId — the real one>",
+    "reportIndex": "<binder index or empty string>",
+    "reportName": "<required, free text>",
+    "SeparateReports": [],
+    "CombinedReports": [{"postFix": null, "jeTypes": [1, 4, 2, 3]}],
+    "fundSettings": null
+  },
+  "batch_support": "implicit — SeparateReports[n] creates n workpapers; CombinedReports[m] creates m workpapers, each combining the jeTypes in its entry",
+  "enums": {
+    "je_type_ids": "see references/config/je_types.json — AJE=1, TJE=2, PAJE=3, RJE=4 (not alphabetical; captured positionally)"
+  },
+  "gotchas": [
+    "Body field `engagementId` carries the clientId. `periodId` carries the engagementId.",
+    "Put type IDs in EXACTLY ONE of SeparateReports OR CombinedReports — never both populated for the same set of types.",
+    "SeparateReports is a flat array of type IDs: [1, 4, ...]. Creates one workpaper per ID, each named '{report_name}_{TYPE}' (e.g. report_name='AJEs' + [1,4] → 'AJEs_AJE' and 'AJEs_RJE'). reportIds issued sequentially in array order.",
+    "CombinedReports is an array of OBJECTS: [{postFix: str|null, jeTypes: [ids]}]. Each entry produces ONE workpaper containing the listed jeTypes. Multiple entries → multiple combined workpapers.",
+    "postFix is the optional name suffix override for a combined report. When null, CCH picks a default suffix.",
+    "JE type IDs are not alphabetical: AJE=1, TJE=2, PAJE=3, RJE=4.",
+    "Pre-flight quota: GET /v1/JournalEntryReport/{clientId}/cancreate returns {count, limit:100, canCreate}.",
+    "Path is just /v1/JournalEntryReport — no /createReports suffix like the TB endpoint has."
+  ],
+  "verification": "GET /v1/JournalEntryReport/{clientId} — new reportGuid(s) should appear in the response array.",
+  "validated_on": [
+    "APNM 2025, client 97509, eng 381325, 2026-05-24 — SeparateReports [1] alone",
+    "APNM 2025, 2026-05-24 — SeparateReports [1,4,2,3] all four → AJE/RJE/TJE/PAJE separate workpapers",
+    "APNM 2025, 2026-05-24 — CombinedReports [{postFix: null, jeTypes: [1,4,2,3]}] → single combined workpaper"
+  ],
+  "script_function": "scripts.reports.create_je_report(client_id, engagement_id, report_name, headers, je_types=('AJE',), combined=False, combined_postfix=None, ...)"
+}

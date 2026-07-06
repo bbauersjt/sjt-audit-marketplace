@@ -1,0 +1,65 @@
+{
+  "operation": "fp_annotation_comment",
+  "subdomain": "financialprep-api.cchaxcess.com",
+  "auth": "engagement-surface (Authorization + IDToken) \u2014 same token set as workbench-api and WPM",
+  "triple_fire": false,
+  "refresh_required": true,
+  "scripts": [
+    "scripts.leadsheet.patch_comment_box",
+    "scripts.leadsheet.post_account_comment",
+    "scripts.leadsheet.delete_account_comment",
+    "scripts.leadsheet.post_tickmarks"
+  ],
+  "notes": "System-leadsheet annotations: top-level comment box, inline account comments, tickmarks. Inline comments carry over to the TB report after refresh. Edit = re-POST (server upserts; no delete-first). Bubbles/tickmarks flow ONE WAY onto TB reports (render read-only in cpComments/cpTickMarks). REF columns are the TB report's own API (wb_tbreportcomment). System leads exist for the DEFAULT grouping list only \u2014 alternate lists have none.",
+  "comment_box": {
+    "method": "PATCH",
+    "path": "/v1.0/leadsheet/Comments",
+    "body": {
+      "engagementId": "clientId",
+      "financialListId": "integer (1 = default)",
+      "periodId": "integer",
+      "financialGroupId": "integer (leadsheet id in URL)",
+      "comments": "string ('' to clear)",
+      "commentsHeight": 70,
+      "commentsWidth": 300,
+      "isConsolidated": false,
+      "subsidiaryParentId": 0
+    }
+  },
+  "account_comment_create_or_edit": {
+    "method": "POST",
+    "path": "/v1.0/Annotation/comment/{clientId}",
+    "body": {
+      "comment": "string",
+      "referenceId": "integer \u2014 account.id from leadsheet GET",
+      "referenceType": "'Account' (account rows) | 'FinancialGroup' (group/total rows \u2014 live-captured 2026-06-04; referenceId = financialGroupId)",
+      "periodId": "integer",
+      "engagementId": "integer"
+    },
+    "response": {
+      "commentReferenceId": "integer \u2014 store for DELETE"
+    },
+    "upsert_key": "referenceId + periodId",
+    "upsert_warning": "Upsert is SILENT \u2014 check existing row.account.annotation.comment (or group annotation) and prompt the user before overwriting."
+  },
+  "account_comment_delete": {
+    "method": "DELETE",
+    "path": "/v1.0/Annotation/comment/{clientId}/{commentReferenceId}",
+    "body": null,
+    "response": "empty body, HTTP 200",
+    "validated": "live-confirmed 2026-06-04 (DELETE .../comment/100736/42981 -> 200)"
+  },
+  "tickmarks_set_or_clear": {
+    "method": "POST",
+    "path": "/v1.0/Annotation/tickmarks/{clientId}",
+    "body": {
+      "ids": "array of tickmark IDs 1-71 (COMPLETE desired set \u2014 set-replace, not delta; [] clears)",
+      "engagementId": "integer",
+      "referenceId": "integer (account.id)",
+      "referenceType": "Account",
+      "periodId": "integer",
+      "originalIds": null
+    },
+    "catalog": "references/config/tickmark_ids.json"
+  }
+}

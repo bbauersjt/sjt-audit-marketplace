@@ -1,0 +1,37 @@
+{
+  "operation": "loadIAN — the activity timeline (the 'clock' feed)",
+  "method": "POST",
+  "url": "https://app.suralink.com/gateways/uGateway.php",
+  "note": "gateway letter a-t is interchangeable",
+  "auth": "session cookie; credentials:'include'",
+  "content_type": "application/x-www-form-urlencoded",
+  "body": {
+    "secret": "aud1tMgr! (static)",
+    "controller": "/Controllers/Shares/IAN",
+    "command": "loadIAN",
+    "ianType": "1",
+    "showMine": "-1 (all users; not just mine)",
+    "auditId": "auditId of the engagement",
+    "lastId": "REQUIRED - 0 for the whole feed, or a prior newestId for messages since then. Omitting it returns {success:false} with error 'missingParameter'.",
+    "csrf_token": "window.csrf.csrf_token (rotates)",
+    "csrf_hash_offset": "window.csrf.csrf_hash_offset (rotates)",
+    "filters[]": "OPTIONAL - omit for the full feed",
+    "startDate": "OPTIONAL - omit for the default recent window",
+    "endDate": "OPTIONAL"
+  },
+  "success": {
+    "status": 200,
+    "body": "{success:true, data:{ianData}}",
+    "ianData": "{newestId, messages[], fromUsers, numRead, numUnread, filters}",
+    "message_object": "{id, requestId, auditId, stateChange, ts, isRead, firmOnly, userType, userId, notes, commentId, isMine, files[], requestData}",
+    "file_object_in_message": "{id (=fId), fmsId, requestId, origFileName, fileSize, ts, isDeleted, ...}"
+  },
+  "errors": {
+    "missingParameter": "lastId (or another required field) was not sent",
+    "Invalid Csrf Token": "stale csrf - re-read window.csrf",
+    "throttleCheck": "called too rapidly - space calls out"
+  },
+  "usage": "An activity feed. NOT a dependable whole-engagement source - it can return 0 messages even when the binder holds files, and it throttles under rapid calls. For a reliable 'what's new' use map_binder_js (a free DOM scrape) and the per-engagement index instead.",
+  "script": "suralink.py :: load_ian_js  |  flatten with suralink-sync sync.py :: ian_files",
+  "validated": "2026-05-23, audit 2774111 - loadIAN requires lastId; with lastId=0 it returns {success:true}"
+}

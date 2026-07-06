@@ -1,0 +1,12 @@
+{
+  "description": "Regex matches that look like KC form IDs but aren't. Filter these from cross-reference unresolved lists.",
+  "patterns": [
+    "^SAS-\\d+",
+    "^AU-C?-?\\d+",
+    "^ASC-\\d+",
+    "^IFRS-\\d+",
+    "^RES-\\d+",
+    "^RPT-\\d+"
+  ],
+  "notes": "RES/RPT are CCH report types that share the XXX-### shape. SAS/AU/ASC/IFRS are standards references. Extend cautiously — adding a real KC prefix here suppresses legitimate xrefs."
+}

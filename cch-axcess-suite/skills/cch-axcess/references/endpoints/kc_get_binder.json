@@ -1,0 +1,21 @@
+{
+  "operation": "kc_get_binder",
+  "purpose": "Fetch every KC form in a binder + the clientGuid lookup.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "method": "GET",
+  "path": "/api/binder/GetBinder/{engagementGuid}",
+  "headers_required": ["Authorization", "IdToken", "Accept"],
+  "response_shape": {
+    "result": {
+      "id": "engagementGuid (echoes input)",
+      "clientId": "kcClientId (KC internal int — DIFFERENT from Axcess clientId)",
+      "clientGuid": "per-client GUID — needed for DELETE form endpoint",
+      "lastUsedTitleGuid": "titleId for the industry title in use",
+      "workpapers": [
+        {"id": "workpaperId", "name": "string", "group": "string", "locationId": "int", "documentId": "GUID"}
+      ]
+    }
+  },
+  "use_cases": ["Look up clientGuid for delete-form workflows", "Inventory the binder for bulk-capture or audit"],
+  "script_function": "scripts.kc.get_binder(eng_guid, headers)"
+}

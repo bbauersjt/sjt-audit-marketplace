@@ -1,0 +1,10 @@
+{
+  "note": "Suralink routes legacy AJAX through 20 gateway PHP files. The letter is interchangeable — the same controller+command works through any of them. The skill uses aGateway.php. Listed here for reference / failover.",
+  "gateway_url_pattern": "https://app.suralink.com/gateways/{letter}Gateway.php",
+  "letters": ["a","b","c","d","e","f","h","i","j","k","l","m","n","o","p","q","r","s","t","u"],
+  "static_secret": "aud1tMgr!",
+  "controllers_seen": [
+    "/Controllers/Auditors/Audit",
+    "/Controllers/Shared/Misc"
+  ]
+}

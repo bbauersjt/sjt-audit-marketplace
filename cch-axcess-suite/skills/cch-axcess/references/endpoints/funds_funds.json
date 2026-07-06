@@ -1,0 +1,66 @@
+{
+  "operation": "funds_funds",
+  "purpose": "List and upsert Funds (the second tier in CCH fund accounting - the individual fund records under a Fund Type).",
+  "host": "workbench-api.cchaxcess.com",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/v1/Fund/{clientId}",
+      "script_function": "scripts.funds.list_funds(client_id, headers)"
+    },
+    "upsert": {
+      "method": "PUT",
+      "path": "/v1/Fund",
+      "script_function": "scripts.funds.upsert_funds(client_id, funds, headers)"
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/v1/Fund/{clientId}/{fundId}",
+      "script_function": "scripts.funds.delete_fund(client_id, fund_id, headers)",
+      "notes": "No eligibility pre-flight - assigned accounts cascade to Unassigned. Validated live 2026-05-25."
+    }
+  },
+  "headers_required": [
+    "Authorization",
+    "IDToken",
+    "Accept"
+  ],
+  "id_field_naming_gotcha": "Body field `engagementId` carries the clientId, not the engagementId. Same misnaming as the rest of workbench-api.",
+  "request_body_shape_put": {
+    "engagementId": "int (actually clientId)",
+    "funds": [
+      {
+        "id": "int (0 for new entries - Fund follows the id=0-means-new convention)",
+        "index": "string (e.g. '01', '02')",
+        "name": "string",
+        "fundTypeId": "int (the parent FundType.id)",
+        "fundSubTypeId": "int? (optional - the FundSubType.id if the fund belongs to a sub-type)"
+      }
+    ]
+  },
+  "response_shape_get": {
+    "kind": "bare array (NO {result:[]} wrapper)",
+    "rows": [
+      {
+        "fundId": "int",
+        "fundGuid": "GUID",
+        "fundName": "string",
+        "fundIndex": "string",
+        "sortOrder": "int",
+        "fundType": {
+          "fundTypeId": "int",
+          "fundTypeIndex": "string",
+          "fundTypeName": "string"
+        },
+        "fundSubType": "object (same prefixed shape) OR null"
+      }
+    ],
+    "field_name_asymmetry": "GET returns prefixed names and embeds fundType + fundSubType as full objects; PUT expects bare names with fundTypeId / fundSubTypeId as integer FKs. Use scripts.funds.normalize_funds() to convert."
+  },
+  "semantics": {
+    "put_is_whole_list_replace": "Same as FundType - PUT replaces the entire funds collection. Caller MUST include every existing fund (with id) plus new ones (id=0).",
+    "ui_quirk": "Unlike FundType, the Funds tab UI does batch multiple Adds into one PUT on Save. Programmatically you can do the same.",
+    "fund_sub_type_assignment": "Assigning a fund to a sub-type happens through this same endpoint by setting fundSubTypeId. The UI also exposes it on the Fund Sub-Type tab as a save-after-edit workflow that ultimately fires this PUT."
+  },
+  "verification": "After upsert, GET /v1/Fund/{clientId} and confirm the new row exists with a server-assigned id and the expected fundTypeId / fundSubTypeId."
+}

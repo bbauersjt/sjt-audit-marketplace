@@ -1,0 +1,55 @@
+{
+  "operation": "funds_fund_sub_types",
+  "purpose": "List, upsert, and delete Fund Sub-Types - the optional middle tier between Fund Type and Fund.",
+  "host": "workbench-api.cchaxcess.com",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/v1/FundSubType/{clientId}",
+      "script_function": "scripts.funds.list_fund_sub_types(client_id, headers)"
+    },
+    "upsert": {
+      "method": "PUT",
+      "path": "/v1/FundSubType",
+      "script_function": "scripts.funds.upsert_fund_sub_types(client_id, fund_sub_types, headers)"
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/v1/FundSubType/{clientId}/{subTypeId}",
+      "script_function": "scripts.funds.delete_fund_sub_type(client_id, sub_type_id, headers)"
+    },
+    "check_delete_eligible": {
+      "method": "GET",
+      "path": "/v1/FundSubType/{clientId}/iseligiblefordelete/{subTypeId}",
+      "script_function": "scripts.funds.check_delete_eligible_fund_sub_type(client_id, sub_type_id, headers)",
+      "response": "bare JSON boolean (true | false)"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept", "Content-Type (writes only)"],
+  "id_field_naming_gotcha": "Body field `engagementId` carries the clientId.",
+  "request_body_shape_put": {
+    "engagementId": "int (actually clientId)",
+    "fundSubTypes": [
+      {
+        "id": "int (0 for new entries)",
+        "index": "string (e.g. '1001')",
+        "name": "string",
+        "fundTypeId": "int"
+      }
+    ]
+  },
+  "response_shape_get": {
+    "kind": "object wrapper",
+    "envelope": {"fundSubTypes": "array"},
+    "rows": [
+      {"fundSubTypeId": "int", "fundSubTypeName": "string", "fundSubTypeIndex": "string", "fundTypeId": "int (bare - not prefixed)", "sortOrder": "int"}
+    ],
+    "field_name_asymmetry": "GET wraps in {fundSubTypes:[]} and uses fundSubType-prefixed names (except fundTypeId which is bare). PUT expects bare names. Use scripts.funds.normalize_fund_sub_types()."
+  },
+  "semantics": {
+    "put_is_whole_list_replace": "Same rules as FundType - empty-array PUT is a silent no-op. Use DELETE to remove rows.",
+    "delete_behavior": "Single-row DELETE. Returns 400 with messages if a Fund still has fundSubTypeId set to this id. Drain dependents (PUT /v1/Fund with fundSubTypeId removed) or check eligibility first.",
+    "fund_assignment_to_sub_type_is_separate": "Assigning Funds to a sub-type happens by setting fundSubTypeId on the Fund record (via PUT /v1/Fund), not by listing funds inside the sub-type body."
+  },
+  "verification": "After upsert/delete, GET /v1/FundSubType/{clientId} and confirm."
+}

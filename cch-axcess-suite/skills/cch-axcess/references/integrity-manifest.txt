@@ -1,0 +1,68 @@
+# Files protected by scripts/verify_integrity.py (must end with <!-- END --> marker).
+# A missing marker on a listed file == truncated; do not deploy.
+# Add a file here ONLY after a host Read confirms it is complete, then `--stamp` it.
+
+SKILL.md
+references/CHANGELOG.md
+references/architecture.md
+references/runbooks/session-bootstrap.md
+references/runbooks/local-exec.md
+references/learn-protocol.md
+references/data/INDEX.md
+references/modules/INDEX.md
+references/modules/file-io.md
+references/modules/manage-funds.md
+references/modules/manage-groups.md
+references/modules/populate-program.md
+references/modules/remove-kc-form.md
+references/modules/rename-workpaper-index.md
+references/modules/run-reports.md
+references/modules/setup-binder-from-index.md
+references/modules/toggle-program-step.md
+references/modules/bulk-capture-forms.md
+references/deferred/empty-grid-row-spawn.md
+
+# Recovered 2026-06-03 (AX-12) and re-protected:
+references/modules/add-audit-programs.md
+references/modules/fill-kc-form.md
+references/modules/map-binder.md
+references/modules/annotate-leadsheet.md
+references/modules/annotate-tbreport.md
+references/usage.md
+scripts/__init__.py
+scripts/auth_capture.py
+scripts/binder_map.py
+scripts/binder_planner.py
+scripts/catalog.py
+scripts/funds.py
+scripts/groups.py
+scripts/http_runner.py
+scripts/kc.py
+scripts/leadsheet.py
+scripts/regenerate_index.py
+scripts/reports.py
+scripts/session.py
+scripts/verify_integrity.py
+scripts/wpm.py
+scripts/xref.py
+scripts/populate_program.js
+references/modules/import-tb-format.md
+
+# Added 2026-06-05 (AX-27 batch rebuild):
+references/modules/tb-backup-package.md
+scripts/tb_backup.py
+references/training-mode.md
+
+# Added 2026-06-17 (AX-32 dual-transport foundation):
+references/runbooks/transport.md
+
+# Added 2026-06-19 (AX-33 JS/DOM-first + new capabilities):
+references/modules/post-journal-entry.md
+references/modules/replace-workpaper.md
+scripts/je.py
+scripts/wpm_replace.py
+scripts/kc_dom_parser.js
+
+# Added 2026-06-25 (AX-35 — KC-over-bridge + status sheet):
+references/modules/binder-status-sheet.md
+scripts/binder_status.py

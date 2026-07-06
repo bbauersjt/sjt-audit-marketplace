@@ -1,0 +1,31 @@
+{
+  "operation": "getRequest — full detail for one request, including its files",
+  "method": "POST",
+  "url": "https://app.suralink.com/gateways/aGateway.php",
+  "note": "gateway letter a-t is interchangeable",
+  "auth": "session cookie; fetch with credentials:'include'",
+  "content_type": "application/x-www-form-urlencoded",
+  "body": {
+    "secret": "aud1tMgr! (static, required)",
+    "controller": "/Controllers/Auditors/Audit",
+    "command": "getRequest",
+    "requestId": "the canonical 8-digit request id (NOT the 2-char response field)",
+    "auditId": "auditId of the engagement",
+    "fromAudit": "true",
+    "limitedData": "true",
+    "csrf_token": "read live from window.csrf.csrf_token (rotates)",
+    "csrf_hash_offset": "read live from window.csrf.csrf_hash_offset (rotates)"
+  },
+  "success": {
+    "status": 200,
+    "body": "{success:true, data:{...request detail...}}",
+    "data.files": "{firm:[...], firmSize:n, client:[...], clientSize:n} — firm = files the audit firm posted, client = files the client uploaded",
+    "file_object": "{id, fmsId, createdTime, requestType, userType, userId, fileSize, deltaValue, origFileName, fileType, stateChange, ts, providedByName, providedDate, downloads[], user{}}"
+  },
+  "gotchas": [
+    "Run calls sequentially (Suralink session serializes gateway calls); read window.csrf live per call as a safety net, but on this endpoint the token does NOT observably rotate — a whole-engagement sweep uses one snapshot",
+    "the response field data.requestId is a 2-char display index, NOT the real id; data.id is the real id"
+  ],
+  "script": "scripts/suralink.py :: get_request_js, extract_files",
+  "validated": "2026-05-22, audit 2774111"
+}

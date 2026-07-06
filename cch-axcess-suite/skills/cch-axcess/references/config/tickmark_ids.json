@@ -1,0 +1,504 @@
+{
+  "_doc": "CCH Axcess leadsheet tickmark catalog. id is what scripts.leadsheet.post_tickmarks expects. IDs 1-51 are standard marks in 3 color variants (red=base, blue=base+1, green=base+2). IDs 52-71 are explanatory circle marks, red only. Source: live capture NIN 2026-06-02.",
+  "count": 71,
+  "color_rule": "standard marks (id<=51): red=base, blue=base+1, green=base+2. base IDs: 1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49. circle marks (52-71): red only.",
+  "tickmarks": [
+    {
+      "id": 1,
+      "label": "Confirmed",
+      "css": "tickmark-confirmed",
+      "color": "red",
+      "base": 1
+    },
+    {
+      "id": 2,
+      "label": "Confirmed",
+      "css": "tickmark-confirmed",
+      "color": "blue",
+      "base": 1
+    },
+    {
+      "id": 3,
+      "label": "Confirmed",
+      "css": "tickmark-confirmed",
+      "color": "green",
+      "base": 1
+    },
+    {
+      "id": 4,
+      "label": "Calculated",
+      "css": "tickmark-calculated",
+      "color": "red",
+      "base": 4
+    },
+    {
+      "id": 5,
+      "label": "Calculated",
+      "css": "tickmark-calculated",
+      "color": "blue",
+      "base": 4
+    },
+    {
+      "id": 6,
+      "label": "Calculated",
+      "css": "tickmark-calculated",
+      "color": "green",
+      "base": 4
+    },
+    {
+      "id": 7,
+      "label": "No Reply",
+      "css": "tickmark-no-reply",
+      "color": "red",
+      "base": 7
+    },
+    {
+      "id": 8,
+      "label": "No Reply",
+      "css": "tickmark-no-reply",
+      "color": "blue",
+      "base": 7
+    },
+    {
+      "id": 9,
+      "label": "No Reply",
+      "css": "tickmark-no-reply",
+      "color": "green",
+      "base": 7
+    },
+    {
+      "id": 10,
+      "label": "Unreconciled Difference",
+      "css": "tickmark-unreconciled-difference",
+      "color": "red",
+      "base": 10
+    },
+    {
+      "id": 11,
+      "label": "Unreconciled Difference",
+      "css": "tickmark-unreconciled-difference",
+      "color": "blue",
+      "base": 10
+    },
+    {
+      "id": 12,
+      "label": "Unreconciled Difference",
+      "css": "tickmark-unreconciled-difference",
+      "color": "green",
+      "base": 10
+    },
+    {
+      "id": 13,
+      "label": "Confirmed with Exception - Cleared",
+      "css": "tickmark-exception-cleared",
+      "color": "red",
+      "base": 13
+    },
+    {
+      "id": 14,
+      "label": "Confirmed with Exception - Cleared",
+      "css": "tickmark-exception-cleared",
+      "color": "blue",
+      "base": 13
+    },
+    {
+      "id": 15,
+      "label": "Confirmed with Exception - Cleared",
+      "css": "tickmark-exception-cleared",
+      "color": "green",
+      "base": 13
+    },
+    {
+      "id": 16,
+      "label": "Confirmed with Exception",
+      "css": "tickmark-exception",
+      "color": "red",
+      "base": 16
+    },
+    {
+      "id": 17,
+      "label": "Confirmed with Exception",
+      "css": "tickmark-exception",
+      "color": "blue",
+      "base": 16
+    },
+    {
+      "id": 18,
+      "label": "Confirmed with Exception",
+      "css": "tickmark-exception",
+      "color": "green",
+      "base": 16
+    },
+    {
+      "id": 19,
+      "label": "Footed",
+      "css": "tickmark-footed",
+      "color": "red",
+      "base": 19
+    },
+    {
+      "id": 20,
+      "label": "Footed",
+      "css": "tickmark-footed",
+      "color": "blue",
+      "base": 19
+    },
+    {
+      "id": 21,
+      "label": "Footed",
+      "css": "tickmark-footed",
+      "color": "green",
+      "base": 19
+    },
+    {
+      "id": 22,
+      "label": "Cross-Footed",
+      "css": "tickmark-cross-footed",
+      "color": "red",
+      "base": 22
+    },
+    {
+      "id": 23,
+      "label": "Cross-Footed",
+      "css": "tickmark-cross-footed",
+      "color": "blue",
+      "base": 22
+    },
+    {
+      "id": 24,
+      "label": "Cross-Footed",
+      "css": "tickmark-cross-footed",
+      "color": "green",
+      "base": 22
+    },
+    {
+      "id": 25,
+      "label": "Recalculated",
+      "css": "tickmark-recalculated",
+      "color": "red",
+      "base": 25
+    },
+    {
+      "id": 26,
+      "label": "Recalculated",
+      "css": "tickmark-recalculated",
+      "color": "blue",
+      "base": 25
+    },
+    {
+      "id": 27,
+      "label": "Recalculated",
+      "css": "tickmark-recalculated",
+      "color": "green",
+      "base": 25
+    },
+    {
+      "id": 28,
+      "label": "Immaterial",
+      "css": "tickmark-immaterial",
+      "color": "red",
+      "base": 28
+    },
+    {
+      "id": 29,
+      "label": "Immaterial",
+      "css": "tickmark-immaterial",
+      "color": "blue",
+      "base": 28
+    },
+    {
+      "id": 30,
+      "label": "Immaterial",
+      "css": "tickmark-immaterial",
+      "color": "green",
+      "base": 28
+    },
+    {
+      "id": 31,
+      "label": "Sum",
+      "css": "tickmark-sum",
+      "color": "red",
+      "base": 31
+    },
+    {
+      "id": 32,
+      "label": "Sum",
+      "css": "tickmark-sum",
+      "color": "blue",
+      "base": 31
+    },
+    {
+      "id": 33,
+      "label": "Sum",
+      "css": "tickmark-sum",
+      "color": "green",
+      "base": 31
+    },
+    {
+      "id": 34,
+      "label": "TR",
+      "css": "tickmark-tax-return",
+      "color": "red",
+      "base": 34
+    },
+    {
+      "id": 35,
+      "label": "TR",
+      "css": "tickmark-tax-return",
+      "color": "blue",
+      "base": 34
+    },
+    {
+      "id": 36,
+      "label": "TR",
+      "css": "tickmark-tax-return",
+      "color": "green",
+      "base": 34
+    },
+    {
+      "id": 37,
+      "label": "TB",
+      "css": "tickmark-trial-balance",
+      "color": "red",
+      "base": 37
+    },
+    {
+      "id": 38,
+      "label": "TB",
+      "css": "tickmark-trial-balance",
+      "color": "blue",
+      "base": 37
+    },
+    {
+      "id": 39,
+      "label": "TB",
+      "css": "tickmark-trial-balance",
+      "color": "green",
+      "base": 37
+    },
+    {
+      "id": 40,
+      "label": "Agrees to GL",
+      "css": "tickmark-general-ledger",
+      "color": "red",
+      "base": 40
+    },
+    {
+      "id": 41,
+      "label": "Agrees to GL",
+      "css": "tickmark-general-ledger",
+      "color": "blue",
+      "base": 40
+    },
+    {
+      "id": 42,
+      "label": "Agrees to GL",
+      "css": "tickmark-general-ledger",
+      "color": "green",
+      "base": 40
+    },
+    {
+      "id": 43,
+      "label": "Consistent & Comparable to PY",
+      "css": "tickmark-consistent-comparable-py",
+      "color": "red",
+      "base": 43
+    },
+    {
+      "id": 44,
+      "label": "Consistent & Comparable to PY",
+      "css": "tickmark-consistent-comparable-py",
+      "color": "blue",
+      "base": 43
+    },
+    {
+      "id": 45,
+      "label": "Consistent & Comparable to PY",
+      "css": "tickmark-consistent-comparable-py",
+      "color": "green",
+      "base": 43
+    },
+    {
+      "id": 46,
+      "label": "Agrees to PY",
+      "css": "tickmark-prior-year",
+      "color": "red",
+      "base": 46
+    },
+    {
+      "id": 47,
+      "label": "Agrees to PY",
+      "css": "tickmark-prior-year",
+      "color": "blue",
+      "base": 46
+    },
+    {
+      "id": 48,
+      "label": "Agrees to PY",
+      "css": "tickmark-prior-year",
+      "color": "green",
+      "base": 46
+    },
+    {
+      "id": 49,
+      "label": "Agrees to",
+      "css": "tickmark-check",
+      "color": "red",
+      "base": 49
+    },
+    {
+      "id": 50,
+      "label": "Agrees to",
+      "css": "tickmark-check",
+      "color": "blue",
+      "base": 49
+    },
+    {
+      "id": 51,
+      "label": "Agrees to",
+      "css": "tickmark-check",
+      "color": "green",
+      "base": 49
+    },
+    {
+      "id": 52,
+      "label": "A - Explanatory",
+      "css": "tickmark-circle-a",
+      "color": "red",
+      "base": 52
+    },
+    {
+      "id": 53,
+      "label": "B - Explanatory",
+      "css": "tickmark-circle-b",
+      "color": "red",
+      "base": 53
+    },
+    {
+      "id": 54,
+      "label": "C - Explanatory",
+      "css": "tickmark-circle-c",
+      "color": "red",
+      "base": 54
+    },
+    {
+      "id": 55,
+      "label": "D - Explanatory",
+      "css": "tickmark-circle-d",
+      "color": "red",
+      "base": 55
+    },
+    {
+      "id": 56,
+      "label": "E - Explanatory",
+      "css": "tickmark-circle-e",
+      "color": "red",
+      "base": 56
+    },
+    {
+      "id": 57,
+      "label": "F - Explanatory",
+      "css": "tickmark-circle-f",
+      "color": "red",
+      "base": 57
+    },
+    {
+      "id": 58,
+      "label": "G - Explanatory",
+      "css": "tickmark-circle-g",
+      "color": "red",
+      "base": 58
+    },
+    {
+      "id": 59,
+      "label": "H - Explanatory",
+      "css": "tickmark-circle-h",
+      "color": "red",
+      "base": 59
+    },
+    {
+      "id": 60,
+      "label": "I - Explanatory",
+      "css": "tickmark-circle-i",
+      "color": "red",
+      "base": 60
+    },
+    {
+      "id": 61,
+      "label": "J - Explanatory",
+      "css": "tickmark-circle-j",
+      "color": "red",
+      "base": 61
+    },
+    {
+      "id": 62,
+      "label": "1 - Explanatory",
+      "css": "tickmark-circle-1",
+      "color": "red",
+      "base": 62
+    },
+    {
+      "id": 63,
+      "label": "2 - Explanatory",
+      "css": "tickmark-circle-2",
+      "color": "red",
+      "base": 63
+    },
+    {
+      "id": 64,
+      "label": "3 - Explanatory",
+      "css": "tickmark-circle-3",
+      "color": "red",
+      "base": 64
+    },
+    {
+      "id": 65,
+      "label": "4 - Explanatory",
+      "css": "tickmark-circle-4",
+      "color": "red",
+      "base": 65
+    },
+    {
+      "id": 66,
+      "label": "5 - Explanatory",
+      "css": "tickmark-circle-5",
+      "color": "red",
+      "base": 66
+    },
+    {
+      "id": 67,
+      "label": "6 - Explanatory",
+      "css": "tickmark-circle-6",
+      "color": "red",
+      "base": 67
+    },
+    {
+      "id": 68,
+      "label": "7 - Explanatory",
+      "css": "tickmark-circle-7",
+      "color": "red",
+      "base": 68
+    },
+    {
+      "id": 69,
+      "label": "8 - Explanatory",
+      "css": "tickmark-circle-8",
+      "color": "red",
+      "base": 69
+    },
+    {
+      "id": 70,
+      "label": "9 - Explanatory",
+      "css": "tickmark-circle-9",
+      "color": "red",
+      "base": 70
+    },
+    {
+      "id": 71,
+      "label": "10 - Explanatory",
+      "css": "tickmark-circle-10",
+      "color": "red",
+      "base": 71
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "description": "CCH internal enums used by API writes. Mirrored from the cch-risk-assessment skill where applicable. Update both if CCH adds new values.",
+  "inherent_risk_and_control_risk": {
+    "key_property": "ir or cr on .{AREA}.RelevantAssertion",
+    "_note_surface": "ir/cr live on the AUD-8xx IR/CR grid at .{AREA}.RelevantAssertion. The KBA-400 relevant-assertion SELECTION is a different surface: .KBA400.AuditareaRelevantAssertions. KBA-502 is a read-through rollup, not where IR/CR is written.",
+    "values": [
+      {"value": "Max", "valueKey": "MAX", "meaning": "Maximum"},
+      {"value": "SBM", "valueKey": "SBM", "meaning": "Slightly Below Maximum"},
+      {"value": "Mod", "valueKey": "MOD", "meaning": "Moderate"},
+      {"value": "Low", "valueKey": "LOW", "meaning": "Low"}
+    ]
+  },
+  "planned_audit_approach": {
+    "key_property": "PlannedAuditApproach on .{AREA}.RelevantAssertion",
+    "write_one_per_checkbox": true,
+    "values": [
+      {"value": "Combined", "valueKey": "COMBINED", "when": "Controls tested and CR < MAX"},
+      {"value": "Substantive: Analytical", "valueKey": "ANALYTICAL", "when": "Active program includes analytical procedure steps"},
+      {"value": "Substantive: In-depth", "valueKey": "INDEPTH", "when": "Active program is tests-of-details based"}
+    ],
+    "warning": "API returns state=3 for ANY valueKey written, even invalid ones, AND the immediate in-page GET reads the uncommitted working copy so it shows state=3 right away. Immediate state=3 is NOT proof of persistence — an invalid/bad key drops on reload. Always use exactly COMBINED/ANALYTICAL/INDEPTH, and verify AFTER submit+reload via the diagnostics endpoint, never the immediate GET."
+  },
+  "financial_assertions": {
+    "key_property": "objectKey on .{AREA}.RelevantAssertion",
+    "values": ["EO", "RO", "CO", "AV", "CU", "UC"],
+    "_note_surface_split": "Two distinct surfaces use these assertion keys. KBA-400 relevant-assertion SELECTION (which assertions are relevant per area) lives on KBA-400 at .KBA400.AuditareaRelevantAssertions. The IR/CR (and RMM / PlannedAuditApproach) grid keyed by assertion lives on the AUD-8xx program at .{AREA}.RelevantAssertion. Do not conflate them: select on KBA-400, set IR/CR on AUD-8xx."
+  },
+  "risks_property_codes": {
+    "key_property": "Risks on .{AREA}.ProgramSteps",
+    "format": "Semicolon-joined valueKeys with TRAILING semi. Full-state replacement.",
+    "values": [
+      {"valueKey": "FINANCIALLEVELRISKS-N", "display": "Per-engagement (e.g. 'Management Override')", "notes": "N is the per-engagement risk number"},
+      {"valueKey": "RMM-EO", "display": "RMM-EO"},
+      {"valueKey": "RMM-RO", "display": "RMM-RO"},
+      {"valueKey": "RMM-CO", "display": "RMM-CO"},
+      {"valueKey": "RMM-AV", "display": "RMM-AV"},
+      {"valueKey": "RMM-CU", "display": "RMM-CU"},
+      {"valueKey": "RMM-UC", "display": "RMM-UC"}
+    ],
+    "warning": "Sending unknown codes returns 500 'Index was outside the bounds of the array'. Verify codes against DOM checkbox names before writing."
+  },
+  "object_types_wpm": ["Folder", "LeadSheet", "KCForms", "Report"]
+}

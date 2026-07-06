@@ -1,0 +1,59 @@
+{
+  "operation": "groups_account_assignment",
+  "purpose": "Reassign one account to a different group within one financialList. Used by the Trial Balance tab's grouping column.",
+  "host": "financialprep-api.cchaxcess.com",
+  "endpoints": {
+    "read_tb_grouped": {
+      "method": "GET",
+      "path": "/v1.0/financialTrialBalance/{clientId}/{financialListId}/trialbalance/{periodId}",
+      "purpose": "Returns the TB rows annotated with each account's current group in the specified list. Read this before a PATCH.",
+      "script_function": "scripts.groups.get_trialbalance_grouped(client_id, financial_list_id, period_id, headers)"
+    },
+    "patch": {
+      "method": "PATCH",
+      "path": "/v1.0/financialTrialBalance/{clientId}/balances/{accountId}",
+      "purpose": "Reassign one account to a different group.",
+      "script_function": "scripts.groups.assign_account_to_group(client_id, account_row, target_group, headers)",
+      "bulk": "scripts.groups.build_bulk_assign_js(client_id, patch_bodies, headers) - one browser call, N PATCHes, order-independent",
+      "verification_status": "live-verified 2026-05-30 (clientId 100173): PATCH WORKS and sticks. The earlier 'silent no-op' warning was a FALSE ALARM caused by a read-back bug - the new group reads back at row.account.group, NOT top-level row.group."
+    },
+    "patch_subgroup": {
+      "method": "PATCH",
+      "path": "/v1.0/financialTrialBalance/{clientId}/financialsubgroup",
+      "purpose": "Assign one account to a SUB-group (child of a group).",
+      "script_function": "scripts.groups.assign_account_to_subgroup(client_id, account_id, financial_list_id, financial_subgroup_id, headers)",
+      "body_shape": {"accountId": "int", "engagementId": "int", "consolidatedEngagementId": "null", "financialSubGroupId": "int", "financialListId": "int"},
+      "read_back": "row.account.financialSubGroup on the grouped TB",
+      "verification_status": "captured 2026-05-30"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept", "Content-Type (writes only)"],
+  "request_body_shape_patch": {
+    "kind": "full account row with `group` field replaced",
+    "minimum_observed_fields": ["id", "engagementId", "consolidatedEngagementId", "accountName", "accountNumber", "financialListId", "periodId", "isTemplateOrTemplateEngagement", "group"],
+    "group_subobject": {
+      "financialGroupId": "int (target group's id)",
+      "engagementFinancialGroupMapId": "int (server-managed)",
+      "financialGroupType": "string ('Custom' for user-defined groups, 'Global' for CCH-bundled groups like FS Financial defaults)",
+      "classificationGuid": "GUID",
+      "id": "GUID (the group's UI id)",
+      "name": "string",
+      "order": "int",
+      "index": "string",
+      "classification": "string display name",
+      "type": "object {accountTypeId, id, name, order, acctType}",
+      "isFirst": "bool"
+    },
+    "note": "The wire body sent by the UI carries ~30 fields. scripts.groups.assign_account_to_group preserves whatever row you read via GET and just swaps the group; build_patch_body() is the minimal hand-rolled version."
+  },
+  "semantics": {
+    "no_unassign_state": "Every account is always in SOME group per list. There is no null group. To 'remove' from a custom group, reassign to whatever Global group fits.",
+    "autosaves_immediately": "Every reassignment fires its own PATCH; no batch save button on the TB tab. Brett's note: 'CCH was watching the whole time, doesn't let you save when you're happy, you save every change you make on this one.'",
+    "incremental_per_account": "Each PATCH touches one account. Bulk reassignment = N PATCHes (use build_bulk_assign_js for one browser call).",
+    "financialListId_required": "GUARDRAIL: every regroup PATCH MUST carry financialListId. Omitting it -> HTTP 400 'FinancialListId ... request data invalid'; it does NOT fall back to the default list. Regroups are per-list independent (one account = one group PER list), so writing list X cannot touch list Y. Only real risk is passing the WRONG list id - before a bulk regroup, resolve the target list and assert it is not isDefault unless intended.",
+    "read_back_path": "Verify an assignment at row.account.group.financialGroupId on the grouped TB (NOT top-level row.group)."
+  },
+  "open_follow_ups": [
+    "Test whether a stripped-down PATCH body (just id + group) works - might save bandwidth on bulk ops"
+  ]
+}

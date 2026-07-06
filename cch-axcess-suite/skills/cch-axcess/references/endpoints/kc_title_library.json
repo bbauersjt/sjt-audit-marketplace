@@ -1,0 +1,31 @@
+{
+  "operation": "kc_title_library",
+  "purpose": "List installed KC titles and the available-forms list per title (cross-title capable). Source for Single Audit (S-suffix) forms and a newer-title check.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "auth": "KC localStorage tokens (kc.accessToken Bearer + IdToken mixed-case), XHR from KC tab. Live 200 2026-06-04.",
+  "endpoints": {
+    "titles": {
+      "method": "GET",
+      "path": "/api/title",
+      "returns": "ALL installed titles (218 at capture). Fields: id (titleGuid), name, year, refTag, familyID, previousYearTitleId, isSingleAudit, kcVersionContent, shortName.",
+      "use": "newer-title check: group by familyID, compare binder title year vs max year."
+    },
+    "forms_for_title": {
+      "method": "GET",
+      "path": "/api/binder/GetWorkpaperListForAddForms/{binderGuid}/{titleGuid}",
+      "returns": "available forms for that title on that binder: group, name (carries the form index e.g. 'AID-301S ...'), referenceTag, workpaperId/id, allowToAdd, isCoreWorkpaper.",
+      "use": "works CROSS-TITLE on one binder \u2014 a governmental binder can list+add Single Audits title forms."
+    }
+  },
+  "single_audit_title": {
+    "name": "Knowledge-Based Single Audits",
+    "refTag": "SAS.2024.1",
+    "titleGuid": "531eb5ad-5eae-4f12-ac51-ea998bb8472e",
+    "note": "2024 is the NEWEST SA edition as of 2026-06-04. All S-suffix forms (84 forms incl. RES/RPT/KCO) live here, NOT in the governmental title.",
+    "static_list": "references/data/sa-title-forms.tsv (form index | referenceTag | full name | section prefix). Prefer a live GetWorkpaperListForAddForms pull; the TSV is the offline fallback."
+  },
+  "ui_note": "The Add Forms dialog opens as a SEPARATE KC tab: knowledgecoach.../binder/{binderGuid}/new-workpapers/{titleGuid}.",
+  "validated_on": [
+    "BT3 binder, 2026-06-04"
+  ]
+}

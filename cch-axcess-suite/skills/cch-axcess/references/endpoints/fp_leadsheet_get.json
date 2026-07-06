@@ -1,0 +1,30 @@
+{
+  "operation": "fp_leadsheet_get",
+  "subdomain": "financialprep-api.cchaxcess.com",
+  "auth": "engagement-surface (Authorization + IDToken) — same token set as workbench-api and WPM",
+  "scripts": ["scripts.leadsheet.get_groups", "scripts.leadsheet.get_leadsheet", "scripts.leadsheet.find_reference_id"],
+  "list_groups": {
+    "method": "GET",
+    "path": "/v1.0/leadsheet/{clientId}/1/groups",
+    "response": "array of group objects with financialGroupId, name, number",
+    "notes": "Resolve a section name/number -> financialGroupId (e.g. '2000' -> Payables -> 726342 on NIN)"
+  },
+  "get_leadsheet": {
+    "method": "GET",
+    "path": "/v1.0/leadsheet/{clientId}/1/groups/{financialGroupId}?periodId={periodId}",
+    "fires_on": "page load when a system-generated leadsheet opens",
+    "response_shape": {
+      "engagementId": "integer",
+      "group": {"financialGroupId": "integer", "name": "string", "number": "string"},
+      "subGroupBalances": [
+        {"account": [{"account": {"id": "integer — referenceId for all annotation calls", "number": "string e.g. '20000-300'", "name": "string", "accountGuid": "GUID"}}]}
+      ],
+      "comments": "string — current comment-box text ('' if none)"
+    },
+    "notes": [
+      "account.id (referenceId) is a CCH-internal integer — NOT the account number string",
+      "Account number uses a 5-digit prefix: '20000-300', not '2000-300' — match exactly",
+      "Confirmed on NIN: 20000-200 -> referenceId 7358067; 20000-300 -> referenceId 7358153"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "operation": "list clients — the firm's full client roster (paged)",
+  "method": "GET",
+  "url": "https://api.suralink.com/v2/organization/{organizationId}/clients",
+  "auth": "session cookie; fetch with credentials:'include'",
+  "query": {
+    "limit": "page size — CAPPED AT 100 server-side regardless of the value sent",
+    "offset": "0-based row offset; page with 0, 100, 200, ..."
+  },
+  "success": {
+    "status": 200,
+    "body": {
+      "totalCount": "total clients in the firm",
+      "offset": "echo of the offset",
+      "limit": "echo of the effective limit (<=100)",
+      "data": "array of client objects",
+      "nextPage": "cursor/url string for the next page (offset paging also works)"
+    },
+    "clientObject": "{ id (clientId, integer), customId (firm's client code), createdAt, name, state, contactFirstName, contactLastName, contactEmail, departmentId, isSensitive, lastLogin, isAssigned }"
+  },
+  "errors": {
+    "401": "session expired / not logged in"
+  },
+  "notes": "Enumerate everything by looping offset until offset + len(data) >= totalCount. This response does NOT include each client's engagements — use the getClientInfo gateway (gw_getClientInfo.json) for that.",
+  "script": "scripts/suralink.py :: list_clients_page_js  (needs organizationId from get_org_id_js)",
+  "validated": "2026-05-23 — firm f65b4c53... returned totalCount 249, 100/page"
+}

@@ -1,0 +1,84 @@
+AID-301S	AID_300_SA_APPLCBLTY	AID-301S Single Audit Applicability and  Det Form 	300
+AID-302S	AID_300_SUBVSVENDOR	AID-302S Subrecipient versus Contractor Considerations	300
+AID-602S	AID_600_ASSESSINTAUD	AID-602S Undstdg and Prelim Assessmt of Internal Aud Function	600
+AID-601S	AID_600_RELY_INT_AIDITORS	AID-601S Considering the Use of the Work of Int Audit Function	600
+AID-701S	AID_700_INT_CONTROLS	AID-701S Aud Sampling Wksht for Tests of Cntrls over Compl	700
+AID-702S	AID_700_SAMATRIXCMPLREQ	AID-702S Matrix of Compliance Requirements	700
+AID-801S	AID_800_AID_SAMPLE_WKST	AID-801S Aud Smpl Wks-Substantive Tests of Compliance	800
+AID-303S	AID_800_COM_AUDMAT	AID-303S Determining Compliance Audit Materiality	300
+AID-802S	AID_800_DUALPURPOSE	AID-802S Dual-Purpose Testing Worksheet	800
+AID-847S	AID_800_SERVAUDIT	AID-847S Service Organization Report Results Analysis	800
+AID-902S	AID_900_CHG_AUDIT_DOC	AID-902S Changes to Audit Doc after Rpt Rel Unif Guid Cmpl Aud	900
+AID-901S	AID_900_DIFF_PROF_OP	AID-901S Differ of Prof Opinion Uniform Guidance Compl Audit	900
+AID-903S	AID_900_REPORTPREPPOSTSAS134	AID-903S Audit Report Preparation Checklist	900
+AUD-101S	AUD_100_OVERALL_AUD_PROG	AUD-101S Overall Audit Program Uniform Guid Audit of Fed Awards	100
+AUD-100S	AUD_100_TAILORING_QUESTIONS	AUD-100S Engagement-Level Tailoring Questions	100
+AUD-601S	AUD_600_INTERNAL_AUD_WORK	AUD-601S Audit Program Testing Internal Auditor Function	600
+AUD-701S	AUD_700	AUD-701S Audit Program Designing Tests of Cntrls over Compl	700
+AUD-817S	AUD_800_SEFA	AUD-817S Audit Prog Schedule of Expenditures of Federal Awards	800
+AUD-901S	AUD_900_SUBSEQ_EVENTS	AUD-901S Audit Program Subsequent Events	900
+COR-202S	COR_200_ENGLTRCSB	COR-202S SA Eng Letter: Gov Entity Integrated Audit	200
+COR-201S	COR_200_ENGLTRSB	COR-201S Single Audit Eng Letter Governmental Entity	200
+COR-215S	COR_200_GOVERNANCE	COR-215S Comm with Those Charged with Gov during Planning	200
+COR-204S	COR_200_NFPLTRCSB	COR-204S SA Eng Letter NFP Entity, Integrated Audit	200
+COR-203S	COR_200_NFPLTRSB	COR-203S Single Audit Eng Letter Not-for-Profit Entity	200
+COR-206S	COR_200_PREDAUD	COR-206S Communication w Pred Aud Prior to Client-Engg Acc	200
+COR-205S	COR_200_PROGRAMENGLT_SB	COR-205S Program-Specific Audit Engagement Letter	200
+COR-207S	COR_200_RELREQ	COR-207S Req from Client to Pred Aud to Rel Info to Successor	200
+COR-801S	COR_800_CONFEDAWRDS	COR-801S Request for Confirmation of Federal Awards	800
+COR-904S	COR_900_COMMMATWEAKNOPILOT_SAS115	COR-904S Comm of Sig Def and Mat Weak, Prior to Compl of Audit	900
+COR-902S	COR_900_MGMTREPLTRNFPSB	COR-902S Rep Ltr Not-for-Profit Entity Single Audit	900
+COR-903S	COR_900_MGMTREPLTRSASSB	COR-903S Rep Ltr Single Audit Representations Only	900
+COR-901S	COR_900_MGMTREPLTRSB	COR-901S Rep Ltr Government Entity Single Audit	900
+KBA-104S	KBA_100_CTRLDEF	KBA-104S Eval and Comm Deficiencies in Internal Cntrl Over Compl	100
+KBA-101S	KBA_100_OVERALLAUDSTRTG	KBA-101S Overall Uniform Guidance Compliance Audit Strategy	100
+KBA-102S	KBA_100_SIGMTRS	KBA-102S Uniform Guidance Compliance Audit Significant Matters	100
+KBA-103SE	KBA_100_SUMEVALNONCOMPE	KBA-103SE Summary and Evaluation of Noncompliance	100
+KBA-301S	KBA_300_MATTOLMISSTHRESH	KBA-301S  and Compliance Requirement Materiality	300
+KBA-303S	KBA_300_MGMTRISKFRAUD	KBA-303S Inquiries of Mgmt about Risks of Fraud in Compl Audit	300
+KBA-302S	KBA_300_UNDSTDENTITY	KBA-302S Understndng Entity and Its Program Envirnmnt	300
+KBA-401S	KBA_400_ENTITYLVLCTRLS	KBA-401S Understanding Entity-Level Cntrls over Comp	400
+AID-401S	KBA_400_GENITCTRLS	AID-401S Understanding General IT Controls over Compliance	400
+KBA-503S	KBA_500_IRMEMO	KBA-503S Basis for Assessment of Inherent Risk of Noncompliance	500
+KBA-501S	KBA_500_ROMM	KBA-501S Team Discussion of Risks of Material Noncompliance	500
+KBA-902S	KBA_900_AUDREVAPRV	KBA-902S Compliance Audit Review and Approval Checklist	900
+KBA-901S	KBA_900_FSDCA	KBA-901S SEFA Awards Presentation and Disclosures Checklist	900
+KBA-903S	KBA_900_TAXSPECREV	KBA-903S Compliance Audit Documentation Checklist	900
+KCO-003	KCO_ANSWEREFFECT	KCO-003 AEs for the Engagement-Level TQs Workpaper	000
+KCO-002	KCO_MARKNA	KCO-002 Answer Effects for the Program Step Library	000
+RES-023S	RES_BASISPRESCREG	RES-023S Summary Schedule of Prior Findings 	000
+RES-002S	RES_BROADREQ	RES-002S Index of Programs, Forms, and Other Practice Aids 	000
+RES-024S	RES_CASHBASIS	RES-024S Corrective Action Plan	000
+RES-007S	RES_EFFECTIVEWALKTHROUGHS	RES-007S Performing Effective Walkthroughs and Making Inquiries	000
+RES-003S	RES_INDEX	RES-003S Government Auditing Standards and Single Audits	000
+RES-001S	RES_KBAMETHODOVERVIEW	RES-001S KBA Methodology Overview for Single Audits	000
+RES-QCA	RES_QCSTANDARDS	RES-QCA Meeting Quality Control Standards Using KBA Audit Tools	000
+RES-QM	RES_QMSTANDARDS	RES-QM Meeting QM Standards Using KBA Audit Tools SAS-146	000
+RES-004S	RES_SAMPLINGTESTCONTROLS	RES-004S Sampling Guidance for Tests of Controls over Compliance	000
+RES-005S	RES_SAMPLINGTESTDETAILS	RES-005S Sampling Guidance for Substantive Tests of Compliance	000
+RES-022S	RES_SELECTCOST	RES-022S Selected Items of Cost	000
+KCO-001	RES_TITLEOVERVIEW	KCO-001 Single Audit Title Overview for Knowledge Coach	000
+RES-008S	RES_UNDERSTANDINGENTITY	RES-008S Controls Over Compliance Ex of Activity and Principles	000
+RES-009S	RES_WCGW_ACTIVITIES	RES-009S Ex of "What Can Go Wrong" Activities and Allowed Cost	000
+RES-010S	RES_WCGW_CASHMGMGT	RES-010S Examples of "What Can Go Wrong" Cash Management	000
+RES-012S	RES_WCGW_ELIGIBILITY	RES-012S Examples of "What Can Go Wrong" Eligibility	000
+RES-013S	RES_WCGW_EQUIPMENT	RES-013S Ex of "What Can Go Wrong" Equip, Property Management	000
+RES-014S	RES_WCGW_MATCHING	RES-014S Ex of "What Can Go Wrong" Matching, LoE, Earmarking	000
+RES-015S	RES_WCGW_PERIODAVAILABLE	RES-015S Ex of "What Can Go Wrong" Period of Perf Fed Funds	000
+RES-016S	RES_WCGW_PROCUREMENT	RES-016S Ex of "What Can Go Wrong" Procurement, Suspens, Debar	000
+RES-018S	RES_WCGW_PROINCOME	RES-018S Ex of "What Can Go Wrong" Program Income	000
+RES-019S	RES_WCGW_REPORTING	RES-019S Examples of "What Can Go Wrong" Reporting	000
+RES-020S	RES_WCGW_SUBRECIPIENT	RES-020S Ex of "What Can Go Wrong" Subrecipient Monitoring  	000
+RPT-930S	RPT_900_AUDITOPTPOST134	RPT-930S Unmod Op - Program Specific Audit (Unif Guid)	900
+RPT-928S	RPT_900_DISCUNMODMATWEAKUNIFGUIDE	RPT-928S Disclaimer of Opinion on Compliance	900
+RPT-924S	RPT_900_MATWEAKPOST134	RPT-924S Unmod Op with Mat Weak (Uniform Guidance)	900
+RPT-922S	RPT_900_NONCOMPPOST134	RPT-922S Unmod Op and No Findings (Uniform Guidance)	900
+RPT-920S	RPT_900_REQSUPPOST134	RPT-920S Unmod Op Gov FS Required Suple with SEFA	900
+RPT-932S	RPT_900_SCHEXPENDPOST134	RPT-932S Report on SEFA under AU-C 805	900
+RPT-923S	RPT_900_SIGDEFSPOST134	RPT-923S Unmod Op with Sign Defi (Uniform Guidance)	900
+RPT-931S	RPT_900_UNMODAUDITOPT134	RPT-931S Unmod Op on Compliance No Findings (Unif Guid)	900
+RPT-921S	RPT_900_UNMODFEDAWARDPOST134	RPT-921S Unmodified Opinion NFP FS Suple with SEFA	900
+RPT-927S	RPT_900_UNMODMATWEAKPOST134	RPT-927S Adv and Unmod Op with Mat Weak (Unif Guid)	900
+RPT-925S	RPT_900_UNMODNONCOMPOST134	RPT-925S Qual Op, Sign Cntrl Def, Mat Weak (Unif Guid)	900
+RPT-926S	RPT_900_UNMODSIGDEFSPOST134	RPT-926S Qual Op, Scope Limit, Sign Def, MW (Unif Guid)	900
+RPT-908S	RPT_900_UNQPYRESTPROCSUFF	RPT-908S Schedule of Findings and Questioned Costs	900

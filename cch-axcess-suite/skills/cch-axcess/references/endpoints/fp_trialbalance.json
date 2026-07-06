@@ -1,0 +1,51 @@
+{
+  "operation": "fp_trialbalance",
+  "purpose": "Read the grouped trial balance rows for one grouping list + period. The balances[] row schema documented here is the source of truth for account/group/subgroup/fund keys (documented 2026-06-05 from live NIN/BT3 captures).",
+  "request": {
+    "method": "GET",
+    "url": "https://financialprep-api.cchaxcess.com/v1.0/financialTrialBalance/{clientId}/{financialListId}/trialbalance/{periodId}?skip={skip}&take={take}",
+    "url_notes": {
+      "clientId": "Axcess clientId (first int in the engagement URL)",
+      "financialListId": "grouping list id from GET /v1.0/financialList/{clientId} (the AUTHORITATIVE list inventory — not financialgrouptemplate)",
+      "periodId": "engagement period id; the CURRENT period id equals the URL's engagementId. Prior-period ids come from the engagement/period metadata (GET /v1.0/engagement/{clientId}) or the report-settings dialog captures.",
+      "skip_take": "PAGINATION IS MANDATORY for full reads: without ?skip&take the endpoint returns only the FIRST 50 accounts while the body's accountCount shows the true total — a silent partial read. Use scripts.groups.get_trialbalance_grouped_all (loops pages)."
+    },
+    "headers": "ls:fp sentinel (KC localStorage, any kc-token tab) OR monkeypatch-captured WPM-leg headers from the engagement tab (bearer accepted by financialprep-api — validated 2026-06-05). XHR transport, never fetch.",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "shape": {
+      "accountCount": "int — TRUE total row count; compare against merged page length",
+      "balances": [
+        {
+          "account": {
+            "id": "int — CCH-internal account id (the referenceId used by FP annotations; NOT the account-number string)",
+            "accountNumber": "string — e.g. '10010-201' (fund engagements suffix the fund)",
+            "accountName": "string",
+            "group": "string|null — financial GROUP name in this grouping list",
+            "financialSubGroup": "string|null — the SUBGROUP key. ⚠ THIS is the populated field.",
+            "subGroup": "ALWAYS NULL — legacy field name; reading it instead of financialSubGroup silently nulls every subgroup (the NIN package bug). Do not use.",
+            "fund": "string|null — fund name/number on fund engagements; null on non-fund",
+            "accountTypeClassificationId": "int — see config/group_account_types.json"
+          },
+          "periods": {
+            "current": {
+              "unadjustedBalance": "number",
+              "adjustedBalance": "number",
+              "finalBalance": "number",
+              "sign_convention": "⚠ CREDITS POSITIVE (API-internal). This is NOT the TB import/export convention (debits positive) — FLIP SIGNS when building import files or comparing to exports. See modules/import-tb-format.md (provenance corrected 2026-06-05)."
+            }
+          }
+        }
+      ]
+    },
+    "notes": [
+      "Row array key is `balances` in current captures, but resolution should stay shape-agnostic (body | body.accounts | body.balances | body.trialBalance | first array prop) — scripts.groups.get_trialbalance_grouped_all already does this.",
+      "Period sub-objects beyond `current` appear when the engagement carries comparative periods; same balance-field shape.",
+      "accountCount is on the top-level body, not per page — use it as the loop terminator."
+    ]
+  },
+  "verify": "Merged row count == accountCount; spot-check one known account's finalBalance against the TB report (remember the sign flip vs exports).",
+  "captured": "2026-06-05 — NIN / BT3 live sessions; documented during the AX-27 batch rebuild (docket item 3b)."
+}

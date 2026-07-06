@@ -1,0 +1,24 @@
+{
+  "operation": "wpm_folder_rename",
+  "purpose": "Rename and/or re-index an existing binder folder. The remediation path for wrong folder names (e.g. the double-index bug).",
+  "host": "workpapermanagementapi.cchaxcess.com",
+  "method": "PUT",
+  "path": "/v1/NewEngagementView/{clientId}/folder",
+  "transport": "XMLHttpRequest (fetch fails CORS preflight; works from KC tab)",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept", "Content-Type"],
+  "header_case_notes": {"IDToken": "ALL-CAPS on WPM"},
+  "body_template": {
+    "oldLocationId": "{locationId of the folder being renamed — THE load-bearing field}",
+    "engagementId": "{clientId}  // misnamed — value is the Axcess clientId, not engagementId",
+    "folderIndex": "{index string, e.g. '01'}",
+    "folderName": "{CLEAN descriptive name, NO index prefix}"
+  },
+  "response": "empty body on 200 — verify via follow-up folder_get",
+  "gotchas": [
+    "Field must be oldLocationId. Using locationId returns 400 'Error Updating Folder. Parent not found.'",
+    "PUT/PATCH on /v1/NewEngagementView/folder/{locationId} return 405; PUT /v1/Documents/{clientId}/{locId} returns 500 (folders are not Documents).",
+    "folderName must NOT embed the index prefix — the binder UI renders folderIndex and folderName separately ('01 | 01 Front of File' double-index bug)."
+  ],
+  "captured": "2026-06-03 — Properties-dialog monkeypatch, Coop playground binder; 24 folders batch-renamed at 200 from KC tab",
+  "script": "scripts.wpm.rename_folder"
+}

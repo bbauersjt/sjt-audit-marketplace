@@ -1,0 +1,78 @@
+{
+  "operation": "funds_account_map",
+  "purpose": "Read and mutate the account-to-fund assignment map. Used by the Accounts tab on the Fund TB Setup screen.",
+  "host": "workbench-api.cchaxcess.com",
+  "endpoints": {
+    "get": {
+      "method": "GET",
+      "path": "/v1/Fund/{clientId}/fundaccountmap",
+      "script_function": "scripts.funds.get_fund_account_map(client_id, headers)"
+    },
+    "assign": {
+      "method": "PUT",
+      "path": "/v1/Fund/{clientId}/fundassignment",
+      "script_function": "scripts.funds.assign_account(client_id, fund_id, account_ids, headers)"
+    },
+    "unassign": {
+      "method": "PUT",
+      "path": "/v1/Fund/{clientId}/fundassignment",
+      "script_function": "scripts.funds.unassign_account(client_id, account_ids, headers)"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept"],
+  "request_body_shape_assign": {
+    "fundId": "int (the Fund.id to assign to)",
+    "accountId": "array<int> (one or more TB account ids - same id you see in the TB row)"
+  },
+  "request_body_shape_unassign": {
+    "accountId": "array<int>"
+  },
+  "response_shape_get": {
+    "kind": "object wrapper",
+    "envelope": {"fundAccountMapDtos": "array", "engagementId": "int (clientId)"},
+    "rows": [
+      {
+        "accountId": "int",
+        "accountGuid": "GUID",
+        "accountName": "string",
+        "accountNumber": "string",
+        "fund": "object (embedded) OR ABSENT for unassigned accounts"
+      }
+    ],
+    "embedded_fund_shape": {
+      "fundId": "int",
+      "fundGuid": "GUID",
+      "fundName": "string",
+      "fundIndex": "string",
+      "sortOrder": "int"
+    },
+    "unassigned_signature": "The `fund` key is OMITTED for unassigned accounts (not set to null). Use scripts.funds.split_assigned() to partition the DTOs."
+  },
+  "response_shape_get": {
+    "kind": "object wrapper",
+    "envelope": {"fundAccountMapDtos": "array", "engagementId": "int"},
+    "rows": [
+      {
+        "accountId": "int",
+        "accountGuid": "GUID",
+        "accountName": "string",
+        "accountNumber": "string",
+        "fund": "object (embedded fund subset) OR ABSENT for unassigned accounts"
+      }
+    ],
+    "embedded_fund_shape": {
+      "fundId": "int",
+      "fundGuid": "GUID",
+      "fundName": "string",
+      "fundIndex": "string",
+      "sortOrder": "int"
+    },
+    "unassigned_signature": "The `fund` key is OMITTED for unassigned accounts (not set to null). Use scripts.funds.split_assigned() to partition the DTOs."
+  },
+  "semantics": {
+    "incremental_not_whole_list": "Unlike the FundType / Fund / FundSubType PUTs, this one is INCREMENTAL. Only the accounts in account_ids are affected; other assignments stay put.",
+    "unassign_signature": "Omitting the fundId key entirely is what tells the server 'send these accounts back to Unassigned'. A null fundId is NOT equivalent - the field must be absent.",
+    "batch_assign": "accountId is an array, so multiple accounts can be assigned to one fund in a single call. Different funds still need separate calls."
+  },
+  "verification": "After mutate, GET /v1/Fund/{clientId}/fundaccountmap and confirm the affected accountId rows have the expected fundId (or are missing if unassigned)."
+}

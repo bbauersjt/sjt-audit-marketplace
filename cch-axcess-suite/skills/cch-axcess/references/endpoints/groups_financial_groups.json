@@ -1,0 +1,78 @@
+{
+  "operation": "groups_financial_groups",
+  "purpose": "List, create, reorder, and (TBD) update TB groupings within a financialList. Groups are the actual codes (e.g. 1000 Cash, 1400 Prepaid).",
+  "host": "financialprep-api.cchaxcess.com",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/v1.0/FinancialGroup/{clientId}/{financialListId}",
+      "script_function": "scripts.groups.list_financial_groups(client_id, financial_list_id, headers)"
+    },
+    "create": {
+      "method": "POST",
+      "path": "/v1.0/FinancialGroup",
+      "body_signal": "financialGroupId = INSERT-AFTER ANCHOR (NOT a create/update flag). 0 = only for first group into an EMPTY list; otherwise the PRECEDING group's id.",
+      "script_function": "scripts.groups.create_financial_group(client_id, financial_list_id, index, name, account_type_id, classification_id, headers, anchor_group_id=0)",
+      "bulk": "scripts.groups.build_chain_create_groups_js(client_id, financial_list_id, groups, headers, start_anchor=0) - one browser call, threads the anchor across N creates",
+      "verification_status": "anchor rule live-captured 2026-05-30 (clientId 100173). Sending 0 into a non-empty list -> HTTP 400 'Invalid financial group.'"
+    },
+    "reorder": {
+      "method": "PUT",
+      "path": "/v1.0/FinancialGroup",
+      "body_signal": "full group object + positionFinancialGroupId (anchor) + positionId (0=before/above, 1=after/below). financialGroupIds are stable across reorders.",
+      "script_function": "scripts.groups.move_financial_group(client_id, financial_list_id, group, anchor_group_id, position, headers)",
+      "bulk": "scripts.groups.build_reorder_groups_js(client_id, financial_list_id, ordered_groups, headers, sort_by_index=True) - ascending-sort chain, each group PUT after its predecessor",
+      "verification_status": "live-validated 2026-05-30: 29 moves -> clean 1000->7000 ascending order"
+    },
+    "update": {
+      "method": "PUT",
+      "path": "/v1.0/FinancialGroup",
+      "body_signal": "rename / reclassify / re-index an EXISTING group. Body = the reorder PUT shape (full account-type trio + positionFinancialGroupId + positionId) with the edited index/name/classification.",
+      "script_function": "scripts.groups.update_financial_group(client_id, financial_list_id, financial_group_id, index, name, account_type_id, classification_id, anchor_group_id, headers, position=1)",
+      "verification_status": "LIVE-VERIFIED 2026-05-31 (clientId 100173, list 14737): renamed a group in place via PUT (count unchanged). The old POST-with-own-id is CONFIRMED WRONG — it created a duplicate group. PUT also REQUIRES a position anchor (positionFinancialGroupId+positionId) or 400 'Invalid group location'; to edit without moving, anchor on the group currently directly above the target with position=1."
+    },
+    "list_types": {
+      "method": "GET",
+      "path": "/v1.0/FinancialGroup/{clientId}/groupaccounttypes",
+      "purpose": "Returns accountType array with nested classifications. Same data bundled at config/group_account_types.json - read that instead of calling the network if you already know the classification name.",
+      "script_function": "scripts.groups.list_group_account_types(client_id, headers)"
+    }
+  },
+  "headers_required": ["Authorization", "IDToken", "Accept", "Content-Type (writes only)"],
+  "request_body_shape_create": {
+    "engagementId": "int (clientId)",
+    "consolidatedEngagementId": "null (for non-consolidated)",
+    "index": "string (e.g. '1000', '1400')",
+    "name": "string (e.g. 'Cash & Equivalents') -- UNIQUE KEY within a list",
+    "accountTypeId": "int (1=Asset, 2=Liability, 3=Equity, 4=Revenue, 5=Expense)",
+    "accountTypeClassificationId": "int (1..10 - see config/group_account_types.json)",
+    "positionId": "int (0 on create)",
+    "financialListId": "int (the parent list id)",
+    "financialGroupId": "int INSERT-AFTER ANCHOR (0 = first into empty list; else preceding group's id)"
+  },
+  "request_body_shape_reorder_put": {
+    "engagementId": "int (clientId)",
+    "consolidatedEngagementId": "null",
+    "financialGroupId": "int (the group being moved)",
+    "index": "string",
+    "name": "string",
+    "accountType": "string REQUIRED (the type string, e.g. 'Asset') - from GET row's type.acctType. Omitting -> 400 'Invalid account type.'",
+    "accountTypeId": "int REQUIRED - from GET row's type.accountTypeId",
+    "accountTypeClassificationId": "int REQUIRED - NOT in the GET row; resolve from the classification NAME (group.classification). Omitting -> 400 'Invalid account type classification.'",
+    "financialListId": "int",
+    "positionFinancialGroupId": "int (anchor group's id)",
+    "positionId": "int (0=before/above anchor, 1=after/below anchor)"
+  },
+  "_reorder_put_field_note": "Corrected 2026-05-31: the reorder PUT requires the FULL account-type trio (accountType STRING + accountTypeId + accountTypeClassificationId) - unlike the create POST. The list_financial_groups GET nests accountType/accountTypeId under type{} and gives classification by NAME only, so the int classification id must be resolved. scripts.groups._group_put_type_fields() does this; build_reorder_groups_js() / move_financial_group() pass GET rows straight through.",
+  "semantics": {
+    "anchor_rule": "financialGroupId on POST is an insert-after anchor, not a create/update flag. Bulk create must chain: create -> read returned financialGroupId -> use as next anchor.",
+    "name_is_unique_key": "Two groups in one list with the same NAME -> HTTP 400 'Group name exists.' Index uniqueness is NOT the constraint; name is.",
+    "display_is_LIFO": "Created groups display newest-on-top until reordered (each insert lands at order 0). Use the reorder PUT chain to sort ascending.",
+    "abbreviation_is_truth": "accountTypeId + accountTypeClassificationId are integer FKs but UI behavior keys off the accountType abbreviation (A/L/E/R/X). See config/group_account_types.json.",
+    "create_response": "POST returns {financialGroupId, financialGroupGuid}."
+  },
+  "open_follow_ups": [
+    "delete endpoint not captured",
+    "positionId semantics on CREATE (always 0 observed)"
+  ]
+}

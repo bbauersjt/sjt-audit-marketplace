@@ -1,0 +1,27 @@
+{
+  "operation": "kc_update_property",
+  "purpose": "Write a single answer/property on a KC form. One field per call.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "method": "POST",
+  "path": "/api/Workpaper/UpdateProperty/{engagementGuid}/{workpaperId}",
+  "headers_required": ["Authorization", "IdToken", "Accept", "Content-Type"],
+  "body_template": {
+    "collectionKey": "string — the collection's path (e.g. '.AUD100.OverAllTailoringQuestions')",
+    "objectKey": "string — the row's key",
+    "propertyKey": "string — the renderProperty's key in its ORIGINAL CASE as seen in the GET",
+    "value": "string — display text (for dropdowns, must match a floatieItemList entry)",
+    "valueKey": "string — dropdown valueKey (empty string for free text)",
+    "dataEntryExpression": "''",
+    "dataEntryExpressionContextObjectKey": "''"
+  },
+  "concurrency_rule": "SEQUENTIAL ONLY — parallel POSTs to the same form drop writes (server race condition).",
+  "multi_value_fields": {
+    "description": "Some properties (Risks on .{AREA}.ProgramSteps; PlannedAuditApproach single-option writes) accept multi-value via semicolon-joined values.",
+    "Risks_property": "FULL-STATE REPLACEMENT. value/valueKey are semicolon-joined with TRAILING SEMI (e.g. 'A;B;C;'). To add one, send existing + new. To remove one, send existing minus that one.",
+    "PlannedAuditApproach": "Single canonical valueKey per call (COMBINED, ANALYTICAL, INDEPTH). One POST per checkbox.",
+    "unknown_codes": "Sending unknown codes in a semicolon-joined value returns 500 'Index was outside the bounds of the array'."
+  },
+  "verification": "Response echoes the full updated form — no separate verify GET needed for happy path. But after batch + submit, do one re-GET to confirm state==3.",
+  "validated_on": ["AUD-801 Cash 2026-05-20 — IR, PlannedAuditApproach (INDEPTH on 5 assertions), Risks (6 step rows)"],
+  "script_function": "scripts.kc.update_property(eng_guid, wp_id, payload, headers)  # caller is responsible for sequential dispatch"
+}

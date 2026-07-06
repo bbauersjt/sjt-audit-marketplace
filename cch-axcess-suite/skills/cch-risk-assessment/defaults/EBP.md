@@ -1,0 +1,180 @@
+# EBP — Employee Benefit Plans
+
+PPC-derived CCH inherent risk defaults. CR defaults to MAX. Tune per engagement.
+
+## Contributions Received and Receivable
+
+| Assertion | IR |
+|---|---|
+| EO | MOD |
+| RO | LOW |
+| CO | LOW |
+| AV | LOW |
+| CU | MOD |
+| UC | LOW |
+
+## Investments, Derivatives, and Related Incomes
+
+| Assertion | IR |
+|---|---|
+| EO | MOD |
+| RO | MOD |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | MOD |
+
+## Contracts with Insurance Companies
+
+| Assertion | IR |
+|---|---|
+| EO | MOD |
+| RO | MOD |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | MOD |
+
+## Participant Data and Employee Contributions
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | MOD |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | LOW |
+
+## Benefit Payments
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | LOW |
+| CO | LOW |
+| AV | LOW |
+| CU | LOW |
+| UC | LOW |
+
+## Participant Accounts and Benefit Obligatons
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | LOW |
+| CO | LOW |
+| AV | LOW |
+| CU | LOW |
+| UC | LOW |
+
+## Cash
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | LOW |
+| CO | LOW |
+| AV | LOW |
+| CU | LOW |
+| UC | LOW |
+
+## Notes Receivable from Participants
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | MOD |
+| CO | MOD |
+| AV | LOW |
+| CU | MOD |
+| UC | LOW |
+
+## Property and Equipment Used in Operations
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | LOW |
+| CO | MOD |
+| AV | MOD |
+| CU | MOD |
+| UC | MOD |
+
+## Accounts Payable and Accrued Expenses
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | MOD |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | MOD |
+
+## Loans Payable
+
+| Assertion | IR |
+|---|---|
+| EO | LOW |
+| RO | MOD |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | LOW |
+
+## Operating Expenses
+
+| Assertion | IR |
+|---|---|
+| EO | MOD |
+| RO | LOW |
+| CO | LOW |
+| AV | MOD |
+| CU | LOW |
+| UC | MOD |
+
+---
+
+## Universal risk-area defaults (apply to all entity types)
+
+These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaults. CCH-determined applicable assertions only — empty assertions are N/A for the area. CR defaults to MAX; RMM derives from IR×CR (will equal IR when CR=MAX).
+
+### Journal Entries (JE2 / AUD-816)
+
+| Assertion | IR |
+|---|---|
+| EO | MOD |
+| CO | LOW |
+| AV | LOW |
+| UC | LOW |
+
+### Related Party Transactions (RPTRNS2 / AUD-817)
+
+| Assertion | IR |
+|---|---|
+| CO | LOW |
+| AV | LOW |
+| UC | MOD |
+
+### Fair Value Measurements and Disclosures (FAIRVALUE2 / AUD-818)
+
+| Assertion | IR |
+|---|---|
+| AV | MOD |
+| UC | MOD |
+
+### Commitments and Contingencies (COMMIT / AUD-819)
+
+| Assertion | IR |
+|---|---|
+| CO | MOD |
+| AV | MOD |
+| UC | MOD |
+
+### Concentrations (CONCENT / AUD-821)
+
+| Assertion | IR |
+|---|---|
+| CO | LOW |
+| UC | LOW |

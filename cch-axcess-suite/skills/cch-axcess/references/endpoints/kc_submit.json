@@ -1,0 +1,11 @@
+{
+  "operation": "kc_submit",
+  "purpose": "Commit pending writes so engagement-view side sees them. Without this, diagnostic counts don't update.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "method": "POST",
+  "path": "/api/Workpaper/submit",
+  "headers_required": ["Authorization", "IdToken", "Accept", "Content-Type"],
+  "body_template": {"binderId": "<engagementGuid>", "workpaperId": ""},
+  "notes": "Empty workpaperId = submit ALL pending forms in the binder. This is what the user-facing 'Submit All KC Changes' button does.",
+  "script_function": "scripts.kc.submit(eng_guid, headers)"
+}

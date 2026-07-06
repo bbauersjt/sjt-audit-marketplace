@@ -1,0 +1,19 @@
+{
+  "operation": "kc_toggle_step",
+  "purpose": "Move program steps between library (visible:false) and active (visible:true) on AUD-8xx forms. One POST per form, full-state replacement.",
+  "host": "knowledgecoach.cchaxcess.com",
+  "method": "POST",
+  "path": "/api/Workpaper/UpdateProgramStep",
+  "headers_required": ["Authorization", "IdToken", "Accept", "Content-Type"],
+  "body_template": {
+    "binderId": "<engagementGuid>",
+    "workpaperId": "<AUD-8xx workpaperId>",
+    "value": "<stepKey1>;<stepKey2>;...  (NO trailing semi — different from Risks property convention)"
+  },
+  "semantics": {
+    "full_state_replacement": "Every POST replaces the entire visible-step set. To add one step, send (current_visible_keys + new_key). To remove one, send (current minus that key). Empty string = clear all.",
+    "child_substeps": "For each visible parent step, include its key AND every key from its childObjectList that should also be visible. Order doesn't matter — server canonicalizes."
+  },
+  "validated_on": ["AUD-802 APNM 2025 — added Debt and Equity Investments step (parent + 1 sub-step)"],
+  "script_function": "scripts.kc.toggle_program_step(eng_guid, wp_id, visible_keys, headers)"
+}

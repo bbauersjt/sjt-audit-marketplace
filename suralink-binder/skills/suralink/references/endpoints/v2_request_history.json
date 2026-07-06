@@ -1,0 +1,20 @@
+{
+  "operation": "request history — activity log for one request",
+  "method": "GET",
+  "url": "https://api.suralink.com/v2/request/{requestId}/history",
+  "auth": "session cookie; fetch with credentials:'include'",
+  "path": {
+    "requestId": "the canonical 8-digit request id"
+  },
+  "query": {
+    "limit": "page size (e.g. 20)",
+    "offset": "page offset",
+    "organizationId": "the firm GUID",
+    "requestListId": "the auditId"
+  },
+  "success": { "status": 200, "body": "JSON history payload" },
+  "errors": { "401": "not logged in / session expired" },
+  "script": "build the URL, call scripts/browser.py :: js_get_json",
+  "validated": "2026-05-22 — confirmed 200 with cookies, 401 without",
+  "note": "captured but not yet wrapped in a dedicated suralink.py function — add one if a workflow needs request history"
+}

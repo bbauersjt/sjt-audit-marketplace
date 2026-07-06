@@ -1,0 +1,26 @@
+{
+  "operation": "wpm_replace_version",
+  "purpose": "Replace a workpaper's content in place (native 'Upload new version') — overwrites the same documentId with a new version. Distinct from the ADD-file POST /v1/Documents/{clientId} and from the soft-delete->evict->claim default replace.",
+  "host": "workpapermanagementapi.cchaxcess.com",
+  "method": "PUT",
+  "path": "/v1/Documents/file/{clientId}/{documentId}",
+  "transport": "in-page XHR (engagement->WPM cross-origin; fetch fails CORS). Embed file as base64 Blob/File so bytes never cross the tool channel (validated bridge pattern).",
+  "leg": "wpm",
+  "body": "multipart/form-data, single field 'file' = the File (named to MATCH the current display name).",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode"],
+  "success": {"status": 200, "body": "(empty)"},
+  "name_match_rule": {
+    "rule": "The uploaded file's BASE name must equal the workpaper's CURRENT DISPLAY NAME (not the original upload name, not derivable from the stored blob which is crypto-gibberish).",
+    "fail_status": 400,
+    "fail_body": "{\"errors\":[{\"message\":\"File name does not match existing workpaper name.\",\"exceptionType\":\"System.ArgumentException\"}],\"message\":\"The request data is invalid.\"}",
+    "evidence": [
+      "wrong name (blank-wp-2001 1.xlsx vs display blank-wp-2001.xlsx) -> 400",
+      "original name after display rename (blank-wp-2001.xlsx vs display blank-wp-2001 1) -> 400 [proves CURRENT display, not original]",
+      "matching name (blank-wp-2001 1.xlsx vs display blank-wp-2001 1) -> 200"
+    ],
+    "extension_note": "Display name carries no extension; the file does. Success matched base 'blank-wp-2001 1' to display 'blank-wp-2001 1' with the file as '.xlsx' — so match is on base name; keep the file's real extension."
+  },
+  "prereq": "Read the current display name from WPM metadata first (wpm.folder_get on the workpaper's folder -> row.name for the documentId). Build the upload File with that exact base name.",
+  "no_hard_delete": "This is an OVERWRITE (in-place new version), NOT a delete — fires no DELETE call (not the Kymera hazard). It is destructive-in-spirit (prior content survives only in CCH version history). file-io.md's DEFAULT remains soft-delete->evict->claim; offer this native path explicitly when the user wants a true in-place version.",
+  "validated_on": "2026-06-19 Coop / Axcess Blind Test 03 (client 100930, eng 393137, documentId 4097135) — 2 fail states + 1 success captured live."
+}

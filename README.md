@@ -1,27 +1,32 @@
-# SJT Audit Skills — Claude Code marketplace
+# SJT Group CPA — audit skills marketplace
 
-A [Claude Code](https://docs.claude.com/en/docs/claude-code) plugin marketplace from **SJT Group CPA**, cataloging the firm's audit skills as installable plugins.
+A Claude Code plugin marketplace (`sjt-skills`) of audit tools, plus a couple of loose skills.
 
-## Add the marketplace
+## Install
+
+Inside Claude Code:
 
 ```
 /plugin marketplace add bbauersjt/sjt-audit-marketplace
+/plugin install fs-review@sjt-skills
+/plugin install suralink-binder@sjt-skills
+/plugin install cch-axcess-suite@sjt-skills
+/plugin install chrome-bridge@sjt-skills
 ```
 
-## Install plugins
+Install only what you need — each plugin is independent. Full steps, the loose-skill
+installer, and the `chrome-bridge` setup notes are in [INSTALL.md](INSTALL.md).
 
-```
-/plugin install sjt-cch-axcess@sjt-audit-skills
-/plugin install sjt-cch-risk-assessment@sjt-audit-skills
-/plugin install sjt-cch-form-fill@sjt-audit-skills
-/plugin install sjt-audit-sampling@sjt-audit-skills
-/plugin install sjt-binder-organize@sjt-audit-skills
-/plugin install sjt-workpapers@sjt-audit-skills
-/plugin install sjt-workpaper-formatter@sjt-audit-skills
-/plugin install sjt-commercial-fs-review@sjt-audit-skills
-/plugin install sjt-nonprofit-fs-review@sjt-audit-skills
-/plugin install sjt-govt-fs-review@sjt-audit-skills
-/plugin install sjt-ebp-fs-review@sjt-audit-skills
-```
+## What's here
 
-Each plugin lives in its own repository under [github.com/bbauersjt](https://github.com/bbauersjt). The catalog is defined in [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json).
+| Plugin | Contains |
+|---|---|
+| `fs-review` | Technical proof & review of financial statements — commercial, nonprofit, governmental, EBP |
+| `suralink-binder` | Suralink portal pull, local mirror sync, and 4-digit indexed binder filing |
+| `cch-axcess-suite` | CCH Axcess / Knowledge Coach automation, risk assessment, and form filling |
+| `chrome-bridge` | MCP transport into an authenticated Chrome session (the relay the Suralink & CCH plugins use) |
+
+Loose skills (copied into `~/.claude/skills/` via `install.ps1`): `audit-sampling`, `trial-balance-prep`.
+
+---
+© SJT Group CPA

@@ -1,0 +1,112 @@
+audit_type,binding_key,tier,rule,select_group,condition,note
+ASB,AP,1,always,,,SURL required
+ASB,CASH,1,always,,,
+ASB,COMMIT,1,always,,,
+ASB,CONCENT,1,always,,,required concentration evaluation (ASC 275)
+ASB,EQUITY,1,always,,,
+ASB,ESTIMATES,1,always,,,
+ASB,JE2,1,always,,,
+ASB,OL,1,always,,,
+ASB,RPTRNS2,1,always,,,required RPT inquiry every audit (AU-C 550)
+ASB,BUSINESS,2,exists,,,occurred -> in
+ASB,DEBT,2,exists,,,
+ASB,FAIRVALUE2,2,exists,,,
+ASB,STOCK,2,exists,,,
+ASB,VIE2,2,exists,,,
+ASB,AR,3,material,,,principal revenue
+ASB,INCTAX,3,material,,,
+ASB,INTANG,3,material,,,
+ASB,INVENTORY,3,material,,,
+ASB,OTHREV,3,material,,,residual caption - exclude items in other programs (e.g. interest->DEBT)
+ASB,PP,3,material,,,
+ASB,PPE,3,material,,,
+CNS,AP,1,always,,,SURL required
+CNS,CASH,1,always,,,
+CNS,COMMIT,1,always,,,
+CNS,CONCENT,1,always,,,required concentration evaluation (ASC 275)
+CNS,EQUITY,1,always,,,
+CNS,ESTIMATES,1,always,,,
+CNS,JE2,1,always,,,
+CNS,OL,1,always,,,
+CNS,RPTRNS2,1,always,,,required RPT inquiry every audit (AU-C 550)
+CNS,BUSINESS,2,exists,,,occurred -> in
+CNS,DEBT,2,exists,,,
+CNS,FAIRVALUE2,2,exists,,,
+CNS,STOCK,2,exists,,,
+CNS,VIE2,2,exists,,,
+CNS,AR,3,material,,,receivables incl. retainage
+CNS,CONTRACT,3,material,,,principal revenue - over-time recognition
+CNS,INCTAX,3,material,,,
+CNS,INTANG,3,material,,,
+CNS,INVENTORY,3,material,,,
+CNS,OTHREV,3,material,,,residual caption - exclude items in other programs (e.g. interest->DEBT)
+CNS,PP,3,material,,,
+CNS,PPE,3,material,,,
+EBP,AR,1,always,,,principal revenue - employer/participant contributions
+EBP,AUD810,1,always,,,plan tax status / qualification
+EBP,AUD815,1,always,,,minutes & plan records
+EBP,BENEFITOBLIG,1,always,,DB/H&W only,actuarial PV of accumulated plan benefits
+EBP,COMMIT,1,always,,,
+EBP,CONCENT,1,always,,,
+EBP,ESTIMATES,1,always,,,
+EBP,PARTICIPANTA,1,always,,DC plan (default),participant data & accounts
+EBP,PARTICIPANTBEN,1,always,,DB plan only,
+EBP,PARTICIPANTHW,1,always,,H&W plan only,
+EBP,RPTRNS2,1,always,,,related party & party-in-interest (ERISA)
+EBP,BENEFIT,2,exists,,,
+EBP,CHANGES,2,exists,,provider/trustee change or first/short year,
+EBP,DEBT,2,exists,,,rare
+EBP,FAIRVALUE2,2,exists,,,
+EBP,INVEST,2,exists,EBP_INVESTMENTS,full scope / non-certified,binary: pick exactly one of EBP_INVESTMENTS
+EBP,JE2,2,exists,,,rarely present
+EBP,LIMITED,2,exists,EBP_INVESTMENTS,ERISA 103(a)(3)(C) certified - DEFAULT,binary: pick exactly one of EBP_INVESTMENTS
+EBP,PARTICIPANTNOTES,2,exists,,if plan permits loans,
+EBP,AP,3,material,,,
+EBP,CASH,3,material,,,plans rarely carry cash; trust holds assets
+EBP,OTHASSET,3,material,,,
+EBP,OTHREV,3,material,,,residual caption
+ALG,AP,1,always,,,SURL required
+ALG,CASH,1,always,,,
+ALG,COMMIT,1,always,,,
+ALG,CONCENT,1,always,,,required concentration evaluation (ASC 275)
+ALG,EQUITY,1,always,,,net position
+ALG,ESTIMATES,1,always,,,
+ALG,JE2,1,always,,,
+ALG,OL,1,always,,,
+ALG,RPTRNS2,1,always,,,required RPT inquiry every audit (AU-C 550)
+ALG,BUDGET2,2,exists,,,
+ALG,DEBT,2,exists,,,
+ALG,DERIVATIVE,2,exists,,,
+ALG,FAIRVALUE2,2,exists,,,
+ALG,INTERFUND,2,exists,,,
+ALG,LANDFILL,2,exists,,,
+ALG,SELF,2,exists,,,
+ALG,ERR,3,material,,,exchange revenue (fraud presumption)
+ALG,INVENTORY,3,material,,,
+ALG,INVEST,3,material,,,
+ALG,NER,3,material,,,principal nonexchange revenue
+ALG,OTHREV,3,material,,,residual caption
+ALG,PP,3,material,,,
+ALG,PPE,3,material,,,
+NPO,AP,1,always,,,SURL required
+NPO,CASH,1,always,,,
+NPO,COMMIT,1,always,,,
+NPO,CONCENT,1,always,,,required concentration evaluation (ASC 275)
+NPO,EQUITY,1,always,,,net assets
+NPO,ESTIMATES,1,always,,,
+NPO,JE2,1,always,,,
+NPO,OL,1,always,,,
+NPO,RPTRNS2,1,always,,,required RPT inquiry every audit (AU-C 550)
+NPO,BUSINESS,2,exists,,,occurred -> in
+NPO,DEBT,2,exists,,,
+NPO,FAIRVALUE2,2,exists,,,
+NPO,AR,3,material,,,exchange revenue (fraud presumption)
+NPO,INCTAX,3,material,,,UBI
+NPO,INTANG,3,material,,,
+NPO,INVENTORY,3,material,,,
+NPO,INVEST,3,material,,,
+NPO,OTHREV,3,material,,,residual caption
+NPO,PP,3,material,,,
+NPO,PPE,3,material,,,
+NPO,REVANDRECEIVABLESX,3,material,,,principal revenue - contributions/support/program
+NPO,SPLITINTX,3,material,,,

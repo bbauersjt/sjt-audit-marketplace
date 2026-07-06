@@ -1,0 +1,51 @@
+{
+  "operation": "fp_create_journal_entry",
+  "purpose": "Post an actual journal entry (AJE/RJE/PAJE/TJE) into the engagement trial balance via FinancialPrep. Distinct from workbench-api /v1/JournalEntryReport, which only creates a JE *report* workpaper.",
+  "host": "financialprep-api.cchaxcess.com",
+  "method": "POST",
+  "path": "/v1.0/journalentry",
+  "transport": "XMLHttpRequest (in-page; engagement→FP cross-origin fetch fails CORS)",
+  "leg": "wpm",
+  "success_status": 201,
+  "success_body": {"id": "<new journalEntryId>", "sequenceNumber": "<int>"},
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Content-Type"],
+  "body_template": {
+    "engagementId": "<clientId int — FP naming gotcha>",
+    "periodId": "<engagementId as STRING>",
+    "comment": "<free text>",
+    "journalEntryId": 0,
+    "journalEntryType": "<AJE|RJE|PAJE|TJE>",
+    "lineItems": [
+      {
+        "id": 0,
+        "accountId": "<FP internal account id int>",
+        "accountName": "<display>",
+        "accountNumber": "<display>",
+        "debit": {"value": "USD<amount.toFixed(2)>", "currency": "USD"},
+        "credit": {"currency": "USD"},
+        "m3Type": null,
+        "defaultM3": null
+      }
+    ],
+    "documentId": "<OPTIONAL int — WPM documentId of a referenced workpaper; omit if none>",
+    "rollforwardOption": 0,
+    "consolidatedEngagementId": null
+  },
+  "amount_format": "Money side: {value:'USD'+amount.toFixed(2), currency:'USD'}. Empty side: {currency:'USD'} (no value key).",
+  "balance_rule": "sum(debit) must equal sum(credit); enforce client-side before POST.",
+  "account_resolver": {
+    "method": "GET",
+    "path": "/v1.0/account/{clientId}/accounts?page=0&query={accountNumber}&take=16",
+    "response": "{accounts:[{id, accountGuid, name, number}], hasMoreResults}",
+    "match": "exact on .number; id→accountId, name→accountName"
+  },
+  "verify": "Trust 201 + returned id, or GET /v1.0/journalentry?engagementId={clientId}&periodId={engagementId} and match by id/comment.",
+  "gotchas": [
+    "Request body uses lowercase 'rollforwardOption'; the read-back echoes 'rollForwardOption' (capital R).",
+    "journalEntryType is a STRING. AJE/RJE/PAJE captured live. CCH term is 'PAJE' (accept 'PJE' as a synonym). TJE rides the same path but was not captured — firm never uses it (no commercial tax clients).",
+    "Workpaper reference is a TOP-LEVEL 'documentId' (int), NOT a per-lineItem field.",
+    "journalEntryId != 0 edits an existing JE — NOT scripted (no edit/delete; manual per firm rule)."
+  ],
+  "no_hard_delete": "CREATE only. No edit/delete call scripted.",
+  "validated_on": "2026-06-19 Coop / Axcess Blind Test 03 (client 100930, eng 393137) — manual AJE+RJE captures + programmatic replay (id 391378, 201)."
+}

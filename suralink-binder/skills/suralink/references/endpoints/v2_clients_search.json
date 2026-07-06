@@ -1,0 +1,25 @@
+{
+  "operation": "search clients — name-indexed client lookup",
+  "method": "GET",
+  "url": "https://api.suralink.com/v2/organization/{organizationId}/clients/search",
+  "auth": "session cookie; fetch with credentials:'include'",
+  "query": {
+    "searchTerm": "name fragment to match. MUST be non-empty (empty -> HTTP 400)."
+  },
+  "success": {
+    "status": 200,
+    "body": {
+      "totalHits": "number of matching clients",
+      "hitsCount": "breakdown by field matched (name, clientId, engagements, ...)",
+      "clients": "array of { score, highlight, source } — `source` is the client object"
+    },
+    "sourceObject": "{ id, name, clientIdNumber, firmId, departmentId, isSensitive, isAssigned, engagementCounts {total, active, inactive, archived}, engagements (empty here), reports }"
+  },
+  "errors": {
+    "400": "empty searchTerm",
+    "401": "session expired / not logged in"
+  },
+  "notes": "Use to resolve a client the user named. `engagements` comes back EMPTY here — engagementCounts gives totals only; use getClientInfo for the actual engagement list. To enumerate the whole roster use v2_clients.json instead.",
+  "script": "scripts/suralink.py :: search_clients_js",
+  "validated": "2026-05-23 — searchTerm 'a' returned 217 hits"
+}

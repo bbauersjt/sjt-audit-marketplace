@@ -1,0 +1,49 @@
+{
+  "_description": "Wire shape for the `fundSettings` sub-object of the TB createReports body (POST workbench-api/v1/trialbalancereport/createReports). Fund scoping applies to fund engagements (governmental / NFP) ONLY. JE reports (POST /v1/JournalEntryReport) carry fundSettings in the body but expose no fund options in the UI, so leave it null.",
+  "_captured": "2026-05-30, live on Claude Playground (clientId 100173, engId 390765, guid bcc7acba-9c30-4a33-b35a-62b9f091e01d) via in-page XHR interceptor on real Create-Report-from-TB saves.",
+  "_builder": "scripts.reports.build_fund_settings(funds) emits exactly these shapes; validated byte-for-byte against the captured POSTs and live through the deployed skill 2026-05-31 (all 3 selection modes POST 200).",
+  "fundOptions": {
+    "_doc": "Fund layout - INERT. Pinned to the constant 'fundsInRows'. CCH ignores the value: it does NOT round-trip (absent from the saved report definition, GET tbreportedit) and the report always renders funds in rows. The UI Funds tab has no rows/columns toggle (include-all / include-selected / do-not-include only). 'fundsInColumns' does nothing - confirmed inert 2026-05-31 (created two reports differing only in fundOptions; saved definitions were byte-identical and both rendered funds-in-rows). The `fund_layout` builder param was removed.",
+    "value": "fundsInRows"
+  },
+  "_readback_note": "The saved definition (GET tbreportedit/{clientId}/{engGuid}/{reportGuid}) echoes fundSettings WITHOUT fundOptions and capitalizes the flag as 'includeCurrentAndFutureFunds' (capital A) vs the lowercase 'includeCurrentandFutureFunds' we send on create - the create endpoint accepts our lowercase (200, persists true).",
+  "modes": {
+    "_doc": "Three mutually-exclusive boolean flags, mirroring the group includeSelected/includeCurrentandFuture pattern. fundsIncluded carries internal fundId values (scripts.funds.list_funds -> 'id' / fundaccountmap).",
+    "specific_funds": {
+      "builder_call": "build_fund_settings([fundId, ...])",
+      "payload": {
+        "fundOptions": "fundsInRows",
+        "fundsIncluded": [1621, 1618, 1619],
+        "doNotIncludeFunds": false,
+        "includeSelectedFunds": true,
+        "includeCurrentandFutureFunds": false
+      }
+    },
+    "all_funds": {
+      "builder_call": "build_fund_settings('all')",
+      "payload": {
+        "fundOptions": "fundsInRows",
+        "fundsIncluded": [],
+        "doNotIncludeFunds": false,
+        "includeSelectedFunds": false,
+        "includeCurrentandFutureFunds": true
+      }
+    },
+    "no_funds_normal_tb": {
+      "_doc": "Explicitly run a fund engagement as a normal (non-fund) TB. NOT the same as omitting fundSettings, though for commercial engagements omitting (null) is the legacy/default path.",
+      "builder_call": "build_fund_settings('none')",
+      "payload": {
+        "fundOptions": "fundsInRows",
+        "fundsIncluded": [],
+        "doNotIncludeFunds": true,
+        "includeSelectedFunds": false,
+        "includeCurrentandFutureFunds": false
+      }
+    },
+    "omit": {
+      "_doc": "Default. build_fund_settings('default'/None) returns null -> fundSettings omitted. Correct for non-fund commercial engagements.",
+      "builder_call": "build_fund_settings('default')",
+      "payload": null
+    }
+  }
+}

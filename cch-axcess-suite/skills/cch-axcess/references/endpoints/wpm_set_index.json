@@ -1,0 +1,22 @@
+{
+  "operation": "wpm_set_index",
+  "purpose": "Assign a workpaper index (e.g. '0102') to a single object after it has been moved to its destination folder.",
+  "host": "workpapermanagementapi.cchaxcess.com",
+  "method": "PUT",
+  "path": "/v1/engagementview/{clientId}",
+  "transport": "XMLHttpRequest",
+  "headers_required": ["Authorization", "IDToken", "USERLocale", "Accept-Language", "CountryCode", "Accept", "Content-Type"],
+  "body_template": {
+    "index": "0102",
+    "name": "<form name>",
+    "objectId": "<documentId for KCForms/LeadSheet, reports/{type} for Report>",
+    "objectType": "KCForms | LeadSheet | Report"
+  },
+  "batch_support": false,
+  "gotchas": [
+    "USE PUT, NOT POST. Live UI captures show POST but POST returns 200 and is a silent no-op (index does not persist). PUT is the working method. Discovered empirically.",
+    "Move PRESERVES the index (AX-14 confirmed); locationId stays stable. Set-Index after Move only for genuinely new (null-index) forms — NOT to restore a cleared index (Move does not clear it)."
+  ],
+  "validated_on": ["APNM 2025-05-07"],
+  "script_function": "scripts.wpm.set_index(client_id, items, headers)  # serializes a list sequentially"
+}
