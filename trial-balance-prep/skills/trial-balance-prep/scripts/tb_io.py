@@ -640,6 +640,25 @@ def write_cch_import(out_path, tier, rows, sheet_name="TB"):
             "by_fund": {k: round(v, 2) for k, v in by_fund.items()}}
 
 
+def drop_dormant_funds(rows, tol=0.005):
+    """Drop funds that are dormant — every account zero in both the CY balance
+    and the PY balance (old dead funds carried forward for years in CaseWare).
+    A fund with zero CY but real PY amounts is kept: its comparative is live.
+
+    rows: fund-tier row dicts (uses fund_index, balance, py_balance).
+    Returns (kept_rows, dropped_fund_indexes).
+    """
+    active = {}
+    for r in rows:
+        f = str(r.get("fund_index", "") or "")
+        has_bal = (abs(float(r.get("balance", 0) or 0)) > tol
+                   or abs(float(r.get("py_balance", 0) or 0)) > tol)
+        active[f] = active.get(f, False) or has_bal
+    kept = [r for r in rows if active[str(r.get("fund_index", "") or "")]]
+    dropped = sorted(f for f, a in active.items() if not a)
+    return kept, dropped
+
+
 def write_fund_list(out_path, funds, sheet_name="Funds"):
     """Write a standalone fund-definition import (optional deliverable).
 

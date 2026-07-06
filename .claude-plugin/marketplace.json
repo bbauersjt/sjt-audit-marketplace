@@ -20,6 +20,16 @@
       "name": "cch-axcess-suite",
       "source": "./cch-axcess-suite",
       "description": "CCH Axcess / Knowledge Coach automation, risk assessment, and form filling."
+    },
+    {
+      "name": "audit-sampling",
+      "source": "./audit-sampling",
+      "description": "Identify, plan, and pull audit samples — FS substantive, walkthrough, EBP, single audit, and other compliance methods."
+    },
+    {
+      "name": "trial-balance-prep",
+      "source": "./trial-balance-prep",
+      "description": "Prepare any client TB for the firm's grouping index and CCH Axcess import — roll-forward, code conversion, import tiers, funds."
     }
   ]
 }

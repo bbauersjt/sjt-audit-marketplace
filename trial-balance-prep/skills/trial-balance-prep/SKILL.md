@@ -1,6 +1,6 @@
 ---
 name: trial-balance-prep
-description: Prepare any client trial balance for the firm's grouping index and for CCH Axcess import. One skill covering four jobs — (1) import/roll a current-year TB against a prior-year reference (map accounts, assign account numbers and leadsheets, QuickBooks-aware); (2) convert legacy grouping/leadsheet codes to the firm's 4-digit index, driven by a grouped Caseware TB or a copied leadsheet legend; (3) build a CCH-importable file in the right tier (Basic / Grouped / Fund) with correct classifications and sign convention; (4) fund handling — build a fund TB from a Caseware / pasted grouped TB and, if needed, a standalone fund import. Trigger even without the word "skill": "import this trial balance", "match this TB to last year", "roll forward the TB", "assign account numbers", "convert these grouping codes", "update the L/S codes to the new 4-digit index", "remap the legacy leadsheet codes", "format this TB for CCH import", "make this TB importable", "build a grouped/fund TB", "create a fund import", "the client sent their TB in a different format", or a Caseware/QuickBooks TB handed over to be brought onto the firm's index.
+description: Prepare any client trial balance for the firm's grouping index and for CCH Axcess import. One skill covering four jobs — (1) import/roll a current-year TB against a prior-year reference (map accounts, assign account numbers and leadsheets, QuickBooks-aware); (2) convert legacy grouping/leadsheet codes to the firm's 4-digit index, driven by a grouped Caseware TB or a copied leadsheet legend; (3) build a CCH-importable file in the right tier (Basic / Grouped / Fund) with correct classifications and sign convention; (4) fund handling — build a fund TB from a Caseware / pasted grouped TB and, if needed, a standalone fund import. When the prior year lives in a CaseWare engagement folder copy, pulls accounts, L/S groupings, funds, and balances via the caseware-crosswalk skill's TB extract instead of asking for pastes or screenshots. Trigger even without the word "skill": "import this trial balance", "match this TB to last year", "roll forward the TB", "assign account numbers", "convert these grouping codes", "update the L/S codes to the new 4-digit index", "remap the legacy leadsheet codes", "format this TB for CCH import", "make this TB importable", "build a grouped/fund TB", "create a fund import", "the client sent their TB in a different format", or a Caseware/QuickBooks TB handed over to be brought onto the firm's index.
 ---
 
 # Trial Balance Prep
@@ -33,22 +33,60 @@ Read what the user gave you before asking much:
 Confirm the plan in one line before doing the work. When the request is
 unambiguous (a lone QB TB + PY reference "to import"), just proceed.
 
+## CaseWare source? Extract first — don't ask
+
+If the prior year (or the TB itself) lives in a **CaseWare Working Papers folder
+copy** — the user points at one, mentions "the CaseWare file", or a folder in play
+contains `*SH.dbf`/`*am.dbf` — do **not** ask for pasted grouped TBs, leadsheet
+legends, folder-tree screenshots, or exports. Run the **`caseware-crosswalk`
+skill's TB extract** against that folder:
+
+```
+python <skills>/caseware-crosswalk/scripts/cw_tb_extract.py "<caseware folder>" [--out DIR]
+```
+
+(If `_tb_extract.json` already sits in the folder, just read it.) It supplies,
+per account: number, name, L/S code (`leadsheet`), extra groupings (`group2` is
+the firm 4-digit index where the file was already converted), fund + fund name,
+BS/IS type, and final balances for the file year + 4 prior (`cy_final`,
+`py1_final`…). Plus a `funds` list (number, name, master/child) and AJE detail.
+Credits are negative — already the CCH sign convention.
+
+Feed it into the jobs:
+- **Job A** — the extract *is* the PY reference: match on `account`/`description`,
+  inherit `leadsheet`, use `cy_final` as the PY balance column.
+- **Job B** — the extract *is* the legend: each unique `leadsheet` code with the
+  account names carrying it gives the code's meaning for this client. The
+  engagement's `_crosswalk.json` (crosswalk mode of the same skill) names the
+  lead documents too — `<code>-LEAD` → "Revenue lead schedule" etc. — use those
+  as the code labels when present. If `group2` is already 4-digit, job B may be
+  a no-op; verify against the firm index instead of converting.
+- **Job D** — the extract's `funds` list is the fund set; account `fund` prefixes
+  give the Fund Index. No screenshot needed. Fund *type* layering (general /
+  special revenue / enterprise…) is not in the extract — still confirm types
+  with the user or the prior FS.
+
+Only fall back to asking when no CaseWare folder copy (with its DBF files) is
+available.
+
 ## Inputs
 
 1. **The TB to work on** — Excel, `.xlsm`, CSV, TSV, or pasted. Any source system.
 2. **A prior-year reference TB** (for job A) — the firm-format structure to match
    against. Used for leadsheet inheritance, rename detection, number recovery.
    The PY balance need not appear in the output. If the user asks to import/roll
-   and gives only the CY TB, ask for the PY reference.
+   and gives only the CY TB, check for a CaseWare folder copy to extract from
+   (see above) before asking for the PY reference.
 3. **The legend** (for job B) — a grouped or summary TB for the same client where
    each group row reads `<old code>  <group name>`, or a copied leadsheet group.
-   This is how the skill learns what each old code means *for this client*. Ask
-   for it before converting if only the account-level TB was given.
+   This is how the skill learns what each old code means *for this client*. A
+   CaseWare TB extract serves as the legend (see above); otherwise ask for it
+   before converting if only the account-level TB was given.
 4. **Entity type** — EBP (defined-contribution plan) vs standard (commercial /
    nonprofit / governmental). Drives which grouping index and which sheet.
    Propose from the TB if obvious; confirm before converting.
-5. **Fund info** (for job D) — often inferable from the TB; for a Caseware file,
-   ask for an extract or a screenshot of the folder tree (see job D).
+5. **Fund info** (for job D) — often inferable from the TB or a CaseWare TB
+   extract; only ask for a folder-tree screenshot when neither exists (see job D).
 
 ## Upfront questions — batch once
 
@@ -206,23 +244,39 @@ grouping layers map to **type › fund** (outer folder = fund type, inner = fund
 ### D1. Determine the Fund Index — infer, then confirm
 `tb_io.scan_fund_patterns(accounts)` reports the dominant pattern, fund set, and
 coverage. Sources, in order of what you were given:
-1. **Account-number pattern** — `100-10000` (prefix) or `10000-100` (suffix). High
+1. **CaseWare TB extract** — if a CaseWare folder copy exists, the extract's
+   `funds` list (number + name) and per-account `fund` column ARE the fund set
+   and Fund Index. Use them; don't ask.
+2. **Account-number pattern** — `100-10000` (prefix) or `10000-100` (suffix). High
    coverage + one consistent pattern → proceed, stating what you inferred.
-2. **Fund names on the TB** — some client TBs name the fund in a column or in the
+3. **Fund names on the TB** — some client TBs name the fund in a column or in the
    account name instead of the number. Map each name to an index with the user.
-3. **Comparative / pasted Caseware TB** — if the user gave a grouped or pasted
+4. **Comparative / pasted Caseware TB** — if the user gave a grouped or pasted
    Caseware TB, infer the fund from it too.
-4. **Caseware folder tree** — a Caseware export carries the fund in nested folders,
-   not the account string. **Ask the user for a Caseware extract or a screenshot
-   of the folder tree**, then read the two layers as type › fund.
+5. **Caseware folder tree screenshot** — last resort, only when no folder copy
+   with DBFs exists: ask the user for a screenshot of the tree, then read the
+   two layers as type › fund.
 
 Match confidence to behavior: confident → state the inference and proceed;
 uncertain → confirm; no signal → ask upfront. Don't invent a fund silently.
 
+### D1a. Drop dormant funds — always, for anything imported into CCH
+Legacy files (CaseWare especially) carry years of dead funds. Before writing any
+CCH deliverable, run `tb_io.drop_dormant_funds(rows)`: it drops every fund whose
+accounts are **all zero in both the CY balance and the PY balance**, and returns
+the dropped fund indexes. A fund with zero CY but real PY amounts survives — its
+comparative is live. Dormant funds also stay out of the standalone fund import
+(D2). Don't ask permission; just report the dropped funds in one line of the run
+summary ("dropped N dormant funds: 003, 016, …") so nothing vanishes silently.
+This is an import rule only — extracts, crosswalks, and review workbooks still
+show everything.
+
 ### D2. Standalone fund import (ask)
 Always ask whether the engagement also needs a **fund import** (fund index / name /
-type). If yes, gather names/types (from the TB or the Caseware folder tree) and
-call `tb_io.write_fund_list(out_path, funds)`.
+type). If yes, gather names/types (from the CaseWare TB extract's `funds` list,
+the TB, or the Caseware folder tree) and call
+`tb_io.write_fund_list(out_path, funds)`. Fund *types* still need the user or the
+prior FS — the extract doesn't carry them.
 
 ---
 
@@ -268,13 +322,15 @@ mechanical rules; the semantic decisions are yours.
 import sys; sys.path.insert(0, "<skill>/scripts")
 from tb_io import (load_tb, load_legend, load_index, detect_format,
                    load_classes, guess_class, scan_fund_patterns, infer_fund,
-                   write_cch_import, write_fund_list, write_output)
+                   drop_dormant_funds, write_cch_import, write_fund_list,
+                   write_output)
 
 tb      = load_tb("<CY TB>")
 classes = load_classes("<skill>/references/default-classes.xlsx")
 index   = load_index("<skill>/references/standard-group-codes.xlsx", sheet="Governmental")
 
 # build `rows` from your mapping/conversion decisions, then:
+rows, dropped = drop_dormant_funds(rows)        # fund tier: dump dead funds; report `dropped`
 res = write_cch_import("<out>/Fund TB import.xlsx", "fund", rows)   # check res["total"] == 0.0
 ```
 
@@ -312,7 +368,9 @@ EBP note: old EBP income-statement codes are idiosyncratic — `10`s are additio
 - **Classification only from `default-classes.xlsx`.** Confirm sub-`high` guesses.
 - **CCH imports: no freeze panes, header row 1, debits positive, balances net to
   zero (per fund).** `write_cch_import` enforces these — don't undo them.
-- **Never guess a fund silently** — infer and confirm; ask for the Caseware tree.
+- **Never guess a fund silently** — infer and confirm. With a CaseWare folder
+  copy, the caseware-crosswalk TB extract is the fund source; only ask for a
+  tree screenshot when no DBFs exist.
 - **No silent low-confidence guesses** anywhere — batch them for the user.
 
 ## Validation checklist before delivery
@@ -325,5 +383,7 @@ EBP note: old EBP income-statement codes are idiosyncratic — `10`s are additio
 - [ ] CCH import file: `ws.freeze_panes is None`, header in row 1, account numbers
       are text, debits positive.
 - [ ] No zero-balance rows in a sterile import.
+- [ ] Fund tier: dormant funds dropped (`drop_dormant_funds`), the dropped list
+      reported, and the fund import limited to surviving funds.
 - [ ] Category-crossing renames, misposted parents, and low-confidence
       conversions/classifications surfaced.
