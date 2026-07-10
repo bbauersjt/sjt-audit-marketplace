@@ -22,11 +22,11 @@ validated_on:
 ---
 # Module — Rename Workpaper Index
 
-> **Index verification (AX-26).** Read display indexes with
-> `scripts.wpm.verify_index(row, object_type)` — Reports/KCForms use `index`,
-> Workpapers use `documentIndex`; hand-picking the field false-negatives (BT3 B6).
-> And NEVER hand-assemble `folderParentLineItems` — `wpm.move()` now refuses them
-> (semantics are inverted per type; hand-rolled bodies silent-200, BT3 B5/B12).
+> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
+> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
+> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
+> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
+> semantics are inverted per type; architecture.md → Move payload semantics).
 
 **Trigger phrases:** "re-index these workpapers", "change the indexes on [folder]", "rename workpaper indexes", "renumber the workpapers", "convert from old indexing to new", "renumber [N-1-*] to [1105]", "fix the indexes on the investments folder", "set workpaper [name] to index [X]".
 
@@ -134,7 +134,7 @@ Re-trigger the folder GET (click away from the folder and back, or call the GET 
 | Body shape | 4 fields: `{index, name, objectId, objectType: "KCForms"}` | Full document (43 fields, `tags` as array, `documentIndex` as the writable index) |
 | Index field | `index` | `documentIndex` |
 | objectType value | `"KCForms"` | n/a (URL-routed by documentId) |
-| Order matters | Set-Index AFTER Move (new forms arrive with null index; Move preserves existing index) | n/a — rename in place |
+| Order matters | Set-Index AFTER Move (new forms arrive with null index; Move preserves the index — architecture.md) | n/a — rename in place |
 
 ## Validated on
 

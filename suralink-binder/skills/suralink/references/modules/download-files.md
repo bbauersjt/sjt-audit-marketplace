@@ -11,6 +11,8 @@ For one or more requests in an audit: lists the files attached to each, then dow
 - A Chrome tab logged into `app.suralink.com`, on
   `https://app.suralink.com/auditors/views/Audit.php?auditId={X}` (full
   `/auditors/views/` prefix required — bare apex returns nginx 404).
+  Verify with `suralink.verify_audit_js(audit_id)` → `ok:true` — the page must
+  reflect the REQUESTED auditId (architecture.md → "Session verification").
 - The `auditId`.
 - The request `id`(s) — from `list-requests.md`.
 

@@ -5,10 +5,12 @@ done by the `suralink` skill; this module decides WHAT is new, WHAT was
 deleted, and WHERE files go. See ../references/architecture.md.
 
 Mirror layout (note the engagement level - one client can have many):
-    {mirror}/{Client}/{Engagement label}/_raw/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Engagement label}/sorted/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Engagement label}/sorted/_unsorted/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Engagement label}/_index.json
+    {mirror}/{Client}/{Year} Suralink Folder/_raw/{NN Category}/{Request}/{file}
+    {mirror}/{Client}/{Year} Suralink Folder/sorted/{NN Category}/{Request}/{file}
+    {mirror}/{Client}/{Year} Suralink Folder/sorted/_unsorted/{NN Category}/{Request}/{file}
+    {mirror}/{Client}/{Year} Suralink Folder/_index.json
+The engagement folder name is derived from the active-clients.json label by
+engagement_folder_name() below - see its docstring.
 
 `sorted/` is seeded ONCE, on an engagement's first pull, as a faithful copy of
 `_raw/`. Every later sync routes genuinely-new files into `sorted/_unsorted/`
@@ -108,13 +110,35 @@ def numbered_category_folder(category_name, number_map):
 
 # --- path planning --------------------------------------------------------
 
+_YEAR = re.compile(r'\b(20\d{2})\b')
+
+
+def engagement_folder_name(label):
+    """Turn an engagement label into an explicit, self-describing folder name.
+
+    A bare label ("Audit 2025", "2024 audit", "NMBF FY25") reads fine in
+    active-clients.json but is ambiguous sitting next to a client's other
+    folders on disk - nothing marks it as the Suralink pull. So the folder
+    name always ends in "Suralink Folder", and leads with the engagement
+    year when one can be pulled out of the label (the common case):
+        "Audit 2025"              -> "2025 Suralink Folder"
+        "2024 audit"              -> "2024 Suralink Folder"
+        "SCDC 401(k) 2024 Audit"  -> "2024 Suralink Folder"
+    No 4-digit year in the label -> fall back to the sanitized label itself:
+        "NMBF FY25"               -> "NMBF FY25 Suralink Folder"
+    """
+    m = _YEAR.search(label or "")
+    stem = m.group(1) if m else safe_component(label, fallback="Engagement")
+    return f"{stem} Suralink Folder"
+
+
 def engagement_dir(mirror_root, client, label):
-    """Absolute path of one engagement's folder: {mirror}/{Client}/{Label}/.
+    """Absolute path of one engagement's folder: {mirror}/{Client}/{Label Suralink Folder}/.
     This is where `_raw/`, `sorted/` and `_index.json` live. A label is
     required so a client's several audits never collide."""
     return os.path.join(os.path.abspath(mirror_root),
                         safe_component(client),
-                        safe_component(label, fallback="Engagement"))
+                        engagement_folder_name(label))
 
 
 def is_seeding(mirror_root, client, label):
@@ -155,7 +179,7 @@ def plan_paths(client, label, request_name, orig_name, category="",
     Category} segment is simply omitted from both paths.
     """
     c = safe_component(client)
-    lb = safe_component(label, fallback="Engagement")
+    lb = engagement_folder_name(label)
     rq = safe_component(request_name, fallback="Uncategorized")
     fn = safe_name(orig_name)
     parts_raw = [c, lb, "_raw"]

@@ -16,6 +16,8 @@ calls:
   - scripts.session.discover_session_js
   - scripts.session.tab_probe_js
   - scripts.session.claim_tab_js
+  - scripts.session.extract_asset_manifest
+  - scripts.session.compare_manifest
   - scripts.auth_capture.INSTALL_MONKEYPATCH_JS
   - scripts.http_runner.ls_headers_js_expr (ls:kc sentinel)
   - scripts.auth_capture.capture_query_js
@@ -23,15 +25,48 @@ status: validated
 ---
 # Runbook — Leg Warmup (lazy; per-leg)
 
+> **GATE — this runbook IS Step 0's warmup; reading it is not running it.** Every platform call
+> (any `*.cchaxcess.com` browser/API touch) needs this actually EXECUTED this session on THIS
+> agent. If you have ALREADY made platform calls this session without having run it: **STOP now**
+> — run it in full here, switch to the page-context transport (`transport.md`), RE-VERIFY BY READ
+> everything you wrote while side-entered (200s may be silent no-ops), then resume from the last
+> verified step. A subagent doing platform work runs its OWN warmup and captures its OWN fresh
+> auth — never inherit a hand-passed token (they rotate ~30 min, truncate on paste). (SKILL.md →
+> "Initialization gate".)
+
 Two auth legs, warmed **independently** and **only when a module declares the need**
 (SKILL.md Step 0.2). Don't warm both "to be safe" — that was the entire cold-start
 delay in Cowork. Check warmth before asking the user for anything, and never re-ask
 within a session.
 
+## Persist vs ephemeral — the memory contract (memory-first bootstrap)
+
+What may be cached across chats vs what must be captured fresh every session. This is the
+whole answer to "can we skip the bootstrap next time" (complaint 2026-06-10):
+
+- **PERSISTABLE — check memory FIRST, write back on first discovery.** Stable identifiers
+  only: `clientId`, `engagementId`, the full engagement-view URL, `engagementGuid`, one KC
+  `workpaperId` (enables the zero-click KC deep-link warm) → project memory;
+  `axcessDeviceId` → global memory. When Step 0 / discovery surfaces one of these that
+  memory doesn't hold, offer ONCE to save it (SKILL.md 0.1); on decline, record the decline
+  and never re-ask.
+- **NON-PERSISTABLE — never cache tokens or headers across chats.** The wpm monkeypatch
+  capture (bearer/IDToken/traceparent) wipes on every full page reload and the bearer
+  rotates (~30 min); kc localStorage tokens self-refresh and are re-read live per call
+  (`ls:kc` / `chrome_network_recent`). ⚠ Self-refresh only runs on a VISIBLE tab — on a
+  backgrounded KC tab `kc.accessToken` sits STALE past expiry and `ls:kc` serves it as if
+  current; on 401s, touch/activate the tab (or `chrome_navigate` the KC deep-link) to
+  re-mint, then take the fresh bearer from a live `chrome_network_recent` capture
+  (architecture.md → auth section / AX-33; SFRC 2026-07-08). A cached token buys nothing
+  and a pasted one is side-entry by construction (SKILL.md → Initialization gate).
+- **What memory-first actually saves:** with GUID + workpaperId in memory the kc leg warms
+  with ZERO clicks (deep-link); the wpm leg always costs its one provoke click per fresh
+  load — that click is irreducible, don't chase bypasses.
+
 | Leg | Holds | Serves | Warm test |
 |---|---|---|---|
 | `wpm` | monkeypatch-captured engagement-tab headers (bearer + IDToken + locale + traceparent) | WPM, financialprep-api, workbench-api (WPM-bearer reuse — validated 2026-06-05) | `window.__cch_capture_installed` true AND a `workpapermanagementapi` capture with an Authorization header exists |
-| `kc` | `engagementGuid` + `kc.accessToken`/`kc.idToken` in localStorage + a KC-origin tab | KC API; also WPM/FP via `ls:wpm`/`ls:fp` sentinels | a claimed `knowledgecoach.cchaxcess.com` tab (its localStorage carries the tokens; self-refreshing) |
+| `kc` | `engagementGuid` + `kc.accessToken`/`kc.idToken` in localStorage + a KC-origin tab | KC API; also WPM/FP via `ls:wpm`/`ls:fp` sentinels | a claimed `knowledgecoach.cchaxcess.com` tab (its localStorage carries the tokens; self-refreshing while VISIBLE — stale-past-expiry on a background tab, see NON-PERSISTABLE note) |
 
 **Cross-serving (don't double-warm):** a warm KC leg serves WPM/FP via the `ls:*`
 sentinels — skip the engagement-tab capture for those calls. A warm WPM leg never
@@ -93,6 +128,40 @@ There is ONE MCP tab group per browser — `tabs_context_mcp` (call it **without
 `javascript_tool`. Returns filter-safe:
 `{host, clientId, engagementId, engagementGuid, hasKcTokens, kcTabUrl, ready_to_write, needs[]}`.
 It tells you which legs are ALREADY warm — skip everything below that's already true.
+
+## On-warm release check (cheap, throttled — catches drift BEFORE it stalls a write)
+
+On by default: a one-GET release detector, run once the transport is up and BEFORE the module
+fires writes. Drift almost always rides a WK release and the SPA asset manifest is the leading
+indicator, so this is the highest-signal thing you can do at warm time — catch the release the
+moment you start work instead of discovering it when a 55-field form fill silently no-ops.
+
+**Throttle — once per work session, not per warm.** The baseline + timestamp live in the
+ENGAGEMENT WORKING FOLDER as `.cch-release-baseline.json` (never the read-only install — AX-33
+state rule). Skip the whole check when its `checked_at` is within
+`session.RELEASE_CHECK_THROTTLE_SEC` (default 4h): the first bot to warm in the engagement pays
+the one GET, every other bot skips until the window lapses. To turn it off for an engagement,
+write that file with `{"off": true}`.
+
+**Procedure (bridge; ~1 unauthenticated GET, read-only):**
+1. **Throttle gate.** Host-`Read` `<working folder>/.cch-release-baseline.json`. Missing → first
+   run (seed below, no alarm). `off:true` → skip. `checked_at` within the window → skip.
+2. **Fetch the index.** `chrome_api_call` GET `session.SPA_INDEX_URLS[leg]` (engagement index for
+   `wpm`, KC index for `kc`) — public HTML, no auth, bridge channel unfiltered.
+3. **Compare.** `session.extract_asset_manifest(body)` → current; `session.compare_manifest(stored,
+   current)`.
+4. **First run** (no stored manifest for this origin) → host-`Write` `{ "origin_manifests": {
+   "<leg>": current }, "checked_at": "<ISO>" }`. No alarm — you have nothing to diff yet.
+5. **`changed:false`** → refresh `checked_at`, proceed.
+6. **`changed:true`** → SURFACE one line: *"CCH SPA release since last check (+N/−M assets) —
+   endpoint shapes may have drifted; verify-by-read the first writes, and on the maintainer setup
+   run `cch-drift --layer bundle` then `--layer all` before trusting writes."* Update the stored
+   manifest + `checked_at`, then **proceed** — a release is a heads-up, NOT a hard stop. Don't halt
+   the engagement; raise vigilance and let the deeper diagnostic (`cch-drift`) run out-of-band.
+
+Never blocks warming, never touches the install. It augments the maintainer cron (weekly
+`--layer all` + monthly `--layer write`) with warm-time latency-to-detection — the release lands
+in your lap at the start of the session, not at the next morning's cron.
 
 ## Warming the `kc` leg
 
@@ -167,9 +236,29 @@ The data channel is fixed by which TRANSPORT carries the call:
 
 `filtered` is set by TRANSPORT: bridge = false (any origin, incl. KC), linked-tab = true for KC.
 
+## Session recovery — stale auth mid-task (401/403/419, login redirect, missing XSRF)
+
+The governing rule is SKILL.md's failure discipline: **re-warm the FAILING leg only, retry
+ONCE, then surface** — one failing family ≠ all dead, and a param/header tweak is not a fresh
+approach. Recovery specifics for this runbook:
+
+1. Identify WHICH family is failing (engagement / WPM / workbench / FP / KC) before touching
+   anything. Never hand-forge headers or reuse another family's tokens.
+2. **Ask the user, in one line,** to refresh the bridged Chrome tab and log back in if
+   prompted; if the failing leg is KC, have them **click into Knowledge Coach once** — KC
+   tokens are minted only when KC is actually opened (and the KC `binderId` is discovered
+   from that open — architecture.md ID glossary).
+3. Re-warm the failing leg per Step 0 — a FULL fresh capture for that leg, never one header
+   patched into an old capture.
+4. **Verify with one cheap read** (e.g. GetBinder) before resuming writes, and resume from
+   the last VERIFIED step — re-verify the last write before continuing past it.
+5. Two clean bootstrap failures → STOP: report endpoint + status + what completed, and what
+   the user should check (VPN/SSO timeout, tenant switch, closed tab).
+
 ## Hand back to the module
 
 Return the warmed leg's handles (headers source or `ls:*` sentinel, plus GUID if acquired)
 + `filtered: true|false`. The module does the work.
 
 <!-- END -->
+

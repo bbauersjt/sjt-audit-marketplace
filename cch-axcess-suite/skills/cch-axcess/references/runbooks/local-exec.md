@@ -6,6 +6,14 @@ status: foundation
 ---
 # Runbook — Exec Cache (per-BUILD verified copy; never run from the mount)
 
+> **GATE — this is the exec-cache verify, not session init.** Building the verified `/tmp` copy
+> and running scripts does NOT initialize a platform session. Any script that makes a platform
+> call still needs Step 0 (`session-bootstrap.md`) run THIS session + the page-context transport
+> (`transport.md`). If you have ALREADY made platform calls this session without Step 0: **STOP
+> now** — run Step 0 in full, switch to the page-context transport, RE-VERIFY BY READ everything
+> written while side-entered (200s may be silent no-ops), then resume from the last verified step.
+> (SKILL.md → "Initialization gate".)
+
 **Why this exists.** The bash sandbox reaches this install through a mount
 (`…/mnt/.claude/skills/cch-axcess`). That mount serves **text files truncated** —
 cut at a stale byte length, mid-line, mid-token — while serving **binary files
@@ -25,7 +33,7 @@ binaries.
 1. **Compute the cache key from the payload binary** (binaries survive the mount):
 
    ```bash
-   PAYLOAD="<mount-path-to>/cch-axcess/exec-payload_AX-36.bin"   # version in the filename
+   PAYLOAD="<mount-path-to>/cch-axcess/exec-payload_AX-39.bin"   # version in the filename
    VER=$(basename "$PAYLOAD" | sed 's/exec-payload_\(.*\)\.bin/\1/')
    HASH=$(sha256sum "$PAYLOAD" | cut -c1-12)
    EXEC=/tmp/cch-ax-${VER}-${HASH}

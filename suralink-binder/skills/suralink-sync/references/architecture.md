@@ -29,7 +29,7 @@ drive, a synced projects folder); only the breadcrumb is anchored.
 
 There is deliberately **no fixed "Suralink Mirror" folder name** any more — the
 root is whatever the user selected, and the engagement folders inside are
-self-describing (`{Label} Suralink Files`).
+self-describing (`{Year} Suralink Folder`).
 
 The same `.skill` works on every computer: each machine has its own pointer and
 its own independent mirror, catalog, manifest and active-client list — they
@@ -43,7 +43,7 @@ the chosen root (`location.ensure_structure`).
 | `catalog.json` | config (cacheable) | the WHOLE firm — every client, engagements filled in lazily | `catalog.py` |
 | `active-clients.json` | config (editable) | the SUBSET of engagements this machine syncs | `active.py` |
 | `_suralink_sync.json` | state (machine-written) | every file ever pulled here, keyed by `fmsId`, incl. tombstones | `manifest.py` |
-| `{Client}/{Label} Suralink Files/_index.json` | state (per engagement) | snapshot of what the PORTAL currently holds | `index.py` |
+| `{Client}/{Year} Suralink Folder/_index.json` | state (per engagement) | snapshot of what the PORTAL currently holds | `index.py` |
 
 Rule of thumb: **catalog + active = config; manifest + index = state.** Config
 is what you intend; state is what is true.
@@ -57,7 +57,7 @@ is what you intend; state is what is true.
   _suralink_sync.json          ← the manifest (file state + tombstones)
   _inbox/                      ← legacy staging dir; current default is ~/Downloads
   {Client Name}/
-    {Engagement label} Suralink Files/   ← one folder per engagement — e.g. "Audit 2025 Suralink Files"
+    {Year} Suralink Folder/     ← one folder per engagement — e.g. "2025 Suralink Folder"
       _index.json              ← portal-state snapshot for this engagement
       _raw/                    ← exact portal copy. NEVER renamed or edited.
         {NN Category}/{Request name}/{origFileName}
@@ -69,10 +69,12 @@ is what you intend; state is what is true.
 
 **The engagement level matters.** A client can have several audits in tow at
 once (last year + this year). Each engagement gets its own
-`{Client}/{Label} Suralink Files/` tree, so `Audit 2024 Suralink Files` and
-`Audit 2025 Suralink Files` never collide. The ` Suralink Files` suffix is added
-by `scripts/sync.py :: engagement_folder_name`, which both `plan_paths` and
-`engagement_dir` route through.
+`{Client}/{Year} Suralink Folder/` tree, so `2024 Suralink Folder` and
+`2025 Suralink Folder` never collide. The name is built by
+`scripts/sync.py :: engagement_folder_name` — it pulls a 4-digit year out of
+the active-clients.json label and appends " Suralink Folder"; if the label
+has no year (e.g. "NMBF FY25") it falls back to the sanitized label itself
+plus the same suffix. Both `plan_paths` and `engagement_dir` route through it.
 
 `_raw/` is the **chain-of-custody original** — byte-for-byte what the portal
 served, original filenames. It is never renamed, edited, moved, or deleted; it

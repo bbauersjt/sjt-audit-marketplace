@@ -26,11 +26,11 @@ validated_on:
 ---
 # Module — Run Trial Balance + Journal Entry Reports
 
-> **Index verification (AX-26).** Read display indexes with
-> `scripts.wpm.verify_index(row, object_type)` — Reports/KCForms use `index`,
-> Workpapers use `documentIndex`; hand-picking the field false-negatives (BT3 B6).
-> And NEVER hand-assemble `folderParentLineItems` — `wpm.move()` now refuses them
-> (semantics are inverted per type; hand-rolled bodies silent-200, BT3 B5/B12).
+> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
+> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
+> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
+> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
+> semantics are inverted per type; architecture.md → Move payload semantics).
 
 **Status:** validated on APNM 2025 (client 97509, eng 381325), 2026-05-24. TB body validated across all-groups, sliced-groups, three ReportType levels, all settings flags ON and OFF, and custom column overrides. JE body validated for SeparateReports and CombinedReports modes.
 
@@ -82,6 +82,11 @@ js = reports.create_tb_report(
     report_type="AccountDetail",
     journal_entry_details=False,   # UNCHECKED for leadsheets (True = adds JE detail columns)
 )
+
+# Fund engagements (govt/NFP) — scope the report's funds:
+#   fund_settings=reports.build_fund_settings('all' | 'none' | [fundId, ...])
+# Omit (default None) on non-fund engagements. Wire shapes + mode semantics:
+# references/config/fund_settings.json. (Restored 2026-07-07 — AX-37.)
 
 # Verify
 js = reports.list_tb_reports(client_id, hdrs)
@@ -182,9 +187,10 @@ cols = [
   + `hide_unused_groups_and_subgroups=True` + `hide_accounts_with_zero_balances=True`. A leadsheet
   shows accounts under each group with the group subtotal; group-totals-only is wrong for a leadsheet.
 - **⚠️ EVERY leadsheet — single or batch — MUST pass `columns=build_leadsheet_columns(...)`.**
-  `columns=[]` (CCH defaults) produces a leadsheet with NO REF column — annotation is then
-  impossible until one is added (BT3 B6/B10 regression). The firm layout is UNADJ/AJE/RJE/FINAL/
-  REF + FINAL-PY. Include the PY column ONLY when a comparative TB exists (prior_period_id +
+  `columns=[]` (CCH defaults) produces a leadsheet with NO Remarks columns — annotation is then
+  impossible until they're added (BT3 B6/B10 regression). The firm layout is UNADJ/AJE/RJE/FINAL/
+  REF/Notes + FINAL-PY — TWO Remarks columns (REF, Notes), firm standard as of 2026-07-09.
+  Include the PY column ONLY when a comparative TB exists (prior_period_id +
   prior_end_date); if you can't establish the prior period, ASK the user whether a comparative
   TB is imported rather than silently omitting it.
 
@@ -207,7 +213,8 @@ groups_js = groups.list_financial_groups(client_id, grouping_list_id, hdrs)
 sections = reports.group_by_leadsheet(all_groups)
 # Returns: [{"section_index": "1100", "section_name": "Investments", "group_ids": [...]}, ...]
 
-# 3. Build the firm-standard leadsheet columns (5, or 6 with comparative — AX-26)
+# 3. Build the firm-standard leadsheet columns (6, or 7 with comparative — AX-43,
+#    now TWO Remarks columns: REF + Notes)
 # current_period_id = engagement_id (e.g. 387698)
 # prior_period_id   = PY engagement_id (e.g. 381325)
 cols = reports.build_leadsheet_columns(
@@ -249,7 +256,8 @@ for (rpt_loc, rpt_int_id, section_name, section_idx, dest_folder_loc) in new_rep
                                 "object_type": "Report"}], hdrs)
 ```
 
-**Standard column layout** (`build_leadsheet_columns` output, locked 2026-06-04):
+**Standard column layout** (`build_leadsheet_columns` output, TWO Remarks columns —
+locked 2026-07-09, supersedes the single-REF layout from 2026-06-04):
 
 | Order | Abbrev | Name | Type | Period |
 |-------|--------|------|------|--------|
@@ -258,14 +266,20 @@ for (rpt_loc, rpt_int_id, section_name, section_idx, dest_folder_loc) in new_rep
 | 3 | RJE | Reclassifying Journal Entry | Rje | CY |
 | 4 | FINAL | Final Balance | Final | CY |
 | 5 | RM1 | **REF** | Remarks | CY |
-| 6 | FINAL | Final Balance | Final | PY (only if comparative TB) |
+| 6 | RM2 | **Notes** | Remarks | CY |
+| 7 | FINAL | Final Balance | Final | PY (only if comparative TB) |
 
-NO Adjusted column; NO second Remarks/"Notes" column ("comment"/"note" asks = bubble
-comments via annotate-leadsheet.md, never a column). To retrofit a REF column onto an
-existing report: `reports.add_remarks_column` (editReports PATCH — see annotate-tbreport.md
-Step 0). columnId for Remarks_N is N, positional, rename-proof.
+NO Adjusted column. TWO Remarks columns are the firm standard for a TB-report leadsheet
+(protocol B — see annotate-tbreport.md's two-protocol split): Remarks_1 "REF" for
+cross-references/index refs/"imm" tags/tickmark-style annotations, Remarks_2 "Notes" for
+free notes. Both are editable columns, not bubble comments. Bubble comments
+(annotate-leadsheet.md) remain the write surface for the OTHER protocol — the
+system-generated leadsheet — and are never used to satisfy a TB-report note/REF ask.
+To retrofit either Remarks column onto an existing report: `reports.add_remarks_column`
+(editReports PATCH — see annotate-tbreport.md Step 0), once per missing column.
+columnId for Remarks_N is N, positional, rename-proof (Remarks_1 → 1, Remarks_2 → 2).
 
-Remarks columns require `engagementId: client_id` in the column dict (CCH naming quirk —
+Both Remarks columns require `engagementId: client_id` in the column dict (CCH naming quirk —
 other column types must NOT carry that field).
 
 ## Known failure modes

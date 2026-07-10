@@ -33,10 +33,34 @@ Participant data testing (AUD-814A-D by plan type) · benefit payments (AUD-809)
 ### 6. The 103(a)(3)(C) structural fork (biggest single EBP difference)
 Under a §103(a)(3)(C) (ERISA limited-scope) election, certified investment information is **not audited** (certified by a qualified bank/insurer) → AUD-802B, certified-investments path, and the ERISA-§103(a)(3)(C) opinion (RPT-097x series) + COR-803C certification + COR-901A rep letter + COR-201A engagement letter. Full-scope → AUD-802A and standard opinion. This election reshapes the investment approach and the report — capture it in the plan profile.
 
+### 7. AID-201 — don't add it unless AUD-100 demands it; and there's NO clean N/A shortcut inside
+Two lessons from the first EBP run (SFRC 401k 0100, 2026-07-08; refined by the read-only diagnosis pass):
+
+**(a) The right N/A answer is to NOT ADD the form.** AID-201 is add-gated by AUD-100's
+`OtherServices` tailoring question. On a no-nonattest engagement, KC's design is that the form is
+simply absent — the PPC habit of an always-present independence checklist with a "None performed"
+line does NOT map to KC. Adding it anyway costs ~110 permanent diagnostics on the form plus a
+permanent `type:"Unnecessary KnowledgeCoach Form"` "remove this workpaper" diagnostic on AUD-100
+(it names the form via `unnecessaryWorkpaperReferenceTag: AID_200_NONAUD_SERVI_INDEP_CKLST`).
+Check AUD-100's diagnostics for Unnecessary-form entries BEFORE adding pre-engagement forms
+(cch-axcess `add-audit-programs.md` gotcha), and remove an already-added AID-201 via
+`remove-kc-form.md` rather than trying to answer it quiet.
+
+**(b) When the form IS genuinely needed (nonattest services exist), know its shape.** Unlike
+KBA-201's engagement-level TQ shortcut (which cleanly gates its ~89 items off), AID-201 gates
+per-category: each header row in `TypeofNonauditService` carries an `Applicable` prop (`YES`/`NO`,
+uppercase) that gates its nested `childObjectList` rows; children carry
+`Applicable`/`Consideration`/`IndependenceRequirementMet`. EXCEPTION: Header1 "General
+Considerations" children are UNGATED — they must always be answered individually. And the rows are
+NESTED: the flat objectList shows ~17 objects but there are ~110+ answerable rows down the
+`childObjectList` tree (fixture: cch-axcess `references/data/fixtures/aid201-form-get.json`), so
+don't trust flat inventory counts. The volume, not the mechanics, is the surprise — the writes are
+convention-standard.
+
 ---
 
 ## What carries over unchanged (no EBP work needed)
-Acceptance (KBA-201), entity info (KBA-200 skeleton), independence (AID-201), strategy (KBA-101), fraud inquiry (KBA-303), COSO controls (KBA-401/402), team discussion (KBA-501), concluding aggregators/checklists (KBA-102/103/105/902/903), subsequent events (AUD-901), JE/related-party programs, the engagement-profile cluster (minus GAGAS/opinion-units; plus ERISA/limited-scope), and every collapse lever.
+Acceptance (KBA-201), entity info (KBA-200 skeleton), independence (AID-201 — content unchanged, but see §7 above for its diagnostic-cascade trap), strategy (KBA-101), fraud inquiry (KBA-303), COSO controls (KBA-401/402), team discussion (KBA-501), concluding aggregators/checklists (KBA-102/103/105/902/903), subsequent events (AUD-901), JE/related-party programs, the engagement-profile cluster (minus GAGAS/opinion-units; plus ERISA/limited-scope), and every collapse lever.
 
 ## Net
 EBP = core spine + **plan profile** + **plan-characteristic toggles** + **AUD-810 tax status** + **103(a)(3)(C) fork**. Everything else is the govt machinery with relabeled cycles.

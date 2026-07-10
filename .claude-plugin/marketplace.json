@@ -27,9 +27,9 @@
       "description": "Identify, plan, and pull audit samples — FS substantive, walkthrough, EBP, single audit, and other compliance methods."
     },
     {
-      "name": "trial-balance-prep",
-      "source": "./trial-balance-prep",
-      "description": "Prepare any client TB for the firm's grouping index and CCH Axcess import — roll-forward, code conversion, import tiers, funds."
+      "name": "audit-workspace",
+      "source": "./audit-workspace",
+      "description": "Engagement workspace onboarding — setup orchestrator, CaseWare crosswalk/TB extract, trial-balance prep & CCH imports, firm writing voice. Companion to the Cowork Audit Workspace Setup handout."
     }
   ]
 }

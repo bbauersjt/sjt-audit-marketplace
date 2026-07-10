@@ -63,7 +63,10 @@ earns its clicks.
    = the mounted sandbox path of the resolved root).
 3. **`suralink` skill** — confirm installed; add its `scripts/` to `sys.path`,
    `import suralink, browser`.
-4. **Chrome tab** — confirm a tab is logged into `app.suralink.com`.
+4. **Transport + Chrome tab** — the `suralink` skill's Step 0 already picked
+   the transport (`chrome_bridge_status`: bridge preferred, linked tab
+   fallback). Confirm a tab is logged into `app.suralink.com` — on the
+   bridge find it with `chrome_list_tabs`; linked-tab, the linked tab itself.
 5. **Staging.** Load the manifest. If `stagingDir` is unset OR points at the
    mirror's `_inbox` (the old default that requires the user to change
    Chrome's download location), set it to the **host path** of `~/Downloads`
@@ -80,7 +83,7 @@ earns its clicks.
 When the user wants to point the sync at a different folder, do NOT just
 overwrite the pointer. The entire mirror — `catalog.json`,
 `active-clients.json`, the `_suralink_sync.json` manifest, and every
-`{Client}/{Label} Suralink Files/` tree — lives **under the current root**.
+`{Client}/{Year} Suralink Folder/` tree — lives **under the current root**.
 
 1. **Warn, explicitly:** *"Heads up — the new folder starts empty. Your active
    client list, the catalog, the manifest of what's been pulled, and every
@@ -137,8 +140,10 @@ For each engagement:
   `browser.parse_result`, `suralink.extract_files(body, "client")`,
   `sync.normalize_file(...)`, and
   `idx = index.build(auditId, client, label, binder, {requestId: [recs]})`.
-  If the result payload is larger than ~500 bytes, ferry it back via the
-  Blob helper rather than chunked JS reads: JS-side
+  If the result payload is larger than ~500 bytes: on the **bridge**,
+  `chrome_eval(js, target=tabId, out_path=...)` writes it straight to disk —
+  no ferry, no wait loop. **Linked-tab**, ferry it via the Blob helper rather
+  than chunked JS reads: JS-side
   `suralink.dump_to_download_js("window.__myVar", "filename.json")` dumps
   to `~/Downloads`; Python-side `sync.wait_and_read_json(download_dir,
   "filename.json")` reads it. See the `suralink` skill's
@@ -169,6 +174,12 @@ exception** to this skill's backend-over-UI doctrine — on a fresh
 whole-engagement pull, speed wins.
 
 Get an explicit "yes" before any downloading begins.
+
+Engagement folder naming — `sync.engagement_folder_name(label)` turns the
+active-clients.json label into `{Year} Suralink Folder` (year pulled out of
+the label; falls back to the sanitized label + suffix if no year is found).
+Both `sync.engagement_dir` and `sync.plan_paths` route through it, so this
+never needs to be computed by hand.
 
 ### 5. Download + file each approved new file
 Decide **once per engagement, before the loop**, whether this is the seeding

@@ -504,4 +504,74 @@ def verify_index(row: dict, object_type: str):
         raise ValueError(f"verify_index: unknown object_type {object_type!r} — one of {sorted(INDEX_FIELD_BY_TYPE)}")
     return row.get(field)
 
+
+# ----- Document-level sign-offs (WPM) -----
+# signatureType codes on the /v1/signoff/* endpoints:
+SIGNATURE_PREPARER = 1
+SIGNATURE_REVIEWER = 2
+# The document row also exposes secondReviewedBy* slots; their signatureType codes
+# (3/4?) are UNCONFIRMED — capture before scripting a second-review removal.
+
+
+def remove_signoff(client_id, object_id, object_type_id, signature_type,
+                   client_guid, engagement_guid, headers,
+                   application_id=1, period_id=None, consolidated_engagement_id=None):
+    """JS for: POST /v1/signoff/removeSignOff — remove ONE document-level sign-off.
+
+    This is BB's "a bot removes the stale sign-off on a form it modified" operation
+    (captured live 2026-07-09, Coop Consulting). Applying sign-offs stays HUMAN-ONLY:
+    there is deliberately NO add_signoff() here. The add endpoints
+    (POST /v1/signoff/preparer, POST /v1/signoff/reviewer — identical body, they differ
+    only by URL + signatureType) are documented in references/endpoints/signoff_remove.json
+    but intentionally not scripted.
+
+    NOT a hard delete (wpm.py hard-delete policy): removeSignOff is a POST that clears a
+    sign-off STATE slot on the workpaper — the 200 response echoes the remaining
+    {"signoffDetails":[...]} — it does not delete the document. In-bounds.
+
+    Removal is keyed by (object_id, signature_type) with NO userId in the body, so the API
+    will remove whichever sign-off occupies that leg — INCLUDING another staff member's.
+    OUT OF BOUNDS (api-ui-parity rule, BB 2026-07-09): the binder UI only lets you remove
+    your OWN sign-off, so a bot must NOT use this to remove anyone else's — using the API to
+    exceed what the UI permits creates untested, corrupt states. Before calling, read the leg
+    (document_get) and confirm the sign-off's userId is the CURRENT logged-in user; if it
+    belongs to someone else, STOP — do not remove it via API and do not "probe" whether the
+    API allows it.
+
+    object_id / object_type_id come straight off the workpaper row (document_get or
+    folder_get) — NEVER hardcode them: KC forms are objectTypeId 4 with a GUID objectId;
+    uploaded workpapers (xlsx/pdf/doc) are objectTypeId 1 with a NUMERIC-STRING objectId.
+
+    engagementId in the BODY is the misnamed clientId (architecture.md) — pass client_id.
+    signature_type: SIGNATURE_PREPARER (1) / SIGNATURE_REVIEWER (2).
+
+    Verify with document_get(): the removed leg's preparedBy*/reviewedBy* fields go null.
+    """
+    body = {
+        "applicationId": application_id,
+        "engagementId": int(client_id),
+        "objectId": str(object_id),
+        "objectTypeId": object_type_id,
+        "signatureType": signature_type,
+        "clientGuid": client_guid,
+        "engagementGuid": engagement_guid,
+        "periodId": period_id,
+        "consolidatedEngagementId": consolidated_engagement_id,
+    }
+    return http_runner.build_xhr_call("POST", f"{WPM}/v1/signoff/removeSignOff", _h(headers), body)
+
+
+def document_get(client_id, document_id, headers):
+    """JS for: GET /v1/Documents/{clientId}/{documentId} — one document's metadata
+    INCLUDING its denormalized sign-off state.
+
+    Sign-offs surface here as FLAT fields (not the signOffs[] array folder_get returns):
+    preparedBy1/2*, reviewedBy1/2*, secondReviewedBy1/2* — each carrying
+    *FirstName / *LastName / *UserId / *CreatedDateTime. A cleared or absent sign-off
+    reads null name, null datetime, all-zero UserId. Cheapest per-document sign-off read
+    (folder_get pulls the whole folder to get at its signOffs[] array); use this to verify
+    a remove_signoff() took.
+    """
+    return http_runner.build_xhr_call("GET", f"{WPM}/v1/Documents/{client_id}/{document_id}", _h(headers))
+
 # <!-- END -->

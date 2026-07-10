@@ -23,6 +23,7 @@ calls:
   - scripts.funds.upsert_fund_sub_types
   - scripts.funds.preflight_account_map
   - scripts.funds.check_fund_references
+  - scripts.funds.check_unfunded_accounts
   - scripts.funds.assign_account
   - scripts.funds.unassign_account
   - scripts.funds.delete_fund_type
@@ -43,6 +44,12 @@ status: validated
 > (an out-of-range / orphan fund). STOP and surface the offending accounts to the user; the
 > fix is theirs (define the fund, or correct the account's fund). NEVER auto-reassign and
 > never proceed — the whole-list PUT mis-maps it silently with no native error.
+>
+> **Unfunded-accounts halt (mandatory).** After fund setup / assignment, run
+> `scripts.funds.check_unfunded_accounts(fundaccountmap_get_body)`. If `ok=False`, one or more
+> accounts are assigned to NO fund — Axcess **silently drops** them from every fund-based
+> statement/report with no error. STOP and prompt the user to assign each (or confirm the
+> omission is intended). NEVER auto-assign — the correct fund is a judgment call.
 
 **Triggers:** "set up funds", "add fund types", "create fund", "assign accounts to fund", "fund sub-type", "fund accounting", "governmental fund setup", "fund TB setup", "load the fund mapping", "build the funds", "delete fund type", "remove a fund"
 

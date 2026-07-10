@@ -5,6 +5,17 @@ description: Skill for navigating the Suralink auditor portal (app.suralink.com,
 
 # Suralink — Dispatcher
 
+## ⚠ Step 0 — transport: BRIDGE-FIRST (first browser call of the session)
+
+**Before ANY other browser op — including merely listing or viewing tabs — call
+`chrome_bridge_status`.** Bridge up/reachable → **BRIDGE** transport for the WHOLE session:
+`chrome_list_tabs` to find the logged-in Suralink tab (not `list_connected_browsers`),
+`chrome_eval(code, target=tabId)` to run every JS builder, `chrome_navigate` to move the tab,
+`chrome_eval(..., out_path=...)` for large payloads. Absent/errors → **LINKED-TAB** transport
+(the Claude-in-Chrome tools: `javascript_tool`, `navigate`, `tabs_context_mcp`) — the fallback,
+unchanged and always works. The JS builders in `scripts/` are identical on both transports;
+only the tool that runs them differs. Verb map: `references/architecture.md` → "Transport".
+
 Route the request to ONE module below, read only that module, then call the
 `scripts/*.py` functions it names. Do not read everything.
 
@@ -27,6 +38,6 @@ Prefer `binder-and-activity.md` for whole-engagement reads — one scrape, no pe
 
 ## Platform facts — don't rediscover
 
-`references/architecture.md` is the single source of truth: the two hosts; cookie auth (no bearer tokens — every call is JavaScript run inside the user's logged-in Chrome tab via `mcp__Claude_in_Chrome__javascript_tool` with `credentials:'include'`); the ID glossary and the request-`id`-vs-`requestId` trap; fileProxy; the static `aud1tMgr!` gateway secret. Read it before any novel work; modules cite it and do not repeat it. Endpoint shapes are in `references/endpoints/*.json`.
+`references/architecture.md` is the single source of truth: the two hosts; cookie auth (no bearer tokens — every call is JavaScript run inside the user's logged-in Chrome tab with `credentials:'include'`, via the session transport: `chrome_eval` on the bridge, `mcp__Claude_in_Chrome__javascript_tool` linked-tab); the transport verb map; the ID glossary and the request-`id`-vs-`requestId` trap; fileProxy; the static `aud1tMgr!` gateway secret. Read it before any novel work; modules cite it and do not repeat it. Endpoint shapes are in `references/endpoints/*.json`.
 
-Prerequisite for everything: a Chrome tab open and logged into `app.suralink.com`.
+Prerequisite for everything: a Chrome tab open and logged into `app.suralink.com` (needed on BOTH transports — the bridge runs its JS inside that same logged-in tab). Before working an audit, the cheap verification read must assert the page reflects the **requested** `auditId` — not merely that a Suralink page loaded (`suralink.verify_audit_js`; stale-tab `returnTo` hazard and the `logout=true` bounce signature: `references/architecture.md` → "Session verification").

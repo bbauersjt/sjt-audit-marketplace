@@ -1,10 +1,9 @@
 # SJT Group CPA — audit skills marketplace
 
-A Claude Code plugin marketplace (`sjt-skills`) of audit tools — 5 plugins.
+A Claude Code plugin marketplace (`sjt-skills`) of audit tools, plus a Chrome bridge download
+and staff handouts.
 
 ## Install
-
-Inside Claude Code:
 
 ```
 /plugin marketplace add bbauersjt/sjt-audit-marketplace
@@ -12,24 +11,29 @@ Inside Claude Code:
 /plugin install suralink-binder@sjt-skills
 /plugin install cch-axcess-suite@sjt-skills
 /plugin install audit-sampling@sjt-skills
-/plugin install trial-balance-prep@sjt-skills
+/plugin install audit-workspace@sjt-skills
 ```
 
-Install only what you need — each plugin is independent. Full steps and the
-`chrome-bridge` note are in [INSTALL.md](INSTALL.md).
+Install only what you need — each plugin is independent. Full steps are in [INSTALL.md](INSTALL.md);
+provenance in [MANIFEST.md](MANIFEST.md).
 
-## What's here
-
-| Plugin | Contains |
+| Plugin | Skills |
 |---|---|
-| `fs-review` | Technical proof & review of financial statements — commercial, nonprofit, governmental, EBP |
-| `suralink-binder` | Suralink portal pull, local mirror sync, and 4-digit indexed binder filing |
-| `cch-axcess-suite` | CCH Axcess / Knowledge Coach automation, risk assessment, and form filling |
-| `audit-sampling` | Identify, plan, and pull audit samples — FS substantive, walkthrough, EBP, single-audit, compliance |
-| `trial-balance-prep` | Prepare any client TB for the firm's grouping index and CCH Axcess import |
+| `fs-review` | fs-review (one orchestrator: commercial, nonprofit, governmental, EBP) |
+| `suralink-binder` | suralink, suralink-sync, binder-organize |
+| `cch-axcess-suite` | cch-axcess, cch-form-fill, cch-risk-assessment |
+| `audit-sampling` | audit-sampling |
+| `audit-workspace` | audit-workspace-setup, caseware-crosswalk, trial-balance-prep, writing-styles |
 
-The `suralink-binder` and `cch-axcess-suite` plugins talk to Chrome through the **Chrome
-bridge**, which ships as its own repo: [bbauersjt/sjt-chrome-bridge](https://github.com/bbauersjt/sjt-chrome-bridge).
+## Also here
+
+- **`chrome-bridge.zip`** — the Chrome bridge (local MCP server + Chrome extension) the
+  portal-facing skills (Suralink, CCH Axcess) need. **A download, not a plugin** — unzip and
+  follow the README inside (pip install → `register_server.ps1` → load the extension unpacked).
+- **`handouts/`** — staff walkthroughs; *Cowork Audit Workspace Setup* runs on the
+  `audit-workspace` plugin.
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ---
 © SJT Group CPA

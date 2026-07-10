@@ -94,12 +94,19 @@ def update_properties_sequential(eng_guid: str, wp_id: str, payloads: list[dict]
     /non-empty request body|Bad Request/. Demonstrated 100% stick on a repeating
     risk row. This is almost certainly the audit-program step-edit flakiness too.
 
-    VERIFY correctly: these writes are PENDING until kc.submit. The completion
-    sequence is submit → reload → GET (NOT the immediate in-page GET, which reads
-    the uncommitted working copy and gives false state-3 positives). Drive the
-    completion loop off the diagnostics endpoint (POST /api/Workpaper/refresh then
+    VERIFY correctly: these writes are PENDING until kc.submit (per-workpaper
+    scoped — never empty wpId). The completion sequence is submit → reload → GET
+    (NOT the immediate in-page GET, which reads the uncommitted working copy and
+    gives false state-3 positives). Drive the completion loop off the diagnostics
+    endpoint (POST /api/Workpaper/refresh then
     GET /api/diagnostics/GetWorkpaperDiagnostics) — that is the oracle; the form's
     own diagnosticCount is stale. (200 ≠ applied — architecture.md.)
+
+    SILENT DROPS ARE THE NORM, NOT THE EXCEPTION: KC silently drops ~30-50% of
+    write→submit pairs even with convention-correct payloads and 1-2s pacing
+    (SFRC 401k 0100 + batch-2 isolated tests, 2026-07-08). Every write set MUST
+    run the loop: write → settle ~1.2s → per-wp submit → verify by re-read after
+    reload → retry misses (cap ~3). field-conventions.md §5 3a is binding.
     """
     calls = [
         {
@@ -112,17 +119,74 @@ def update_properties_sequential(eng_guid: str, wp_id: str, payloads: list[dict]
     return http_runner.build_compact_batch_xhr(calls, headers, retry_on_body_drop=True)
 
 
-def submit(eng_guid: str, headers: dict) -> str:
-    """JS for: POST /api/Workpaper/submit with empty workpaperId (submit ALL pending in binder).
+def submit(eng_guid: str, wp_id: str, headers: dict) -> str:
+    """JS for: POST /api/Workpaper/submit scoped to ONE workpaper. wp_id is REQUIRED.
 
     REQUIRED for persistence. UpdateProperty writes sit in a pending working copy;
     a refresh/reload DISCARDS any unsubmitted writes. (The old "persists without
     submit; submit only refreshes counts" claim is FALSE.) Call submit after a
     batch of writes, then verify after reload (never the immediate in-page GET —
     that reads the uncommitted working copy and gives false state-3 positives).
+
+    NEVER submit with an EMPTY workpaperId. The old "submit all pending in
+    binder" form ({workpaperId:""}) silently DISCARDS pending writes on other
+    forms instead of committing them (isolated-test confirmed, 2026-07-08).
+    Only per-workpaper-scoped submits persist — hence the required wp_id.
+
+    Even scoped correctly, KC silently drops ~30-50% of write→submit pairs
+    (payloads convention-correct; sleeps reduce but don't eliminate it). The
+    binding pattern is write → settle ~1.2s → submit(this fn) → VERIFY by
+    re-read after reload → retry misses (cap ~3). field-conventions.md §5 3a.
     """
-    body = {"binderId": eng_guid, "workpaperId": ""}
+    if not wp_id:
+        raise ValueError("submit requires a workpaperId — empty wpId ('submit all') "
+                         "silently discards pending writes on other forms")
+    body = {"binderId": eng_guid, "workpaperId": wp_id}
     return http_runner.build_fetch_call("POST", f"{KC}/api/Workpaper/submit", headers, body)
+
+
+def program_step_signoff_payload(area_key: str, step_object_key: str, entries=None) -> dict:
+    """UpdateProperty payload for a program-step SignOff cell — the IN-FORM (pt=3) sign-off /
+    N/A marker. DISTINCT from the document-level WPM sign-off (that one is wpm.remove_signoff).
+
+    The `SignOff` property on a `.{AREA}.ProgramSteps` step object is a JSON-ARRAY-IN-A-STRING
+    (captured live, Coop AUD-808, 2026-07-09):
+      - sign-off:  [{"userId","userReportName","date","staffId","type":0}]
+      - N/A mark:  [{"userId","date","staffId","type":1}]   (note: N/A carries no userReportName)
+      - CLEARED :  "[]"                                       (un-sign OR un-N/A — same empty clear)
+
+    entries=None → CLEAR (value "[]"). Passing a list sets it, but a bot rarely should:
+    populate_program.js already applies step sign-offs; applying is not this op's purpose.
+    area_key e.g. "AP" — the AUD-8xx NUMBER is NOT in the key (.AP.ProgramSteps, never
+    .AP808.ProgramSteps; same rule as build_write_payload).
+    """
+    if entries:
+        import json as _json
+        value = _json.dumps(entries)
+    else:
+        value = "[]"
+    return {
+        "collectionKey": f".{area_key}.ProgramSteps",
+        "objectKey": step_object_key,
+        "propertyKey": "SignOff",
+        "value": value,
+        "valueKey": "",
+        "dataEntryExpression": "",
+        "dataEntryExpressionContextObjectKey": "",
+    }
+
+
+def clear_program_step_signoff(eng_guid: str, wp_id: str, area_key: str,
+                               step_object_key: str, headers: dict) -> str:
+    """JS for: clear ONE program-step sign-off OR N/A marker (SignOff = "[]") via UpdateProperty.
+
+    The KC-leg un-sign-off — counterpart to wpm.remove_signoff (document level). ONE clear works
+    for both a sign-off (type 0) and an N/A mark (type 1). PENDING until kc.submit(eng_guid, wp_id),
+    then verify after reload — 200 != applied, and the write-drop converge loop applies
+    (field-conventions.md §5 3a). Get step_object_key + area_key from the form read (the step's
+    objectKey and its `.{AREA}.ProgramSteps` collectionKey)."""
+    return update_property(eng_guid, wp_id,
+                           program_step_signoff_payload(area_key, step_object_key), headers)
 
 
 def toggle_program_step(eng_guid: str, wp_id: str, visible_step_keys: list[str], headers: dict) -> str:
@@ -658,6 +722,12 @@ def inventory_form(decoded_form: dict) -> dict:
     excludes latent columns, hidden driver rows, and heading boxes (see _is_fillable).
     This is the preferred entry point over walk_fields() — it classifies, so callers
     stop hand-rolling per-form payload logic.
+
+    Nested rows ARE walked: handle_object recurses childObjectList, so rows carry
+    children[] and `fillable` includes nested fields at every depth. Do NOT size
+    work from len(objectList) on a raw GET — AID-201's TypeofNonauditService is
+    17 flat objects but 112 rows / 195 fillable fields across depths 0-3
+    (fixture: references/data/fixtures/aid201-form-get.json, verified 2026-07-08).
     """
     sections, writable_flat = [], []
     by_kind: dict[str, int] = {}

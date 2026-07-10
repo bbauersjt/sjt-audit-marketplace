@@ -7,6 +7,8 @@ triggers:
   - "add a TB group"
   - "assign account to group"
   - "leadsheet grouping"
+  - "add a subgroup"
+  - "assign account to subgroup"
 load_from_jump:
   - "from scripts import groups, http_runner"
   - "config/group_account_types.json  # classification name -> ids (read instead of network)"
@@ -17,14 +19,19 @@ calls:
   - scripts.groups.list_financial_lists
   - scripts.groups.list_financial_groups
   - scripts.groups.create_financial_list
+  - scripts.groups.create_financial_group
   - scripts.groups.build_chain_create_groups_js
   - scripts.groups.build_reorder_groups_js
+  - scripts.groups.move_financial_group
   - scripts.groups.get_trialbalance_grouped
   - scripts.groups.build_bulk_assign_js
   - scripts.groups.assign_account_to_group
   - scripts.groups.build_patch_body
   - scripts.groups.update_financial_group
   - scripts.groups.resolve_classification
+  - scripts.groups.create_financial_subgroup
+  - scripts.groups.build_chain_create_subgroups_js
+  - scripts.groups.assign_account_to_subgroup
 status: validated
 validated_on:
   - "create + reorder chains + account assignment: clientId 100173 — 2026-05-30/31"
@@ -93,6 +100,34 @@ Need: monkey-patched financialprep-api headers, `clientId`, `periodId` (for assi
 | `400 Invalid account type / classification.` on reorder PUT | reorder needs full trio (accountType str + accountTypeId + classificationId) | pass GET rows through (helper derives the trio) |
 | `400 EngagementId` on assign PATCH | body missing the engagementId=clientId mapping | use rows from `get_trialbalance_grouped`, or `build_patch_body()` (AX-08) |
 | KC tab `Runtime.evaluate timed out` after N PATCHes | sequential XHR in KC tab | one-call `build_bulk_assign_js()` |
+
+## Subgroups (financialsubgroup — child level under a group)
+
+A subgroup is a child level below a financialGroup (TB Sub-Group column; UI: Account Groupings
+→ Financial → select core group → Actions → Add). **There is NO subgroup GET** (the endpoint
+404s) — read subgroup membership from the grouped TB at **`row.account.financialSubGroup`** (NOT
+`row.account.subGroup`, which is silently null — see architecture.md FP-trialbalance gotcha).
+
+Status: captured 2026-05-30/31 — not yet round-trip live-validated the way group create/reorder is.
+
+1. **Create subgroups under a parent group** — same insert-after anchor rule as groups, on its
+   own field (`0` = first subgroup under the parent; else the preceding sibling's
+   `financialSubGroupId`). Chain N in one call:
+   ```python
+   groups.build_chain_create_subgroups_js(client_id, list_id, parent_group_id, subgroups, headers, start_anchor=0)
+   # subgroups = [{"index": "1010", "name": "Operating cash"}, ...]
+   # one subgroup: groups.create_financial_subgroup(client_id, list_id, parent_group_id, index, name, headers, anchor_subgroup_id=0)
+   ```
+2. **▶ PRECONDITION — parent group first.** The account MUST already be assigned to the
+   subgroup's PARENT group before a subgroup assign, or the PATCH 400s "Invalid financial
+   sub-group." Flow: `assign_account_to_group(parent)` → then `assign_account_to_subgroup`.
+   ```python
+   groups.assign_account_to_subgroup(client_id, account_id, list_id, financial_subgroup_id, headers)
+   ```
+3. **Verify** — re-GET the grouped TB; assignment reads back at `row.account.financialSubGroup`.
+
+See `endpoints/groups_financial_groups.json` (single-group `create_financial_group` /
+`move_financial_group` building blocks) and `groups_account_assignment.json` (`patch_subgroup`).
 
 ## See also
 `references/endpoints/groups_financial_lists.json` (financialList CRUD),

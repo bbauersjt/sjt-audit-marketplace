@@ -67,16 +67,25 @@ Either way the destination is the same `sorted/` tree of indexed section folders
 a section folder is created only when a file actually lands in it. A thin
 engagement yields a thin binder.
 
-**Planning is consolidated.** CCH's four planning-zone sections collapse to two:
-`0200 Planning` (strategy, understanding, risk assessment, org charts —
-everything planning) and `0400 Internal Controls` (control memos, walkthroughs).
+**The planning zone matches the binder templates.** All four front-of-file
+sections exist for both client types — `0200 Planning` (strategy, materiality),
+`0300 Understanding the Entity/Plan` (entity overview, org charts, minutes),
+`0400 Internal Controls` (control memos, walkthroughs), `0500 Risk Assessment`
+(risk and fraud-risk docs). (An earlier version consolidated 0300/0500 into
+0200; overruled 2026-07-08 — the taxonomy conforms to the cch-axcess binder
+templates, which rule all four.)
 
-**Perm File is a flat dump.** `9000 Perm File` gets every permanent-file
-document with no sub-sorting — perm files are built differently for every
-client. Optional (off by default, the user must ask): a date split into
-`9000 Perm File/Carryforward` (documents dated before the engagement fiscal
-year — what you should already have) and `9000 Perm File/New This Year`
-(current FY or later). Undated documents stay at the `9000` root.
+**Perm File is flat for standard clients; ruled subfolders for EBP.**
+`9000 Perm File` gets every permanent-file document. For EBP engagements the
+template rules three topical subfolders — `9100 Plan Documents`,
+`9200 Service Agreements`, `9300 SOC 1 Reports` — and a perm-bucket file that
+matches one is filed into it (`perm_subfolder_for`); no match stays at the
+root. Standard clients keep the flat dump — their perm files are built
+differently for every client. Optional (off by default, the user must ask):
+a date split into `9000 Perm File/Carryforward` (documents dated before the
+engagement fiscal year — what you should already have) and
+`9000 Perm File/New This Year` (current FY or later); it applies only to files
+no topical rule claimed. Undated documents stay at the `9000` root.
 
 **Samples keep their flag.** A file flagged as a sample is filed into its real
 substantive section, then dropped in a `Samples` subfolder —

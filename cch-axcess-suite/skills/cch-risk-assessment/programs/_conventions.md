@@ -11,7 +11,7 @@ Each visible program step has three linked sets:
 
 **Convention:** For each visible step, the `Risks` valueKey must include `RMM-{assertion}` for every assertion in the step's `Assertion` valueKey, **skipping** any assertion that is N/A for the area (CCH server-side rule — e.g., AV is N/A for Cash, no `RMM-AV` checkbox exists).
 
-Preserve any FS-level risk references already on the step (e.g., `FINANCIALLEVELRISKS-1` for Management Override) when adding RMM-X links. Full-state replacement on write — see `cch-axcess/references/modules/fill-kc-form.md` "Step-level Risks multi-checkbox" for the API format.
+Preserve any FS-level risk references already on the step (e.g., `FINANCIALLEVELRISKS-1` for Management Override) when adding RMM-X links. Full-state replacement on write — see `cch-axcess/references/modules/fill-kc-form.md` "Multi-value / multiselect" (the Risks bullet) for the API format.
 
 ## Cross-cutting steps — Fraud Awareness & Information as Audit Evidence
 
@@ -92,7 +92,7 @@ PPC didn't track these. Universal defaults are in `defaults/{CODE}.md` under "Un
 
 ## Submit semantics
 
-`POST /api/Workpaper/submit` with body `{binderId: <engGuid>, workpaperId: ""}` commits all pending changes binder-wide. **Empty workpaperId = submit all.** Submit AFTER your writes; never between writes within a logical group, or partial state may surface.
+Submit AFTER your writes; never between writes within a logical group, or partial state may surface. The endpoint and payload shape are `cch-axcess`'s to state (`references/modules/fill-kc-form.md`) — this file only carries the timing rule.
 
 ## Validation log
 

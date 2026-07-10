@@ -20,6 +20,35 @@ If you discover a new fact about the platform, update this file (and the relevan
 
 Prerequisite: a Chrome tab logged into Suralink. If a call returns `401`, the session expired — the user must log in again. The skill cannot log in for them.
 
+### Session verification — assert the auditId, not just "a page loaded"
+
+The cheap verification read after navigating to an audit MUST assert that the page reflects the **requested** `auditId` — both the URL `auditId=` param and `window.auditId` must equal it. "A Suralink page loaded" is NOT a pass. Use `scripts/suralink.py :: verify_audit_js(audit_id)` before any real work on an audit.
+
+Why (observed 2026-07-09, SCDC 401k): a **reused stale tab's** login bounce carried a `returnTo` pointing at a *different* auditId (2871416) than the one requested (2852254) — the tab's last-visited audit, not the target. Logging back in through that bounce lands on the wrong audit, and a naive liveness check green-lights it. After any login bounce, re-navigate to the requested `Audit.php?auditId={X}` explicitly; never trust the bounce's `returnTo`.
+
+**Login-bounce signatures** (tab lands on `accounts.suralink.com/login`):
+- `...&logout=true` in the query = the session was **invalidated** (explicit logout / server-side kill) — distinct from an idle-timeout bounce, which lacks `logout=true`. Either way the user must log in again; the skill cannot.
+- The bounce's `returnTo` param encodes the tab's stale prior location — parse it only to *detect* the mismatch (`verify_audit_js` surfaces it as `returnToAuditId`), never to navigate.
+- Expired-session transient (observed 2026-07-09): navigating an expired tab to `Audit.php` can bounce through `app.suralink.com/logout.php?...&sessionExpired=true&returnTo=...` — on the APP host, not `accounts.`. It resolves to the logged-in `Audit.php` once the session cookie lands. `verify_audit_js` correctly returns `ok:false` for it, but does NOT tag it `logoutBounce` (that flag keys off the non-app host). Treat any `ok:false` as "not ready" and re-check after the user logs in — don't special-case this transient.
+
+**Validated live 2026-07-09** (chrome-bridge browser, auditId 2871416): `verify_audit_js(2871416)` → `{ok:true, urlAuditId 2871416, pageAuditId 2871416, path /auditors/views/Audit.php}` on a freshly logged-in Audit.php tab; before login the expired-session navigation returned `ok:false` as designed. (Note: the fleet's live session lives in the **chrome-bridge** browser — logging into Suralink on another browser surface does NOT make the bridge session live.)
+
+## Transport — bridge PRIMARY, linked tab FALLBACK
+
+Detect ONCE per session — the **first browser call is `chrome_bridge_status`** (see SKILL.md
+Step 0). Server up → **BRIDGE** for the whole session; tool absent / errors → **LINKED-TAB**
+(the Claude-in-Chrome flow). Both transports run the same `scripts/` JS builders inside the
+same logged-in Suralink tab — cookies authorize everything either way; only the tool differs.
+
+| Operation | BRIDGE (preferred) | LINKED-TAB (fallback) |
+|---|---|---|
+| Find the Suralink tab | `chrome_list_tabs` → pick by `app.suralink.com` URL (sees ALL real tabs) | `tabs_context_mcp` / the user's linked tab |
+| Run a JS builder | `chrome_eval(code, target=tabId)` | `mcp__Claude_in_Chrome__javascript_tool(code, tabId)` |
+| Navigate / open tab | `chrome_navigate` / `chrome_open_tab` | `navigate` / `tabs_create_mcp` |
+| Big JSON out of the tab | `chrome_eval(..., out_path=...)` — straight to disk, one call | Blob ferry to `~/Downloads` (see below) |
+| Download a file (fileProxy) | `download_file_js` via `chrome_eval` → Downloads folder (same mechanism, validated). `chrome_download(url, out_path)` straight to the mirror is *expected* to work (cookie jar rides along) but **not yet validated on fileProxy** — validate once, then prefer it | `download_file_js` via `javascript_tool` → Downloads folder |
+| Network capture (training mode) | `capture.py` monkeypatch via `chrome_eval`; `chrome_network_recent` is also available and survives pushState | `capture.py` monkeypatch (`read_network_requests` is unreliable — see gotchas) |
+
 ## ID glossary
 
 Suralink uses several IDs that look interchangeable but are not. Mixing them produces silent `403`/`404`/`500`.
@@ -143,7 +172,7 @@ Navigating between requests with `&requestId=` is a client-side `pushState` — 
 
 ## Known gotchas
 
-- **`read_network_requests` is unreliable here.** Its buffer clears on the `pushState` request-id changes. Use the capture monkey-patch in `scripts/capture.py` instead, and never have the user do a full page reload mid-capture (a reload wipes the patch).
+- **`read_network_requests` (linked-tab tool) is unreliable here.** Its buffer clears on the `pushState` request-id changes. Use the capture monkey-patch in `scripts/capture.py` instead, and never have the user do a full page reload mid-capture (a reload wipes the patch). On the bridge, `chrome_network_recent` is an additional option that survives pushState.
 - **The Cowork content filter blocks raw URLs/tokens** in tool output. When surfacing captured data, emit sanitized derivatives (paths with IDs masked, param names not values) — see `training-mode.md`.
 - A full browser reload kills any installed monkey-patch. Re-install after any reload.
 - **Gateway calls run sequentially** (one fetch in flight at a time). Suralink's session serializes them; two in flight collide on the session, not the CSRF token. `window.csrf` is read LIVE per call so any rotation is harmless. Note: on read-only commands like `getRequest` the token does NOT observably rotate — a whole-engagement sweep of 28+ requests uses a single `window.csrf` snapshot. The older lore here ("CSRF rotates per call") was overstated. Keep the sequential rule anyway — it's correct for the right reason.
@@ -155,7 +184,12 @@ A whole-engagement enumeration (28-90 requests with files) is many KB, and
 chunked round-trips (15+ JS execs to page through a `slice(i, i+n)`) are slow
 and brittle.
 
-**Standard pattern: Blob ferry to the Downloads folder.** On the JS side,
+**On the BRIDGE, skip the ferry entirely:** `chrome_eval(js, target=tabId, out_path=...)`
+writes the full result straight to disk in one call — no Downloads staging, no wait loop.
+The Blob ferry below is the **linked-tab** path (and it remains the mechanism behind
+`download_file_js` on both transports).
+
+**Linked-tab pattern: Blob ferry to the Downloads folder.** On the JS side,
 serialize the result as JSON, wrap it in a `Blob`, trigger a synthetic
 `<a download>` click — Chrome saves it to the user's Downloads folder. On
 the Python side, read the file with `json.load`. One round-trip per dump,

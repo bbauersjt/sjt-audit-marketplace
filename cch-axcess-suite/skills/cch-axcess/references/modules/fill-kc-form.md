@@ -22,7 +22,15 @@ calls:
   - scripts.kc.is_answered
   - scripts.kc.was_rejected
   - scripts.kc.update_properties_sequential
-  - scripts.kc.submit
+  - scripts.kc.submit   # per-workpaper scoped (eng_guid, wp_id, headers)
+  - scripts.kc.build_spawn_payload
+  - scripts.kc.addable_empty_grids
+  - scripts.kc.enrich_repeating_choice
+  - scripts.kc.resolve_choice_options_from_templates
+  - scripts.kc.rendered_binding_keys
+  - scripts.kc.is_heading_object
+  - scripts.kc.find_dropdown_options
+  - scripts.kc.existing_repeating_rows
   - scripts.xref.extract_form_refs
   - scripts.xref.load_engagement_form_index
   - scripts.xref.resolve
@@ -32,40 +40,26 @@ validated_on:
 ---
 # Module — Fill KC Forms
 
-> **wpId lookup — GetBinder FIRST (AX-26).** Any time you need a form's workpaperId (or
+> **wpId lookup — GetBinder FIRST.** Any time you need a form's workpaperId (or
 > any binder workpaper's id): `GET https://knowledgecoach.cchaxcess.com/api/binder/GetBinder/{engagementGuid}`
 > from the KC tab (`ls:kc` auth) — `result.workpapers[]` carries every workpaper with
-> name + wpId. Never walk WPM folders for a form lookup (BT3 B9: ~17 wasted calls).
+> name + wpId. Never walk WPM folders for a form lookup.
 
 **Triggers:** "fill out [form ID]", "answer the questions on [form]", "fast-fill the planning forms", "inject answers into [form]", "scan [form] for cross-references", "walk the planning forms", "complete AUD-100 / KBA-302 for [client]".
 
 **Capabilities:** read a form, get a typed inventory of every field, resolve cross-references against the engagement's form index, write answers (sequential), submit.
 
-## Field detection: DOM-first, GET as substrate (AX-33)
+## Field detection: DOM-first, API side-check
 
-For **what is actually fillable on a rendered form**, the DOM beats the GET. The GET over-reports
-fillable fields ~2:1 (KBA-101 live: 74 "fillable" → 36 real) — phantom `Comment`/`Description`
-columns plus rows the GET flags `visible:true` that render no control at all. So:
-
-- **Detector = the DOM** via `scripts/kc_dom_parser.js` (`window.kcDom`) — the ground-truth set of
-  rendered, fillable controls in one in-page pass. Ship it as the leg:kc enumerator.
-- **Substrate = the GET** — still the source for write targets (collectionKey/objectKey, options,
-  `floatieItemList`), and the **only** reliable signal for **empty add-grids**: a passive DOM parse
-  reports "nothing to fill" on an unfilled scoping form, but `inventory_form()['addable_grids']` /
-  the API `objectList:[]` check catches the 6/9 unpopulated grids ("looks done but isn't"). Keep it.
-- **Net:** DOM enumerates fillable fields → API side-checks empty `objectList` add-grids → write via
-  the builders → submit → reload → verify via the diagnostics endpoint. Not either/or. (Rollup forms
-  like KBA-502 are client-render display only — both DOM and GET correctly show ~0 directly-fillable.)
-
-**The in-page GET reads the UNCOMMITTED working copy — NOT the read-of-truth.** A write lands → an
-in-page `chrome_eval` GET shows `state 3` immediately, but that is the pending working copy, not
-committed state (a "false state-3"). Writes are PENDING until `kc.submit` commits them and are
-DISCARDED on reload if you never submit. So the immediate GET is fine for the *cascade rounds*
-(deciding what to write next inside one working session), but it is NOT proof of persistence. The
-correct verify sequence is **write → `kc.submit` → reload → re-read** (and the authoritative
-completion oracle is the diagnostics endpoint — see Step 5). Use the DOM for the *initial*
-enumeration and the *post-reload* check; the DOM does NOT reflect out-of-band API writes without a
-reload (the Angular SPA only re-renders writes it initiated).
+Two doctrine facts are canonical in `architecture.md` — do not re-derive them here: the DOM
+is the fillable-field detector for a rendered form (the GET over-reports fillable ~2:1) while
+the API GET is the write substrate, and an in-page GET reads the **uncommitted working copy**
+(false state-3), never proof of persistence. Applied to filling: enumerate fillable controls
+via `scripts/kc_dom_parser.js` (`window.kcDom`), side-check empty `objectList:[]` add-grids via
+`inventory_form()['addable_grids']` (a passive DOM parse can't see them), write via the builders,
+then **submit → reload → verify via the diagnostics endpoint**. The DOM does NOT re-render
+out-of-band API writes without a reload, so use it for the initial enumeration and the
+post-reload check.
 
 ## Read in JS, analyze in Python
 
@@ -142,7 +136,7 @@ THREE gates — each catches a distinct phantom class, all confirmed live on AUD
    hold, including latent ones the layout never shows. Each AUD-100 tailoring row
    has a `Comment` property, but the table renders only QUESTION + ANSWER columns.
 
-> **TQComments gotcha (live-confirmed BT3 B8):** the engagement-level TQ *comment*
+> **TQComments gotcha:** the engagement-level TQ *comment*
 > writes through propertyKey **`"Description"`**, NOT `"Answer"`.
    Writing `Comment` returns 200/state→3 yet has **no UI box** — stored-but-invisible
    data. `kc.rendered_binding_keys(form)` is the lowercased bindingKey set from
@@ -243,9 +237,32 @@ Validated: AUD-100 fixed-point fill converged in 2 rounds and left **0 unfilled 
 ### 4. Write sequentially + submit
 ```python
 js = kc.update_properties_sequential(eng_guid, wp_id, payloads, headers)  # concurrency=1, enforced
-js = kc.submit(eng_guid, headers)
+js = kc.submit(eng_guid, wp_id, headers)   # per-workpaper — NEVER empty wpId (discards other forms' pending writes)
 ```
 **Why sequential?** Parallel POSTs to the same form drop writes (server race).
+
+**Expect silent drops even when everything is right — CONVERGE, don't count retries.** KC drops a
+**rotating subset** of rapid sequential UpdateProperty writes: every write echoes state 3, but the
+commit loses some of them — ~30–50% of write→submit pairs with convention-correct payloads;
+inter-write sleeps (1–2s) reduce but do NOT eliminate the loss (SFRC 401k 0100 + batch-2 isolated
+tests, 2026-07-08). The per-write echo is NEVER proof; only the committed read is. The standard
+fill procedure for every write set is the **converge loop**:
+
+```
+repeat (2–4 rounds converges in practice):
+    write the outstanding payloads (settle ~1.2s each) -> per-workpaper submit
+    re-read the COMMITTED state (after refresh/reload)
+    outstanding = cells whose committed value does not match intent
+    if outstanding is empty: break
+```
+
+One committed re-read covers the whole set — verify in batch, rewrite ONLY the dropped cells
+(never blind-repeat the full set), and loop until the committed read matches intent. A write not
+verified state-3-after-reload was NOT made. Because the drop set ROTATES between rounds, a fixed
+"retry the misses ≤3×" pass under-delivers on large write sets — converge to match-intent instead.
+Validated at scale 2026-07-09 (Coop Consulting planning cascade: KBA-302/303/401/402 — an 81-write
+form converged, with different cells dropping each round).
+(field-conventions.md §5 3a; RECOVERY.md silent write-drop entry.)
 
 **The dominant KC-write failure was 415, not a body-drop.** Every KC write went out without a
 `Content-Type: application/json` header (`build_batch_xhr` omitted it; the single-call builders inject

@@ -1,5 +1,14 @@
 # Reference Data Catalogue
 
+> **GATE — reading reference data is NOT a session.** Pulling a binder template, form catalog,
+> group code, or xref table from here gives you *content*, not an initialized platform session —
+> it does NOT get you past Step 0. Before the FIRST platform call you still owe Step 0
+> (`session-bootstrap.md`) THIS session + the page-context transport (`transport.md`). If reading
+> a datum here tempted you to jump straight into `chrome_api_call`/folder-creates and you have
+> ALREADY made platform calls without Step 0: **STOP now** — run Step 0 in full, switch to the
+> page-context transport, RE-VERIFY BY READ everything written while side-entered (200s may be
+> silent no-ops), then resume from the last verified step. (SKILL.md → "Initialization gate".)
+
 Static lookup material that modules and scripts consult: binder templates, form catalogs, group codes, engagement-specific xref tables. **Stored in native editable formats (xlsx for tabular, .md for prose). Modules never inline contents.**
 
 ## Storage rules
@@ -72,6 +81,10 @@ When a new reference is needed (commercial / EBP / construction templates, new g
  the engagement's right sidebar; Natural otherwise. See `setup-binder-from-index.md` Phase 0 for the detection logic.
 
 - `sa-title-forms.tsv` — the 84 forms of the Knowledge-Based Single Audits title (SAS.2024.1, titleGuid 531eb5ad-5eae-4f12-ac51-ea998bb8472e), captured 2026-06-04. Columns: form index | referenceTag | full name | section prefix. Offline fallback for catalog.load_sa_title_forms(); prefer a live GetWorkpaperListForAddForms pull (endpoints/kc_title_library.json).
+
+### fixtures/ — captured live payloads for offline verification (no tokens; do not edit)
+- `fixtures/aid201-form-get.json` — full AID-201 form GET (SFRC 401k, 2026-07-08). Proves the nested-row shape: `TypeofNonauditService` = 17 flat objects but 112 rows / 195 fillable fields across `childObjectList` depths 0–3 (field-conventions.md §4 note); regression fixture for `kc.decode_form` → `kc.inventory_form` nested walking.
+- `fixtures/aud100-unnecessary-form-diag.json` — AUD-100 `GetWorkpaperDiagnostics` result showing the `type:"Unnecessary KnowledgeCoach Form"` shape (`unnecessaryWorkpaperReferenceTag: AID_200_NONAUD_SERVI_INDEP_CKLST`) that fires when AID-201 is added on a no-nonattest engagement (add-audit-programs.md gotcha; field-conventions.md §5 item 4).
 
 <!-- END -->
 

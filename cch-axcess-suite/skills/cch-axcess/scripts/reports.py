@@ -64,12 +64,17 @@ def create_tb_report(
     journal_entry_details: bool = True,
     show_classified_report: bool = False,
     columns: list[dict] | None = None,
+    fund_settings: dict | None = None,
 ) -> str:
     """JS for: POST workbench-api/v1/trialbalancereport/createReports.
 
     `groups=None` → include all current and future groups.
     `groups=[ids]` → include only those FinancialGroup IDs
                      (discoverable via get_financial_groups).
+
+    `fund_settings` — pass build_fund_settings(...) on fund engagements
+    (governmental/NFP); None (default) omits fund scoping — correct for
+    non-fund engagements. Wire shapes: references/config/fund_settings.json.
 
     `report_type` must be one of TB_REPORT_TYPES.
     `trial_balance` is the named TB on the engagement; default 'Financial'
@@ -131,10 +136,47 @@ def create_tb_report(
             "showClassifiedReport": show_classified_report,
             "IncludeSumOfAccountGroups": True if include_sum_of_account_groups else None,
         },
-        "fundSettings": None,
+        "fundSettings": fund_settings,
     }
     return http_runner.build_xhr_call(
         "POST", f"{WB}/v1/trialbalancereport/createReports", headers, body
+    )
+
+
+def build_fund_settings(funds) -> dict | None:
+    """fundSettings sub-object for the TB createReports body (fund engagements).
+
+    funds='default'/None → None (omit fund scoping — non-fund engagements)
+    funds='all'          → include all current and future funds
+    funds='none'         → run a fund engagement as a normal (non-fund) TB
+    funds=[fundId, ...]  → include only those funds (internal ids from
+                           scripts.funds.list_funds -> 'id' / fundaccountmap)
+
+    Wire shapes captured + validated live 2026-05-31 (all 3 modes POST 200);
+    byte-for-byte spec: references/config/fund_settings.json. fundOptions is
+    pinned to 'fundsInRows' (CCH ignores the value — confirmed inert).
+    Restored 2026-07-07: the function was dropped in a rebuild while its spec
+    and validation record survived. JE reports take no fund options — leave
+    create_je_report's fundSettings null.
+    """
+    if funds in (None, "default"):
+        return None
+    base = {"fundOptions": "fundsInRows", "fundsIncluded": [],
+            "doNotIncludeFunds": False, "includeSelectedFunds": False,
+            "includeCurrentandFutureFunds": False}
+    if funds == "all":
+        base["includeCurrentandFutureFunds"] = True
+        return base
+    if funds == "none":
+        base["doNotIncludeFunds"] = True
+        return base
+    if isinstance(funds, (list, tuple)) and funds:
+        base["fundsIncluded"] = [int(f) for f in funds]
+        base["includeSelectedFunds"] = True
+        return base
+    raise ValueError(
+        f"funds must be 'default'/None, 'all', 'none', or a non-empty list of "
+        f"fund ids, got {funds!r}"
     )
 
 
@@ -262,23 +304,35 @@ def build_leadsheet_columns(
     prior_period_id: int | None = None,
     prior_end_date: str | None = None,
 ) -> list[dict]:
-    """Build the firm-standard leadsheet column set (locked 2026-06-04).
+    """Build the firm-standard leadsheet column set (TWO Remarks columns —
+    locked 2026-07-09, supersedes the single-REF-column layout from 2026-06-04).
 
-    Layout (captured from live Cash Lead, client 94136, 2026-06-04):
-      1. UNADJ — Unadjusted Balance (CY)
-      2. AJE   — Adjusted Journal Entry (CY)
-      3. RJE   — Reclassifying Journal Entry (CY)
-      4. FINAL — Final Balance (CY)
-      5. REF   — single Remarks column, NAMED "REF"  ← requires engagementId = clientId
-      6. FINAL — Final Balance (PY) — ONLY when a comparative TB exists
-                 (pass prior_period_id + prior_end_date; omit both otherwise)
+    Layout (TB-report leadsheet, the firm's DEFAULT surface — protocol B in
+    annotate-tbreport.md's two-protocol split):
+      1. UNADJ    — Unadjusted Balance (CY)
+      2. AJE      — Adjusted Journal Entry (CY)
+      3. RJE      — Reclassifying Journal Entry (CY)
+      4. FINAL    — Final Balance (CY)
+      5. Remarks_1 — NAMED "REF"   ← cross-references / index refs / "imm" tags /
+                     tickmark-style annotations. Requires engagementId = clientId.
+      6. Remarks_2 — NAMED "Notes" ← free notes. Requires engagementId = clientId.
+      7. FINAL    — Final Balance (PY) — ONLY when a comparative TB exists
+                    (pass prior_period_id + prior_end_date; omit both otherwise).
+                    Always comes AFTER both Remarks columns.
 
-    Deliberately NO Adjusted column and NO second Remarks/"Notes" column — "note"/
-    "comment" asks route to bubble comments (annotate-leadsheet.md), never to a column.
+    TWO editable Remarks columns are now the firm standard for TB-report leads:
+    REF (cross-refs/index/imm) and Notes (free notes) — both live IN THE COLUMNS,
+    not as bubble comments. Bubble comments (annotate-leadsheet.md) remain the
+    write surface for the OTHER protocol — the system-generated leadsheet — and
+    mirror read-only onto TB reports; they are not used for TB-report notes.
 
-    client_id goes into the Remarks column's engagementId field (CCH naming quirk).
-    The Remarks column id is Remarks_1; the tbreportcomment columnId for it is 1
-    (positional, rename-proof — captured 2026-06-04).
+    client_id goes into each Remarks column's engagementId field (CCH naming
+    quirk) — set on BOTH Remarks columns, omitted from every other column.
+    Remarks_1 → tbreportcomment columnId 1; Remarks_2 → columnId 2 (positional,
+    rename-proof — captured 2026-06-04, reconfirmed 2026-07-09).
+
+    `order` stays sequential 1..6 (no PY column) or 1..7 (with PY column) —
+    the PY Final column's order shifts to 7 only when it is included.
     """
     cy = {"periodId": current_period_id, "periodEndDate": current_end_date, "isDeleted": False}
     cols = [
@@ -287,19 +341,27 @@ def build_leadsheet_columns(
         {**cy, "id": "Rje_Current",        "type": "Rje",        "name": "Reclassifying Journal Entry", "abbrev": "RJE",   "variance": None, "order": 3},
         {**cy, "id": "Final_Current",      "type": "Final",      "name": "Final Balance",               "abbrev": "FINAL", "variance": None, "order": 4},
         {**cy, "id": "Remarks_1",          "type": "Remarks",    "name": "REF",                         "abbrev": "RM1",   "variance": None, "order": 5, "engagementId": client_id},
+        {**cy, "id": "Remarks_2",          "type": "Remarks",    "name": "Notes",                       "abbrev": "RM2",   "variance": None, "order": 6, "engagementId": client_id},
     ]
     if prior_period_id is not None and prior_end_date is not None:
         py = {"periodId": prior_period_id, "periodEndDate": prior_end_date, "isDeleted": False}
         cols.append({**py, "id": "Final_PriorPeriod_1", "type": "Final", "name": "Final Balance",
-                     "abbrev": "FINAL", "variance": None, "order": 6})
+                     "abbrev": "FINAL", "variance": None, "order": 7})
     return cols
 
 
 def add_remarks_column(client_id: int, engagement_guid: str, report_guid: str,
                        current_settings: dict, headers: dict,
                        name: str = "REF") -> str:
-    """Build JS for PATCH /v1/trialbalancereport/editReports — add a Remarks (REF)
+    """Build JS for PATCH /v1/trialbalancereport/editReports — add a Remarks
     column to an EXISTING report. Live-captured 2026-06-04.
+
+    The firm standard is TWO Remarks columns on a TB-report leadsheet — "REF"
+    (cross-refs/index/imm tags) and "Notes" (free notes), see
+    build_leadsheet_columns. Call this ONCE per missing column when retrofitting
+    an existing report that lacks one or both: `name="REF"` for the first,
+    `name="Notes"` for the second (this function auto-assigns the next free
+    Remarks_{N} regardless of `name` — call it twice to add both).
 
     current_settings = the full tbreportedit GET response body for this report (REQUIRED —
     the PATCH body must carry the complete createReports-shaped settings + ALL columns;

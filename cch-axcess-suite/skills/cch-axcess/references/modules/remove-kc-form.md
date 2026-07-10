@@ -18,10 +18,10 @@ status: validated
 ---
 # Module — Soft-Delete KC Form from Binder
 
-> **wpId lookup — GetBinder FIRST (AX-26).** Any time you need a form's workpaperId (or
+> **wpId lookup — GetBinder FIRST.** Any time you need a form's workpaperId (or
 > any binder workpaper's id): `GET https://knowledgecoach.cchaxcess.com/api/binder/GetBinder/{engagementGuid}`
 > from the KC tab (`ls:kc` auth) — `result.workpapers[]` carries every workpaper with
-> name + wpId. Never walk WPM folders for a form lookup (BT3 B9: ~17 wasted calls).
+> name + wpId. Never walk WPM folders for a form lookup.
 
 **Triggers:** "delete this form from the binder", "remove [form] from this engagement", "drop the form we just added", "clean up unfiled forms", "remove KC form", "scrub the binder of unwanted forms".
 
@@ -103,8 +103,8 @@ Tell the user the forms are staged in `9999 User to delete` for them to review a
 - `wpm.set_index` is sequential — don't try to parallelize.
 - Wrapper folder doesn't exist yet? Run `setup-binder-from-index.md` first; "User to delete" needs a parent.
 
-## Why no hard delete (incident note)
+## Why no hard delete
 
-Kymera 2025 EBP, 2026-05-28: two DELETE calls to `/v1/KnowledgeCoach/.../deleteform/...` returned 200 but corrupted the binder — `lastUsedTitleGuid` went null and 30+ unrelated workpapers became invisible. Recycle Bin did NOT recover them. Binder rebuilt from scratch. The skill no longer exposes hard delete; the function literally is not implemented in `scripts/wpm.py`. See the policy block at the top of that file.
+Hard-deleting a KC form corrupts the binder and is unrecoverable, so this skill does not implement it — soft-delete is the only path (Kymera incident — see `architecture.md` → KC-form hard delete, and the policy block atop `scripts/wpm.py`).
 
 <!-- END -->

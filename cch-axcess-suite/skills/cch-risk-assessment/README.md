@@ -46,6 +46,8 @@ ASB→Commercial, HOA→Commercial, CNS→Construction, EBP→Employee Benefit P
 
 ## Status
 
+Last verified against cch-axcess AX-37 — 2026-07-07.
+
 Rebuilt 2026-05-30 around the parse-live cascade; SKILL.md re-gated 2026-06 to the axcess Step-0 dispatcher pattern.
 
 | Component | Status |

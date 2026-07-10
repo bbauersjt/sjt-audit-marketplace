@@ -15,6 +15,8 @@ description: >-
 
 # CCH Form Fill
 
+> Last verified against cch-axcess AX-37 — 2026-07-07.
+
 Fills the CCH Axcess Knowledge Coach planning forms and audit-program step responses that fall outside the risk cascade. Determine context- and client-aware answers, apply firm-standard confirmable defaults, and write them back through cch-axcess.
 
 ## First — classify the request (do this before anything else)
@@ -55,9 +57,22 @@ Run against a mounted engagement folder and a live binder. **Load `references/fo
 
 6. **Handle defer-to-user areas.** For complex commercial capital structures and governmental OPEB/pensions with deferred outflows/inflows, do not auto-fill. Flag the area for the user and assist only under direction.
 
-7. **Write back.** Build payloads and write through cch-axcess sequentially, verifying each with a re-read. Sign-offs are UI-only.
+7. **Write back.** Build payloads and write through cch-axcess sequentially, verifying each with a re-read. Per-step sign-offs on AUD-8xx program steps are API-writable (`cch-axcess` `populate-program.md` + `field-conventions.md` — token goes in `valueKey`); the OVERALL/form-level sign-off (`kcc-workpaper-signoff`) is off-limits to the API and stays manual, through the UI.
 
 **Write precondition (applies no matter how you got here):** before writing ANY field, steps 1–3 must be complete for this engagement — entity type determined, binder read, gather/confirm batch surfaced. If any is missing (you arrived from a lookup, or you are resuming mid-conversation), stop and run steps 1–3 first. Do not write from a partially-initialized state.
+
+**Fleet mode — pre-built gather context:** when running inside the audit fleet (`bots/`), the
+`0200-planning-risk` bot runs steps 1–3 ONCE per engagement and persists the result as
+**`engagements/<client>/form-fill-context.md`** — entity type + platform, the gleaned [L] facts,
+the [A] answers (named people, dates, predecessor, designated individual), the [C] confirm-batch
+outcomes with a confirmed-on date, and the constants (reviewers, testing-WP indexes, report date).
+A context artifact that matches THIS engagement (client + period) **satisfies steps 1–3**: read it
+and go straight to per-form work — never re-run the gather or re-ask the confirm batch. If the
+artifact is missing or stale, do **not** self-initialize from inside a section bot — report that
+`0200-planning-risk` must supply it and mark the fill pending (fleet rule: `bots/RULES.md` §H).
+Section bots contribute their own section's coverage + evidence refs as [K] inputs to step
+responses. The concluding [C] items are re-confirmed at the end by `0600-concluding` from the
+section status reports (`bots/RULES.md` §S) — update the artifact when any of them flips.
 
 ## Universal rules
 
@@ -107,4 +122,4 @@ Read the file that fits the task:
 4. Otherwise map the field via the disposition cascade ([X]/[K]/[C]/[D]/blank — Operating model step 4); gather or confirm inputs only for [C]/[A] items **the step-3 batch did not already cover** — this per-form check is a top-up, never a substitute for the up-front batch.
 5. Build the payloads (one title per add when adding forms; sequential writes).
 6. Write through cch-axcess; re-read to verify.
-7. Sign off through the UI.
+7. Sign off: per-step sign-offs on AUD-8xx program steps are API-writable (`cch-axcess` `populate-program.md`); the overall/form-level sign-off stays manual, through the UI.

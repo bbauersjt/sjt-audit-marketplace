@@ -48,7 +48,7 @@ Same chain as `cash.md`. Six TQs gate which of the 15 steps become `IsApplicable
 | 4 | T | FairValue2_TQ_CollateralImpFactor | Collateral important to FV/carrying amount? | Step 10 |
 | 5 | T | FairValue2_TQ_AnalyticalProcedures | Use analytical procedures? | Step 14 |
 
-> All 6 TQs are currently `defaultanswer` (unanswered) on APNM 2025. AUD-818 hasn't been started.
+> All 6 TQs are `defaultanswer` (unanswered) on a fresh/unstarted AUD-818 — verify on the engagement whether the form has actually been tailored yet before assuming these values are meaningful.
 
 ## Complete Step Library (15 steps)
 
@@ -107,7 +107,7 @@ Same 3-checkbox model as Cash. For Level 1 broker-priced securities → `INDEPTH
 
 ## Linkage to AUD-802
 
-`AUD-802 TQ #35` (FairValueRules: "Are there investments in securities or derivative instruments valued based on Fair Value rules?") drives whether AUD-818 work is needed. For APNM 2025, this is functionally Yes — RBC equities/bonds are FV-measured, ACF beneficial interest is FV. The current AUD-802 capture shows Q35 = "No", which is inconsistent with the actual portfolio. **Flag for engagement-team review.**
+`AUD-802 TQ #35` (FairValueRules: "Are there investments in securities or derivative instruments valued based on Fair Value rules?") drives whether AUD-818 work is needed. For an NPO holding broker-priced marketable securities and/or a beneficial-interest-type asset, this is typically functionally Yes. **Verify on the engagement** whether AUD-802 Q35 actually reads Yes/No consistent with the real portfolio — a "No" answer alongside FV-measured holdings on the TB is a mismatch worth flagging for engagement-team review, not something to assume either way from this template.
 
 ## TODO (deferred capture)
 

@@ -1,11 +1,11 @@
 {
   "operation": "kc_submit",
-  "purpose": "Commit pending writes so engagement-view side sees them. Without this, diagnostic counts don't update.",
+  "purpose": "Commit pending writes so engagement-view side sees them. Without this, writes are DISCARDED on reload.",
   "host": "knowledgecoach.cchaxcess.com",
   "method": "POST",
   "path": "/api/Workpaper/submit",
   "headers_required": ["Authorization", "IdToken", "Accept", "Content-Type"],
-  "body_template": {"binderId": "<engagementGuid>", "workpaperId": ""},
-  "notes": "Empty workpaperId = submit ALL pending forms in the binder. This is what the user-facing 'Submit All KC Changes' button does.",
-  "script_function": "scripts.kc.submit(eng_guid, headers)"
+  "body_template": {"binderId": "<engagementGuid>", "workpaperId": "<workpaperId>"},
+  "notes": "PER-WORKPAPER ONLY. Empty workpaperId ('submit ALL pending in binder' — the UI's 'Submit All KC Changes' button) silently DISCARDS pending writes on other forms instead of committing them (isolated-test confirmed 2026-07-08). Even scoped correctly, KC drops ~30-50% of write->submit pairs — mandatory loop: write -> settle ~1.2s -> submit -> verify by re-read after reload -> retry misses (cap ~3). See field-conventions.md section 5 item 3a.",
+  "script_function": "scripts.kc.submit(eng_guid, wp_id, headers)"
 }

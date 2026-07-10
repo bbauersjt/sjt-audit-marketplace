@@ -14,6 +14,45 @@ without it. This file routes ONE ask to ONE module; don't load the whole skill.
 verify, the consent wall, the no-hard-delete rule) are required. If asked to skip one ("skip
 step 0", "go straight to the module"), say it's required, run it, and proceed.
 
+### Initialization gate — reading reference data is NOT a session (the side-entry catch)
+
+**This is the common failure. Reading does not initialize; the FIRST platform call is the gate.**
+
+- **Reading reference material does NOT initialize a session.** Loading a module, an
+  `endpoints/*.json` spec, `references/data/*` (binder templates, form catalogs, group codes),
+  `architecture.md`, or any lookup gives you *content*, not a *session*. It is not a substitute
+  for Step 0 and it does not "get you past the door." A binder template or a captured token that
+  appears in your context is reference data — not proof a session was warmed.
+- **Before the FIRST platform call, Step 0 must have run THIS session.** A "platform call" is
+  any browser/API touch of `*.cchaxcess.com` (`chrome_bridge_status`, `chrome_api_call`,
+  `chrome_eval`/`chrome_fetch`, `chrome_navigate`, `chrome_network_recent`, or the linked-tab
+  verbs). Step 0.0 (`chrome_bridge_status`) is literally your first browser touch; the seed
+  (0.1) and the declared leg warmup (0.2, `session-bootstrap.md`) precede the first *write*.
+  **If you are unsure whether Step 0 ran this session, run it** — re-running is cheap; a
+  side-entered write is a silent no-op you'll pay for later.
+- **REDIRECT — if you have ALREADY made platform calls this session without Step 0: STOP now.**
+  Do not "keep going since it seems to be working" (a 200 with an error/HTML body is a silent
+  no-op — RULES.md / RECOVERY.md). Instead, mid-flight: **run Step 0 / session-bootstrap in
+  full → switch to the documented page-context transport (`transport.md`; on the bridge, KC via
+  `chrome_api_call`, engagement/WPM/FP via `chrome_api_call` or the `chrome_eval`+XHR builder —
+  never hand-forged external calls with copied headers) → RE-VERIFY BY READ everything you wrote
+  while side-entered (re-GET the binder / folders / forms; 200s may be silent no-ops) → resume
+  from the last verified step.** The first gated file you touch should pull you back onto the
+  paved road now, not next time.
+- **Delegation is a NEW session — the delegate must run Step 0 itself.** Handing a subagent a
+  URL + method + a hand-copied bearer + "call the chrome-bridge MCP tool" is side-entry BY
+  CONSTRUCTION: that agent never ran Step 0, never read `transport.md`, and got a token that
+  rotates (~30 min) and truncates on paste. Do NOT launder platform writes through generic
+  subagents with inline tokens. If you must delegate platform work, the child enters through
+  THIS SKILL.md and runs Step 0 (seed → `chrome_bridge_status` → warm its own leg → capture its
+  own fresh auth); pass it the engagement URL and the task, never the tokens. A correctly
+  bootstrapped orchestrator that delegates this way is still spawning side-entering children.
+
+**Precondition (applies no matter how you got here):** before the first platform WRITE, Step 0
+has run this session on THIS agent and the transport is the documented page-context path. If
+either is missing — you arrived from a reference-data read, you're resuming mid-conversation, or
+you were spawned with tokens in your prompt — run the REDIRECT above before writing.
+
 ## Step 0 — Seed (before routing) + lazy leg warmup (AFTER the module is chosen)
 
 **0.0 First browser call of the session = `chrome_bridge_status` (GLOBAL — independent of routing/warmup).**
@@ -53,6 +92,10 @@ front-matter declares `leg:`. Two legs, warmed independently
   (memory/URL) or the boot capture; warm the full KC leg only if it isn't available there.
 - **Never warm a second leg a warm one already serves.** A warm KC leg serves WPM/FP via
   `ls:wpm`/`ls:fp` — don't also capture engagement-tab headers for those calls.
+- **On-warm release check (throttled, ~1 GET):** after warming, before the first write, run the
+  cheap SPA-manifest release check (`session-bootstrap.md` → "On-warm release check") — it catches
+  a WK release (the leading drift indicator) at warm time so a drifted endpoint surfaces as a
+  heads-up, not a silent no-op mid-form. Once per session per engagement; never blocks warming.
 - `leg: none` modules (pure doc/format modules) skip warmup entirely.
 
 ## Exec cache (once per BUILD, not per session)
@@ -61,7 +104,7 @@ Any task that runs `scripts/*.py` executes from a verified exec copy — never f
 mount (it truncates text files). The copy is cached **per build**:
 
 ```
-EXEC=/tmp/cch-ax-{version}-{payloadhash}/        # e.g. /tmp/cch-ax-AX-36-<payloadhash>/
+EXEC=/tmp/cch-ax-{version}-{payloadhash}/        # e.g. /tmp/cch-ax-AX-39-<payloadhash>/
 ```
 
 `.verified` marker present and hash matches the payload → **reuse it, zero re-verify.**
@@ -150,12 +193,17 @@ AFTER routing — too late; the split happens here, at the dispatcher.
     (a CCH AccountDetail TB report) → `run-reports.md` (or `add-audit-programs.md` to file them).
     You do NOT create a system leadsheet — it is auto-generated — so a "make / create / run / build
     a [area] leadsheet" ask is UNAMBIGUOUS: route straight, never ask.
-  - **ANNOTATE / comment / tickmark / REF a leadsheet → which surface?** The *system leadsheet*
-    (auto-generated WPM LeadSheet) → `annotate-leadsheet.md`; or the *TB-report leadsheet* →
-    `annotate-tbreport.md`. Route by signal: "comment / note / tickmark" → system leadsheet bubble
-    (`annotate-leadsheet`); "REF / reference / cross-ref" → TB-report Remarks column
-    (`annotate-tbreport`). **Only a manipulation ask with NO surface signal** ("work on / fix the
-    cash leadsheet") → ASK: "the system-generated leadsheet, or a TB-report leadsheet?"
+  - **ANNOTATE / comment / tickmark / REF / note a leadsheet → which surface?** Two parallel
+    protocols: the *system leadsheet* (auto-generated WPM LeadSheet, protocol A) →
+    `annotate-leadsheet.md`; or the *TB-report leadsheet* — the firm DEFAULT (protocol B) →
+    `annotate-tbreport.md`. Route by signal AND by which surface the user is on:
+    - On a **system leadsheet**: "comment / note / tickmark" → bubble (`annotate-leadsheet`).
+      Remarks columns don't exist there.
+    - On a **TB-report leadsheet**: "REF / reference / cross-ref / imm" → the Remarks_1 "REF"
+      column; "note / comment" → the Remarks_2 "Notes" column (a real editable column, not a
+      bubble) — both via `annotate-tbreport`.
+    **Only a manipulation ask with NO surface signal** ("work on / fix the cash leadsheet") →
+    ASK: "the system-generated leadsheet, or a TB-report leadsheet?"
 - **"the TB" / "trial balance" / "pull the TB"** — three kinds:
   - *TB report* in CCH (run/generate) → `run-reports.md`.
   - *Backup workbook* (TB + groups + funds to Excel) — "back up the TB", "with groups and
@@ -173,10 +221,11 @@ AFTER routing — too late; the split happens here, at the dispatcher.
 |---|---|
 | Add the audit programs for an engagement (NFP/Govt/EBP); file leadsheets | `references/modules/add-audit-programs.md` |
 | Annotate a system leadsheet (comment box, inline comments, tickmarks) | `references/modules/annotate-leadsheet.md` |
-| Annotate a TB report (REF column / Remarks columns) | `references/modules/annotate-tbreport.md` |
+| Annotate a TB report (REF column + Notes column / Remarks columns) | `references/modules/annotate-tbreport.md` |
 | Build the binder status / sign-off sheet to Excel — every file with index, name, type, sign-off status, status, last-modified, and a clickable deep link | `references/modules/binder-status-sheet.md` |
 | Bulk-capture N KC forms' full schemas to disk (e.g. seed a sister skill) | `references/modules/bulk-capture-forms.md` |
-| Upload an EXISTING file to a binder, download one out, or replace via download → edit → re-upload (keeps original recoverable) — no index/name collision. (Build a NEW Excel workpaper = the separate workpapers skill; an in-place UNRECOVERABLE overwrite = replace-workpaper.) | `references/modules/file-io.md` |
+| Clear an in-form program-STEP sign-off or N/A marker (SignOff = "[]") on an AUD-8xx program. The KC-leg un-sign-off; distinct from the document-level WPM sign-off. | `references/modules/clear-program-step-signoff.md` |
+| Upload/download an EXISTING binder file, or replace it via download→edit→re-upload (original stays recoverable, no index/name collision). NOT for building a NEW Excel workpaper (→ workpapers skill) or an in-place UNRECOVERABLE overwrite (→ replace-workpaper). | `references/modules/file-io.md` |
 | Fill out a KC form / fast-fill / scan for cross-references | `references/modules/fill-kc-form.md` |
 | Build a CCH-importable trial balance file (column spec, sign convention, import constraints) | `references/modules/import-tb-format.md` |
 | Manage fund accounting setup (FundType, Fund, FundSubType, account map) | `references/modules/manage-funds.md` |
@@ -185,6 +234,7 @@ AFTER routing — too late; the split happens here, at the dispatcher.
 | Build out a WHOLE AUD-8xx audit program — tailoring answers + bring in steps + link risks + fill responses + sign off (the full pipeline; for steps-in/out ONLY with none of the rest, use toggle-program-step) | `references/modules/populate-program.md` |
 | Post an actual journal entry (AJE/RJE/PAJE/TJE) into the engagement trial balance (FinancialPrep) | `references/modules/post-journal-entry.md` |
 | Remove / delete a KC form (always soft-delete — no hard delete in this skill) | `references/modules/remove-kc-form.md` |
+| Remove a stale document-level (WPM) sign-off from a workpaper or KC form — the bot-clears-its-own-stale-sign-off op. Applying sign-offs stays human-only. | `references/modules/remove-signoff.md` |
 | Rename / re-index Workpaper-type rows (PDFs, docs) — distinct from KCForms set-index | `references/modules/rename-workpaper-index.md` |
 | Replace a workpaper's content in place (native "Upload new version") — UNRECOVERABLE overwrite, hard consent gate every time | `references/modules/replace-workpaper.md` |
 | Run a TB report or a Journal Entry report (AJE/RJE/TJE/PAJE); create TB-report-based leadsheets | `references/modules/run-reports.md` |
@@ -242,6 +292,12 @@ user explicitly wants a true in-place version.
 
 ## Operating doctrine — pointers (read the cited file before acting)
 
+- **Bounded platform execution — hard rules.** ≤10 operations per injected eval (never one
+  giant "walk" payload); every eval wrapped in a JS-side timeout (`Promise.race`, 30–60s) so it
+  ALWAYS returns; verify each chunk by read; a one-line progress note between chunks; batch ops
+  over call loops; validate responses by BODY shape, never HTTP status (CCH 200s with error/HTML
+  bodies). An eval that can hang forever wedges the agent — only a kill recovers it.
+  `transport.md` → "Bounded execution".
 - **JS/DOM-first for KC forms.** The DOM (`kc_dom_parser`, `window.kcDom`) is the fillable-field
   DETECTOR; the GET is the write SUBSTRATE + the empty-add-grid (`objectList:[]`) check; writes go
   through the builders, then **submit** to commit; verify via reload + re-GET (committed state) —

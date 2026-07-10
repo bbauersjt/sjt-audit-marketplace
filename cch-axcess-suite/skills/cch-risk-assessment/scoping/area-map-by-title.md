@@ -19,7 +19,7 @@ Source: `cch-axcess/references/data/kc-forms-catalog-rich.xlsx` (1,660-form cata
 | Area (binding key) | Plain name | ASB/HOA | CNS | EBP | ALG | NPO |
 |---|---|---|---|---|---|---|
 | CASH | Cash | 801 | 801 | 801 | 801 | 801 |
-| INVEST | Investments | — | — | — | 802 | 802 |
+| INVEST | Investments | 802A | —† | 802A/802B | 802 | 802 |
 | AR | Accounts Receivable / Revenue | 803 | 803 | 803 | — | 803 |
 | ERR | Exchange Revenue & Receivables | — | — | — | 803 | — |
 | SPLITINTX | Split-Interest Agreements | — | — | — | — | 804 |
@@ -43,13 +43,14 @@ Source: `cch-axcess/references/data/kc-forms-catalog-rich.xlsx` (1,660-form cata
 | JE2 | Journal Entries (risk area) | 814 | 814 | 812 | 813 | 816 |
 | RPTRNS2 | Related Party Transactions (risk area) | 815 | 815 | 813 | 814 | 817 |
 | AUD815 | Minutes & Other Records | — | — | 815 | — | — |
+| (participant data) | Participant Data / Benefit Obligations | — | — | 814A–D | — | — |
 | FAIRVALUE2 | Fair Value Measurements (risk area) | 816 | 816 | 816 | 815 | 818 |
 | INTERFUND | Interfund Transactions | — | — | — | 816 | — |
 | VIE2 | Variable Interest Entities | 817 | 818 | — | — | — |
 | CONTRACT | Uncompleted / Completed Contracts | — | 817 | — | — | — |
 | BUDGET2 | Budgets | — | — | — | 817 | — |
 | STOCK | Share-Based Payments | 818 | 819 | — | — | — |
-| DERIVATIVE | Derivative Instruments | — | — | — | 818 | — |
+| DERIVATIVE | Derivative Instruments | 802B | — † | — | 818 | — |
 | COMMIT | Commitments & Contingencies (risk area) | 819 | 820 | 817 | 821 | 819 |
 | SELF | Self-Insurance | — | — | — | 819 | — |
 | (bind=None) | Accounting Estimates | 820 | 821 | 818 | 822 | 820 |
@@ -57,7 +58,12 @@ Source: `cch-axcess/references/data/kc-forms-catalog-rich.xlsx` (1,660-form cata
 | CONCENT | Concentrations (risk area) | 821 | 822 | 819 | 823 | 821 |
 | BUSINESS | Business Combinations | 822 | 823 | — | — | 822 |
 
-Numbers are the AUD-8xx suffix (801 = AUD-801). Resolve the exact form on the engagement through `cch-axcess`.
+Numbers are the AUD-8xx suffix (801 = AUD-801). A/B suffixes are distinct forms (Commercial:
+802A Investments, 802B Derivatives & Hedging; EBP: 802A Investments non-certified/ERISA, 802B
+Investments certified; EBP 814A DC participant data, 814B DB participant data, 814C H&W DB,
+814D Benefit Obligations DB/H&W). † CNS (Construction 2025) not re-verified live — resolve via
+the catalog before relying on its Investments/Derivatives rows. Resolve the exact form on the
+engagement through `cch-axcess`.
 
 ## Title-distinctive areas (scope these only for the matching title)
 
@@ -80,4 +86,4 @@ JE2, RPTRNS2, FAIRVALUE2, COMMIT, CONCENT, and Accounting Estimates are scoped o
 
 ## Provenance / maintenance
 
-Built 2026-05-30 from the rich form catalog (titles: Commercial/Construction/EBP 2025, Governmental 2025, NFP 2026). When titles re-version, re-query the catalog rather than hand-editing — numbering shifts. The binding keys are stable across versions; the AUD numbers are not.
+Built 2026-05-30 from the rich form catalog (titles: Commercial/Construction/EBP 2025, Governmental 2025, NFP 2026). **Verified live 2026-07-07** against the KC title library (`GetWorkpaperListForAddForms`) for GOV.2025.1, NFP.2026.1, COM.2025.1, EBP.2025.1 — all rows confirmed except the corrections applied that day (INVEST/DERIVATIVE 802A/802B on Commercial+EBP; participant-data 814A–D row added). CNS not re-verified (†). When titles re-version, re-query the catalog rather than hand-editing — numbering shifts. The binding keys are stable across versions; the AUD numbers are not.

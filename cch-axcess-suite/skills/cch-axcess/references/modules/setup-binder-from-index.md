@@ -22,7 +22,28 @@ validated_on:
 ---
 # Module — Set Up New Binder
 
+> **GATE — platform module.** Requires Step 0 (`session-bootstrap.md`) run THIS session +
+> the page-context transport (`transport.md`). **Reading this file is NOT initialization.**
+> If you have ALREADY made platform calls this session without Step 0 (e.g. you were spawned
+> with a token in your prompt, or jumped straight to `chrome_api_call`): **STOP now** — run
+> Step 0 in full, switch to the page-context transport, RE-VERIFY BY READ everything you wrote
+> while side-entered (200s may be silent no-ops), then resume from the last verified step.
+> (SKILL.md → "Initialization gate".)
+
 **Status:** validated on one real engagement (APNM 2025). Re-run cautiously on new client types.
+
+## Batch-first — check this table BEFORE looping single calls
+
+Building a binder one call per object is the known runaway failure (RULES-§T class; the Rock
+build looped folder-by-folder while 2 batched PUTs moved 19 objects). Chunk per
+`transport.md` → "Bounded execution" (≤10 ops per eval, JS-side timeout, verify by read).
+
+| Doing this N times? | Use instead |
+|---|---|
+| Move / file N workpapers, leadsheets, or forms | ONE `scripts.wpm.move(client_id, items, hdrs)` — `items` is a LIST; batch it (2 PUTs filed 19 objects live, 2026-07-07) |
+| Add N KC forms | ONE `kc_add_forms` batch body via `scripts.catalog.build_add_forms_body` — array body; see `transport.md` → array-body note for the wire path |
+| Create N folders | No batch endpoint exists — per-call is correct, but run them in bounded chunks (≤10 per injected eval), not one eval per folder |
+| Inventory the binder / find items | `scripts.binder_map.build_map_js` / `fetch_chunk_js` — never a folder-by-folder GET loop |
 
 **Triggers:** "set up a new binder", "build a new binder", "build out the binder", "build the binder for [client]", "populate this engagement", "make the folders", "build the index", "build out [client]'s engagement", any phrasing supplying an engagement and asking for the standard structure.
 

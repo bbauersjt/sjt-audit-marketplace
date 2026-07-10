@@ -7,7 +7,8 @@
     "titles": {
       "method": "GET",
       "path": "/api/title",
-      "returns": "ALL installed titles (218 at capture). Fields: id (titleGuid), name, year, refTag, familyID, previousYearTitleId, isSingleAudit, kcVersionContent, shortName.",
+      "returns": "ALL installed titles (218 at capture; 221 live 2026-07-07). Fields: id (titleGuid), name, year, refTag, familyID, previousYearTitleId, isSingleAudit, kcVersionContent, shortName.",
+      "response_wrapper": "WRAPPED: {result: [...titles], statusCode} — parse at .result (verified live 2026-07-07; drift probe kc_title_library fingerprints the refTag set as a new-edition detector).",
       "use": "newer-title check: group by familyID, compare binder title year vs max year."
     },
     "forms_for_title": {

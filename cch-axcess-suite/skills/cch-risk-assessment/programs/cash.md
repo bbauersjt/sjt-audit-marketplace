@@ -7,8 +7,9 @@
 > **Template pattern for every program MD.** Same structure should be used for all `programs/{area}.md`.
 > This file is JUDGMENT: which steps, which assertions, which approach, what the firm's typical responses
 > are. **All platform mechanics — field locators, valueKey codes, endpoint URLs, write payloads, submit/verify
-> — live in `cch-axcess` (`fill-kc-form.md` + `field-conventions`).** Name the program + the values in a
-> HANDOFF; let `cch-axcess` execute.
+> — live in `cch-axcess` (`fill-kc-form.md` for RelevantAssertion/IR/CR/RMM property writes,
+> `populate-program.md` for the full step build-out pipeline, `toggle-program-step.md` for steps-in/out only,
+> + `field-conventions`).** Name the program + the values in a HANDOFF; let `cch-axcess` execute.
 
 ## How a program ties together (conceptual model)
 
@@ -191,10 +192,12 @@ when the response is a specific WP reference (e.g., `1002`) that varies per enga
 
 ## Platform mechanics
 
-All API specifics for this program — GET/resolve the workpaperId, the step/assertion/RMM/IR/approach write
-payloads, the submit-and-verify cycle — are in `cch-axcess` (`references/modules/fill-kc-form.md` and
-`references/config/field-conventions.md`). This file does not restate them; the HANDOFF names AUD-801 and
-the values, and `cch-axcess` executes.
+All API specifics for this program — GET/resolve the workpaperId, the RelevantAssertion/IR/CR/RMM/approach
+write payloads, the step build-out pipeline (tailoring → step selection → risk-linking → responses →
+sign-off), and the submit-and-verify cycle — are in `cch-axcess` (`references/modules/fill-kc-form.md` for
+property writes, `references/modules/populate-program.md` for the full step build-out, `references/modules/
+toggle-program-step.md` for steps-in/out only, and `references/config/field-conventions.md`). This file does
+not restate them; the HANDOFF names AUD-801 and the values, and `cch-axcess` executes.
 
 ## Validation log
 

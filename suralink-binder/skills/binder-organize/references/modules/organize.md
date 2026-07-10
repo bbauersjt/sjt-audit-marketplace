@@ -75,11 +75,15 @@ signals = {"category": "<NN Category folder>",   # e.g. "03 Cash"
    - `c["confident"] is False` → **Claude judges**. Look at `c["alternatives"]`,
      read the document if needed, decide. If still genuinely unclear, the file
      goes to `Other` — never guess a section. Ask the user on anything material.
-10. **Perm File date split** (only if the user asked for it in Phase 1). For
-    each perm-bucket file, find the document's date — read the document or use
+10. **Perm File subfolders.** For each perm-bucket file, first try the ruled
+    topical subfolders: `sub = O.perm_subfolder_for(tx, ct, signals)` (EBP files
+    to `9100 Plan Documents` / `9200 Service Agreements` / `9300 SOC 1 Reports`
+    per the EBP binder template; standard has no rules and always gets `None`).
+    Only if that returned `None` AND the user asked for the date split in
+    Phase 1: find the document's date — read the document or use
     `O.extract_year(filename)` as a fallback — then
-    `sub = O.perm_split(tx, doc_year, fiscal_year)`. No split requested → leave
-    `perm_subfolder=None` (flat `9000 Perm File`).
+    `sub = O.perm_split(tx, doc_year, fiscal_year)`. Neither applies → leave
+    `perm_subfolder=None` (file sits at the `9000 Perm File` root).
 11. Plan the destination:
 ```python
 dest_parts = O.plan_destination(tx, c, sample_flag=is_sample,

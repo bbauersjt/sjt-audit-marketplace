@@ -1,13 +1,15 @@
 ---
-summary: Annotate a TB report (REF column / Remarks columns)
+summary: Annotate a TB report (REF column + Notes column / Remarks columns)
 leg: wpm
 triggers:
   - "add a REF to the TB report"
   - "add a REF2 to [row]"
   - "fill in the REF column on the TB report"
+  - "add a note to [row] on the TB report / leadsheet"
   - "annotate the TB report"
   - "put a reference next to [fund/group] on the TB"
   - "clear the REF on [row]"
+  - "clear the note on [row]"
   - "add a cross-reference / workpaper reference to [row]"
 inputs:
   - "Engagement tab (monkeypatch installed BEFORE the report opens)"
@@ -20,28 +22,43 @@ calls:
   - scripts.leadsheet.tbreport_post_comment
   - scripts.leadsheet.tbreport_delete_comment
   - scripts.reports.add_remarks_column
-status: validated (transport + columnId + referenceType live-captured 2026-06-04)
+status: validated (transport + columnId + referenceType live-captured 2026-06-04; TWO Remarks columns REF+Notes made the firm standard 2026-07-09)
 ---
-# Module — Annotate TB Report REF/Remarks columns (workbench-api)
+# Module — Annotate TB Report REF/Notes columns (workbench-api)
 
 ## Terminology — read this first (firm-specific, causes mis-routing)
 
-- **Firm "leadsheet" = a TB report** (`Report` type, AccountDetail) that the firm generates
-  and files. Its ONLY writable annotation is the **REF column** — a `Remarks`-type column
-  that must EXIST on the report (see Step 0). REF text is visible at a glance — that is
-  what makes it usable for workpaper cross-references.
-- **System leadsheet = the auto-generated WPM `LeadSheet`** (one per group on the DEFAULT
-  grouping list; alternate lists get none). It is the WRITE SURFACE for comment bubbles and
-  tickmarks (FP-API — `annotate-leadsheet.md`). Those flow ONE WAY onto TB reports, where
-  they render read-only in the native `cpComments` / `cpTickMarks` columns.
-- **REF values do NOT appear on the system leadsheet.** The mirror is one-directional
-  (system lead → TB report). Do not expect a REF write to show anywhere but the TB report.
-- **Routing vocabulary:** "REF" / "reference" / "cross-ref" / "W/P ref" → THIS module.
-  "comment" / "note" / any bubble language → `annotate-leadsheet.md` (FP-API). Never
-  create a "Notes" Remarks column to satisfy a comment ask.
+The firm runs **TWO parallel leadsheet-annotation protocols** — know which surface the user
+is on before writing anything:
+
+- **Protocol A — system-generated leadsheet** (the auto-generated WPM `LeadSheet`, one per
+  group on the DEFAULT grouping list; alternate lists get none). WRITE SURFACE = comment
+  bubbles and tickmarks (FP-API — `annotate-leadsheet.md`). Those flow ONE WAY onto TB
+  reports, where they render read-only in the native `cpComments` / `cpTickMarks` columns.
+  Use this protocol whenever the user is filed off a system-generated LeadSheet.
+- **Protocol B — TB-report leadsheet (the FIRM DEFAULT).** The firm works off TB-report
+  leadsheets, not system-generated leads. This module (`annotate-tbreport.md`) covers this
+  protocol. Its writable annotation surface is **TWO editable Remarks columns**, which must
+  EXIST on the report (see Step 0):
+  - **Remarks_1, named "REF"** — cross-references / index refs / "imm" (immaterial) tags /
+    tickmark-style annotations.
+  - **Remarks_2, named "Notes"** — free notes. Notes on a TB-report lead go in the Notes
+    COLUMN, NOT as bubbles.
+  Both columns are visible at a glance — that is what makes them usable for workpaper
+  cross-references and review notes alike.
+- **The mirror is one-directional and does not carry Notes.** System-lead bubbles/tickmarks
+  flow system lead → TB report (read-only). REF/Notes column values do NOT appear on the
+  system leadsheet and flow nowhere else — they live on the TB report only. Do not expect a
+  REF or Notes write to show anywhere but the TB report.
+- **Routing vocabulary (TB-report lead, protocol B):** "REF" / "reference" / "cross-ref" /
+  "W/P ref" / "imm" → Remarks_1 "REF". "note" / "comment" (on a TB-report lead) → Remarks_2
+  "Notes" — a real editable column, not a bubble.
+- **Routing vocabulary (system lead, protocol A):** "comment" / "note" / "tickmark" → a
+  bubble via `annotate-leadsheet.md` (FP-API). REF/Notes columns don't exist on a system
+  lead.
 - **Filed-system-lead rule:** if a system-generated LeadSheet is FILED in the binder, that
-  user works off system leads (they don't generate TB-report leadsheets) — route ALL
-  annotation asks to bubbles (`annotate-leadsheet.md`); REF columns don't exist there.
+  user works off system leads (protocol A) — route ALL annotation asks to bubbles
+  (`annotate-leadsheet.md`); REF/Notes columns don't exist there.
 
 ## Transport (live-captured 2026-06-04 — supersedes all prior claims)
 
@@ -87,22 +104,29 @@ do NOT add a Remarks column or warm anything first.
   catching it here is the entire point of this step. Only once the row is confirmed do you
   proceed to the column preflight.
 
-### 0b. Preflight — REF column present? Existing value? (mandatory)
+### 0b. Preflight — REF/Notes columns present? Existing value? (mandatory)
 
 After resolving the report, GET `tbreportedit/{clientId}/{engagementGuid}/{reportGuid}`:
 
-- **No `type:"Remarks"` entry in `reportFormat.columns`** (or `columns: []` = CCH defaults)
-  → the report has NO REF column. The native `cpComments` column you may see in the DOM is
-  NOT a REF column and cannot be written via this API. OFFER to add one:
-  `scripts.reports.add_remarks_column(...)` (PATCH `/v1/trialbalancereport/editReports`,
-  createReports-shaped body, full columns array; new column = `Remarks_{N}`, name "REF",
-  `engagementId: clientId` quirk). Or stop and tell the user to add it in the UI
-  (Edit report → Columns → add remarks column). The page must be reloaded after.
+- **No `type:"Remarks"` entries in `reportFormat.columns`** (or `columns: []` = CCH defaults)
+  → the report has NEITHER Remarks column. The native `cpComments` column you may see in
+  the DOM is NOT a Remarks column and cannot be written via this API. OFFER to add the
+  firm-standard pair: `scripts.reports.add_remarks_column(...)` (PATCH
+  `/v1/trialbalancereport/editReports`, createReports-shaped body, full columns array) —
+  call it once for `name="REF"` and once more for `name="Notes"` (each call appends the
+  next free `Remarks_{N}`, `engagementId: clientId` quirk on both). Or stop and tell the
+  user to add them in the UI (Edit report → Columns → add remarks column, twice). The page
+  must be reloaded after.
+- **Only ONE `type:"Remarks"` entry exists** → the report is missing its second column
+  (older report, or built before AX-43). OFFER to add the missing one via
+  `add_remarks_column` with the appropriate `name`.
 - **Existing value at the target cell** → prompt the user before overwriting (the POST is a
   silent upsert). Read current values via the row probe or the report data GET.
 - Column NAME is irrelevant to the API: `columnId` is positional — `Remarks_1` → columnId 1,
-  `Remarks_2` → 2 — and is RENAME-PROOF (captured: column renamed to "REF" still posts
-  columnId 1). Identify the target column by `Remarks_{N}` id, never by header text.
+  `Remarks_2` → columnId 2 — and is RENAME-PROOF (captured: column renamed to "REF" still
+  posts columnId 1). Identify the target column by `Remarks_{N}` id, never by header text.
+  By firm convention `Remarks_1` = "REF", `Remarks_2` = "Notes", but always confirm against
+  the actual `name` field on this report rather than assuming the convention held.
 
 ### 1. Resolve the integer reportId (skip if known)
 
@@ -134,7 +158,7 @@ wrong level for the row (or the raw probe `rowType` string).
 ```python
 js = leadsheet.tbreport_post_comment(
         client_id, report_id, client_id,
-        column_id=1,                    # positional: Remarks_1. Rename-proof.
+        column_id=1,                    # positional: Remarks_1="REF". Use 2 for Remarks_2="Notes". Rename-proof.
         reference_id=row_reference_id,
         reference_type=reference_type,  # per the Step-2 LEVEL mapping
         period_id=engagement_id,        # periodId carries the ENGAGEMENT id (naming gotcha)
@@ -151,14 +175,14 @@ js = leadsheet.tbreport_post_comment(
 
 ### 5. Verify, then tell the user to refresh
 
-Re-GET (200 ≠ applied). REF changes are not visible until page reload.
+Re-GET (200 ≠ applied — architecture.md). REF/Notes changes are not visible until page reload.
 
 ## Field-naming gotcha (differs from FP-API)
 
 | API | POST response id field | DELETE path tail |
 |---|---|---|
 | FP-API (bubble comment) | `commentReferenceId` | `/Annotation/comment/{clientId}/{commentReferenceId}` |
-| workbench-api (TB report REF) | `reportCommentReferenceId` | `/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}` |
+| workbench-api (TB report REF/Notes) | `reportCommentReferenceId` | `/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}` |
 
 ## Known failure modes
 

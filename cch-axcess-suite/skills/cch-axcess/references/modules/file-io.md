@@ -1,5 +1,5 @@
 ---
-summary: Upload an EXISTING file to a binder, download one out, or replace via download → edit → re-upload (keeps original recoverable) — no index/name collision. (Build a NEW Excel workpaper = the separate workpapers skill; an in-place UNRECOVERABLE overwrite = replace-workpaper.)
+summary: Upload/download an EXISTING binder file, or replace it via download→edit→re-upload (original stays recoverable, no index/name collision). NOT for building a NEW Excel workpaper (→ workpapers skill) or an in-place UNRECOVERABLE overwrite (→ replace-workpaper).
 leg: wpm
 triggers:
   - "add this file to the binder"
@@ -23,11 +23,11 @@ status: validated   # live end-to-end on Playground binder 2026-05-31
 ---
 # Module — Workpaper File I/O (upload / download / replace)
 
-> **Index verification (AX-26).** Read display indexes with
-> `scripts.wpm.verify_index(row, object_type)` — Reports/KCForms use `index`,
-> Workpapers use `documentIndex`; hand-picking the field false-negatives (BT3 B6).
-> And NEVER hand-assemble `folderParentLineItems` — `wpm.move()` now refuses them
-> (semantics are inverted per type; hand-rolled bodies silent-200, BT3 B5/B12).
+> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
+> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
+> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
+> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
+> semantics are inverted per type; architecture.md → Move payload semantics).
 
 All three flows live-validated on the Playground binder (client 100173, eng 390765) 2026-05-31.
 

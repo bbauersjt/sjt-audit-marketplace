@@ -30,7 +30,7 @@ Default to an inline answer only when no owner matches.
 ```
 
 ## 1. Disposition codes
-**Write precondition:** only apply this cascade to WRITE fields when `SKILL.md` Operating model steps 1–3 are complete for THIS engagement (entity type determined, binder read, gather/confirm batch surfaced). If you arrived here from a lookup or are otherwise uninitialized, stop and run `SKILL.md` step 1 first — never fill from a lookup-only state.
+**Write precondition:** only apply this cascade to WRITE fields when `SKILL.md` Operating model steps 1–3 are complete for THIS engagement (entity type determined, binder read, gather/confirm batch surfaced) — or a valid `engagements/<client>/form-fill-context.md` gather artifact exists for this engagement (fleet mode; see `SKILL.md`). If you arrived here from a lookup or are otherwise uninitialized, stop and run `SKILL.md` step 1 first (or, inside a fleet section bot, request the artifact from `0200-planning-risk` and mark the fill pending) — never fill from a lookup-only state.
 
 **Answer cascade — strict order, take the first rung that hits. ~75% of this job is generic answers to boilerplate, so default to FILLING:**
 1. **[X] cross-reference** — topic owned by another form (§2) → reference it.
@@ -103,23 +103,29 @@ CCH reuses AUD/AID/COR/KBA numbers across entity titles. **Never assume a number
 | Program / topic | Govt | NPO | Commercial | EBP |
 |---|---|---|---|---|
 | Related party / party-in-interest | AUD-814 | AUD-817 | AUD-815 | AUD-813 |
-| Journal entries | AUD-813 | AUD-816 | (folded; confirm) | (folded; confirm) |
-| Net assets / equity | fund balance/net position (binder 3000) | AUD-814 (net assets) | AUD-812 (equity) | NAAB — trivial |
+| Journal entries | AUD-813 | AUD-816 | AUD-814 | AUD-812 |
+| Net assets / equity | AUD-811 (net position/fund balance) | AUD-814 (net assets) | AUD-812 (equity) | NAAB — trivial |
 | Revenue / contributions | nonexchange (substantive) | AUD-805 (contributions) | AUD-803 (ASC 606 rev/AR) | AUD-803 gate (contributions) |
 | Inventory | rare | rare | AUD-804 | n/a |
 | Split-interest agreements | n/a | AUD-804 | n/a | n/a |
 | Income tax / plan tax status | n/a | AUD-812 (UBI/tax) | AUD-810 (income tax) | AUD-810 (plan tax status) |
 | VIE / consolidation | n/a | n/a | AUD-817 | n/a |
-| Estimates / fair value | AUD-822 | AUD-820 / AUD-818 (FV) | AUD-820 | AUD-818 (FV) |
-| Commitments & contingencies | AUD-819 | AUD-817 | AUD-819 | mirrors RPT |
+| Estimates / fair value | AUD-822 / AUD-815 (FV) | AUD-820 / AUD-818 (FV) | AUD-820 / AUD-816 (FV) | AUD-818 / AUD-816 (FV) |
+| Commitments & contingencies | AUD-821 | AUD-819 | AUD-819 | AUD-817 |
 | Participant data | — | — | — | AUD-814A(-D) |
 | Benefit payments | — | — | — | AUD-809 |
-| Investments | AUD-802 | AUD-802 | AUD-802 | AUD-802A full / AUD-802B certified |
+| Investments | AUD-802 | AUD-802 | AUD-802A (802B = derivatives/hedging) | AUD-802A non-certified/ERISA / AUD-802B certified |
+
+*Verified/corrected 2026-07-07 against the live KC title library (GetWorkpaperListForAddForms:
+GOV.2025.1, NFP.2026.1, COM.2025.1, EBP.2025.1) — the earlier rows carried six wrong/unresolved
+cells (JE Commercial+EBP, Govt equity, EBP+Commercial FV, Commitments Govt/NPO/EBP). Numbers
+shift on title re-versions: reconcile with `cch-risk-assessment/scoping/area-map-by-title.md`
+(same live verification) and re-pull when editions change.*
 
 **Collision watch — the wrong-pull traps (resolve by entity title every time):**
 - **AUD-813** = Journal Entries on Govt/NPO concluding, but = related-party / party-in-interest on **EBP**.
 - **AUD-814** = Related Party on Govt, but = Net Assets on **NPO** (and AUD-814A = participant data on EBP).
-- **AUD-817** = related party / contingencies on NPO, but = **VIE on Commercial**.
+- **AUD-817** = related party on NPO, = **VIE on Commercial**, = commitments & contingencies on **EBP**.
 - **AUD-810** = income taxes on Commercial, but = plan tax status on **EBP**.
 - **AUD-804** = inventory on Commercial, but = split-interest on **NPO**.
 - **AUD-812** = equity on Commercial, but = UBI/tax on **NPO**.

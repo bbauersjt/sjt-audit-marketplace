@@ -20,7 +20,10 @@
 //  - SignOff needs BOTH value AND valueKey = initials. valueKey-only is silently
 //    ignored (state stays 0). (Corrects the old enums/arch "valueKey only" note.)
 //  - Tight back-to-back UpdateProperty writes to one form silently drop (HTTP 200,
-//    no persist). ~300ms inter-write gap is the floor; we use 300-360ms.
+//    no persist). 2026-07-08 correction: the old ~300ms floor is WRONG — ~60% still
+//    dropped at ~350ms, and ~30-50% drop even at 1-2s gaps. Pace ~1200ms and rely on
+//    the verify+repair loop (NOT pacing) for persistence; verify-by-read is mandatory
+//    (field-conventions.md section 5 item 3a).
 //  - GOTCHA: an API UpdateProgramStep does NOT make the Angular UI re-render the
 //    newly-visible steps, so the Risks-checkbox / Comment-box DOM nodes aren't there
 //    yet. You MUST reload the tab between tqAndVisible() and build() so the rendered

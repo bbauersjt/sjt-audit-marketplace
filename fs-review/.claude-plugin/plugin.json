@@ -1,10 +1,10 @@
 {
   "name": "fs-review",
-  "description": "Technical proof and review of financial statement packages — commercial (ASC/FASB), nonprofit (ASC 958), governmental (GASB/CAFR/Single Audit), and employee benefit plans (ERISA/ASC 962-960-965). Math, cross-reference, and disclosure review before QC.",
-  "version": "1.0.0",
+  "description": "Technical proof and review of financial statement packages — commercial (ASC/FASB), nonprofit (ASC 958), governmental (GASB/ACFR/Single Audit), and employee benefit plans (ERISA/ASC 962-960-965). One orchestrator skill + shared procedure modules + deterministic math/extraction scripts + industry overlays (construction). Math, cross-reference, and disclosure review before QC.",
+  "version": "2.1.0",
   "author": {
     "name": "SJT Group CPA",
     "email": "bbauer@sjtgroupcpa.com"
   },
-  "keywords": ["audit", "financial-statements", "fs-review", "gaap", "gasb", "erisa", "disclosure"]
+  "keywords": ["audit", "financial-statements", "fs-review", "gaap", "gasb", "erisa", "disclosure", "construction", "wip"]
 }

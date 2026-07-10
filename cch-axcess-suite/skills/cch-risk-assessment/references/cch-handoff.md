@@ -111,7 +111,10 @@ Reason: AU-C 240 fraud risk on cash collection — multiple field offices with l
 
 ```
 HANDOFF → cch-axcess
-Module: fill-kc-form.md   (or add-audit-programs.md / toggle-program-step.md per the ask)
+Module: populate-program.md   (full pipeline: step selection + risk-linking + responses + sign-off.
+                                Use toggle-program-step.md if this is steps-in/out ONLY, with none of
+                                the rest. Use add-audit-programs.md only if the AUD-8xx form itself
+                                isn't yet in the binder.)
 Form: AUD-801 (Cash) — program workpaper
 Engagement: 6b99b20e-cf08-4537-850f-a7f159eec1bc
 Writes:

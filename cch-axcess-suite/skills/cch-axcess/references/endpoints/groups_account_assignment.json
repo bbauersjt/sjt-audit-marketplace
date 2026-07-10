@@ -47,6 +47,7 @@
     "note": "The wire body sent by the UI carries ~30 fields. scripts.groups.assign_account_to_group preserves whatever row you read via GET and just swaps the group; build_patch_body() is the minimal hand-rolled version."
   },
   "semantics": {
+    "order_must_be_integer": "LIVE 2026-07-07 (clientId 103426): the FinancialGroup GET can emit group.order as a FLOAT ('order': 5.0); the PATCH endpoint 400s 'Input string 5.0 is not a valid integer' if you pass the row through unmodified. Coerce order (top-level and type.order) to int before PATCHing — 17/17 400s before the coercion, 17/17 200s after.",
     "no_unassign_state": "Every account is always in SOME group per list. There is no null group. To 'remove' from a custom group, reassign to whatever Global group fits.",
     "autosaves_immediately": "Every reassignment fires its own PATCH; no batch save button on the TB tab. Brett's note: 'CCH was watching the whole time, doesn't let you save when you're happy, you save every change you make on this one.'",
     "incremental_per_account": "Each PATCH touches one account. Bulk reassignment = N PATCHes (use build_bulk_assign_js for one browser call).",

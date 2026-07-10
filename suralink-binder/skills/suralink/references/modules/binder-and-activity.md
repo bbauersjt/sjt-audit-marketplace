@@ -46,6 +46,9 @@ folder they belong in.
 ## Known failure modes
 
 - Empty binder map / timeline → tab not on `Audit.php`, or session expired (`401`).
+- Wrong-audit data → the tab was on a DIFFERENT auditId than requested (stale tab
+  or login-bounce `returnTo`). Run `suralink.verify_audit_js(audit_id)` before the
+  scrape and require `ok:true` (architecture.md → "Session verification").
 - `loadIAN` is a gateway call — run sequentially (Suralink session serializes
   gateway calls; CSRF is read live per call but rarely actually rotates).
 - The timeline includes firm-side files too, not only client uploads — filter on

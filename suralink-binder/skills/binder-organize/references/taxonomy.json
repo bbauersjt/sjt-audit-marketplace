@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "_comment": "Binder taxonomy for the binder-organize skill. Seeded from the cch-axcess skill's binder-template.xlsx (standard) and binder-template-ebp.xlsx. Section folders use 4-digit indexes so the organized folder matches the firm's CCH Axcess binders. Edit this file to retune categories, keywords, or naming WITHOUT touching skill code. Folder name = '<index> <name>'.",
+  "version": 2,
+  "_comment": "Binder taxonomy for the binder-organize skill. Conformed to the cch-axcess skill's binder templates (binder-template.xlsx standard / binder-program-template-ebp.xlsx EBP) — those templates are the ruled index; fix drift HERE to the template, never the other way (BB 2026-07-08). Section folders use 4-digit indexes so the organized folder matches the firm's CCH Axcess binders. Folder labels may be shortened versions of the template group names; the index is the identity. Edit this file to retune categories, keywords, or naming WITHOUT touching skill code. Folder name = '<index> <name>'.",
 
   "folder_name_format": "{index} {name}",
 
@@ -23,7 +23,7 @@
     "index": "9000",
     "name": "Perm File",
     "mode": "flat_dump",
-    "_comment": "Perm file is one flat folder by default - every client builds it differently, so no sub-sorting. Optional date_split (off unless the user asks) splits it two ways against the engagement fiscal year.",
+    "_comment": "Perm file is one flat folder by default for STANDARD clients. For client types listed under 'subfolders' (per the EBP binder template's 9100/9200/9300), a perm-bucket file is matched against the topical rules and filed into the matching subfolder; no match stays at the 9000 root. Optional date_split (off unless the user asks) applies only to files no topical rule claimed.",
     "date_split": {
       "enabled_by_default": false,
       "carryforward": "Carryforward",
@@ -39,7 +39,30 @@
                  "amendment", "plan document", "adoption agreement",
                  "trust agreement", "trust document", "organizational document",
                  "governing document", "charter", "prior year",
-                 "permanent file"]
+                 "permanent file",
+                 "spd", "summary plan description", "board resolution",
+                 "soc 1", "soc1", "soc-1", "soc 2", "soc2",
+                 "service auditor", "bridge letter", "gap letter"],
+    "subfolders": {
+      "_comment": "Ruled topical subfolders per client type, from the EBP binder template SECTION 90 (9100 Plan Documents / 9200 Service Agreements / 9300 SOC 1 Reports). Scored like classify(): most keyword hits wins; zero hits stays at the 9000 root. The standard template rules no subfolders, so 'standard' has no entry.",
+      "ebp": [
+        {"name": "9100 Plan Documents",
+         "keywords": ["plan document", "adoption agreement", "amendment",
+                      "base plan", "volume submitter", "spd",
+                      "summary plan description", "determination letter",
+                      "opinion letter", "irs approval", "irs letter",
+                      "board resolution", "trust agreement", "trust document"]},
+        {"name": "9200 Service Agreements",
+         "keywords": ["service agreement", "services agreement", "asa",
+                      "recordkeeping agreement", "administrative services",
+                      "custody agreement", "custodial agreement",
+                      "trustee agreement", "fee schedule", "fee disclosure"]},
+        {"name": "9300 SOC 1 Reports",
+         "keywords": ["soc 1", "soc1", "soc-1", "soc 2", "soc2",
+                      "service auditor", "bridge letter", "gap letter",
+                      "service organization"]}
+      ]
+    }
   },
 
   "single_audit": {
@@ -66,7 +89,9 @@
       "sections": [
         ["0100", "Pre-Engagement and Acceptance"],
         ["0200", "Planning"],
+        ["0300", "Understanding the Entity"],
         ["0400", "Internal Controls"],
+        ["0500", "Risk Assessment"],
         ["0600", "Concluding Procedures"],
         ["0700", "Reports and Communications"],
         ["0900", "Trial Balance"],
@@ -94,13 +119,16 @@
       "keywords": {
         "0100": ["engagement letter", "client acceptance", "engagement acceptance",
                  "independence", "conflict check", "continuance", "aml", "kyc"],
-        "0200": ["planning", "audit strategy", "understanding the entity",
-                 "risk assessment", "org chart", "organizational chart",
-                 "budget", "board minutes", "minutes", "materiality",
-                 "prelim analytics", "preliminary analytics", "entity overview"],
+        "0200": ["planning", "audit strategy", "budget", "materiality",
+                 "prelim analytics", "preliminary analytics"],
+        "0300": ["understanding the entity", "entity overview", "org chart",
+                 "organizational chart", "board minutes", "minutes"],
         "0400": ["internal control", "control memo", "walkthrough", "icfr",
                  "control matrix", "control narrative", "it controls",
                  "segregation of duties", "control questionnaire"],
+        "0500": ["risk assessment", "fraud risk", "inherent risk",
+                 "significant risk", "risk of material misstatement",
+                 "fraud inquiry", "fraud inquiries"],
         "0600": ["concluding", "subsequent events", "going concern",
                  "management representation", "rep letter",
                  "representation letter", "final analytics", "review notes"],
@@ -160,7 +188,9 @@
       "sections": [
         ["0100", "Pre-Engagement and Acceptance"],
         ["0200", "Planning"],
+        ["0300", "Understanding the Plan"],
         ["0400", "Internal Controls"],
+        ["0500", "Risk Assessment"],
         ["0600", "Concluding Procedures"],
         ["0700", "Reports and Communications"],
         ["0900", "Trial Balance"],
@@ -181,12 +211,16 @@
       "keywords": {
         "0100": ["engagement letter", "client acceptance", "engagement acceptance",
                  "independence", "conflict check", "continuance"],
-        "0200": ["planning", "audit strategy", "understanding the plan",
-                 "risk assessment", "org chart", "materiality",
-                 "scope", "103(a)(3)(c)", "103a3c", "full scope", "limited scope"],
+        "0200": ["planning", "audit strategy", "materiality",
+                 "scope", "103(a)(3)(c)", "103a3c", "full scope", "limited scope",
+                 "discrimination testing", "adp acp", "payroll calendar",
+                 "safe harbor notice", "annual notice"],
+        "0300": ["understanding the plan", "plan overview", "org chart",
+                 "organizational chart", "board minutes", "minutes"],
         "0400": ["internal control", "control memo", "walkthrough",
-                 "soc 1", "soc report", "soc1", "service organization",
-                 "control matrix"],
+                 "control matrix", "it controls"],
+        "0500": ["risk assessment", "fraud risk", "inherent risk",
+                 "significant risk", "fraud inquiry", "fraud inquiries"],
         "0600": ["concluding", "subsequent events", "going concern",
                  "management representation", "rep letter",
                  "representation letter"],
@@ -196,16 +230,18 @@
         "1000": ["cash", "bank statement", "bank rec", "trust statement cash"],
         "1100": ["investment", "trust statement", "certification",
                  "investment certification", "fair value", "portfolio",
-                 "schedule of investments"],
+                 "schedule of investments", "trust report"],
         "1200": ["participant loan", "notes receivable from participants",
-                 "loan to participant", "participant note"],
+                 "loan to participant", "participant note", "loan summary",
+                 "loan report"],
         "1300": ["contributions receivable", "employer contribution receivable",
                  "receivable contribution"],
         "1400": ["other asset", "prepaid"],
         "2000": ["accrued", "amounts payable", "payable", "excess contribution",
-                 "refund payable"],
+                 "refund payable", "debt", "lease obligation"],
         "2100": ["participant account", "participant statement",
-                 "individual account", "account allocation"],
+                 "individual account", "account allocation",
+                 "earnings allocation"],
         "3000": ["net assets available", "statement of net assets",
                  "net assets available for benefits"],
         "4000": ["contribution", "employee deferral", "deferral",
@@ -214,12 +250,14 @@
         "4100": ["investment income", "earnings", "investment gain",
                  "appreciation", "dividend income"],
         "5000": ["benefit payment", "distribution", "withdrawal",
-                 "hardship", "loan payoff", "benefits paid"],
+                 "hardship", "loan payoff", "benefits paid", "1099-r", "1099r"],
         "5100": ["administrative expense", "admin fee", "recordkeeping fee",
-                 "audit fee", "trustee fee", "expense paid by plan"],
+                 "audit fee", "trustee fee", "expense paid by plan",
+                 "fees report", "plan fees", "plan expenses"],
         "6000": ["participant data", "census", "eligibility",
                  "compensation testing", "payroll", "demographic",
-                 "participant count", "eligibility testing"]
+                 "participant count", "eligibility testing", "i-9", "i9",
+                 "personnel action", "new hire"]
       }
     }
   }

@@ -24,7 +24,7 @@ prefer `binder-and-activity.md :: map_binder_js` over this flat list.
 ## Procedure — requests in an audit
 
 ### 1. Make sure the tab is on the audit
-Navigate the tab to `https://app.suralink.com/auditors/views/Audit.php?auditId={auditId}` if it is not already.
+Navigate the tab to `https://app.suralink.com/auditors/views/Audit.php?auditId={auditId}` if it is not already, then run `suralink.verify_audit_js(audit_id)` and require `ok:true` — the page must reflect the REQUESTED auditId, not just be "a Suralink page" (stale-tab `returnTo` / `logout=true` bounce: architecture.md → "Session verification").
 
 ### 2. Scrape the request list
 ```python

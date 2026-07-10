@@ -5,6 +5,8 @@ description: The risk-assessment brain for CCH Axcess (Knowledge Coach) audits. 
 
 # CCH Risk Assessment — Dispatcher (the judgment engine for the planning cascade)
 
+> Last verified against cch-axcess AX-37 — 2026-07-07.
+
 This skill decides **what goes in** the CCH planning forms. The sibling skill **`cch-axcess`** reads the
 live forms and writes the answers back. This skill never clicks, parses field IDs, names endpoints, or
 POSTs — when a task needs the platform, build a HANDOFF block (`references/cch-handoff.md`) and

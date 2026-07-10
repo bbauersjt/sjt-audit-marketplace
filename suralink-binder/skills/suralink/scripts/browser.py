@@ -1,9 +1,11 @@
 """Low-level JS builders for Suralink HTTP calls.
 
-Each function returns a JavaScript string. Pass it to
-mcp__Claude_in_Chrome__javascript_tool with the tabId of a Chrome tab logged
-into app.suralink.com. The JS runs in the page, so cross-origin calls to
-api.suralink.com work and the session cookie authorizes everything.
+Each function returns a JavaScript string. Run it in a Chrome tab logged into
+app.suralink.com via the session transport — chrome_eval(code, target=tabId)
+on the bridge (preferred), or mcp__Claude_in_Chrome__javascript_tool(code,
+tabId) linked-tab (fallback); see the skill's architecture.md "Transport".
+The JS runs in the page either way, so cross-origin calls to api.suralink.com
+work and the session cookie authorizes everything.
 
 Parse every result with parse_result().
 """

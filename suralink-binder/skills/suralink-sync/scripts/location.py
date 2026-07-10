@@ -167,7 +167,7 @@ def migrate_root(old_root, new_root, *, overwrite=False):
     repoints the saved root.
 
     WHY THIS MATTERS -- the whole mirror (catalog.json, active-clients.json, the
-    `_suralink_sync.json` manifest, and every `{Client}/{Label} Suralink Files/`
+    `_suralink_sync.json` manifest, and every `{Client}/{Year} Suralink Folder/`
     tree) lives UNDER the root. If the pointer is repointed at a fresh empty
     folder WITHOUT moving these, the skill re-bootstraps from scratch: the active
     list is empty, nothing is "known", so the next sync treats every engagement

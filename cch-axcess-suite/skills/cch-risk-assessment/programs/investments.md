@@ -195,14 +195,14 @@ Plus FV-side coverage from AUD-818 if Q35 (FairValueRules) = Yes.
 
 Same 3-checkbox model as Cash (`COMBINED` / `ANALYTICAL` / `INDEPTH`). For RBC-held marketable securities under NPO with CR=MAX: `INDEPTH` on all applicable assertions, plus `ANALYTICAL` if Q38=Yes and step 114 is added.
 
-## API specifics
+## Platform mechanics
 
-- **GET form:** `GET /api/Workpaper/{eng}/{wpId}` (KC tokens from localStorage; see `cch-axcess/references/auth-discovery.md`).
-- **dataBindingKey:** `INVEST`
-- **Step library:** `.INVEST.ProgramSteps` (115 rows; `visible: true` = active, `visible: false` = library).
-- **Add/remove steps:** POST `/api/Workpaper/UpdateProgramStep` with full-state `value` string (semicolon-joined step keys, plus all `childObjectList[].key` for parent steps with sub-steps). See `cch-axcess/references/modules/toggle-program-step.md`.
-- **Per-assertion grid:** `.INVEST.RelevantAssertion` (6 rows).
-- **IR/CR/RMM/PlannedAuditApproach writes:** See `cash.md` "API specifics" and `cch-axcess/references/modules/fill-kc-form.md`. Same pattern, swap `.CASH.` for `.INVEST.`.
+All API specifics for this program — GET/resolve the workpaperId, auth (`cch-axcess/references/architecture.md`
+"Auth pattern"), the RelevantAssertion/IR/CR/RMM/approach write payloads, the step build-out pipeline, the
+submit-and-verify cycle — are in `cch-axcess` (`references/modules/fill-kc-form.md`,
+`references/modules/populate-program.md`, `references/modules/toggle-program-step.md`, and
+`references/config/field-conventions.md`). This file does not restate them; the HANDOFF names AUD-802 and
+the values, and `cch-axcess` executes. Same pattern as `cash.md`, swap `.CASH.` for `.INVEST.`.
 
 ## Title-variant: EBP — AUD-802A Audit Program Investments (Non-Certified / ERISA Plan)
 

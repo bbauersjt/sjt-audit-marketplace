@@ -27,10 +27,10 @@ Drives the whole program-build for ONE AUD-8xx workpaper: tailoring questions �
 
 ## Why a bounded pipeline, not one call (READ THIS)
 
-A single "do it all" JS call **will trip the 45s CDP renderer cap** on a real program (AR is 56 parents / 147 step rows ≈ 300 writes) and throw a red "Runtime.evaluate timed out" error mid-run. To a user that looks broken. So the procedure is deliberately split into **bounded, self-verifying steps** that each finish well under the cap, and drops self-heal on re-verify. Never wrap it in one mega call.
+A single "do it all" JS call **will trip the in-page eval timeout** (45s on the linked-tab CDP transport; the bridge's `chrome_eval` defaults to 30s) on a real program (AR is 56 parents / 147 step rows ≈ 300 writes) and throw a red "Runtime.evaluate timed out" error mid-run. To a user that looks broken. So the procedure is deliberately split into **bounded, self-verifying steps** that each finish well under the timeout, and drops self-heal on re-verify. Never wrap it in one mega call.
 
 Two hard platform facts force the shape:
-1. **Writes must be paced.** Back-to-back `UpdateProperty` to one form silently drop (HTTP 200, no persist). ~300ms gap is the floor. → fire ≤ ~35 writes per call.
+1. **Writes must be paced — and pacing alone is NOT sufficient.** Back-to-back `UpdateProperty` to one form silently drop (HTTP 200, no persist). The old ~300ms floor is WRONG: ~60% still dropped at ~350ms, and ~30–50% drop even with 1–2s gaps (batch-2 + SFRC 401k 0100, 2026-07-08). Pace ~1.2s AND run the mandatory write → per-workpaper submit → verify-by-read → retry ≤3× loop (field-conventions.md §5 3a) — which this module's verify+repair pipeline already embodies. → fire ≤ ~35 writes per call.
 2. **`UpdateProgramStep` (API) does NOT re-render the Angular UI.** The Risks-checkbox and Comment-box DOM that risk-linking + heading detection read only appear after a page **reload**. → reload between step 2 and step 3.
 
 ## Procedure

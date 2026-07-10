@@ -48,7 +48,8 @@ CCH uses several distinct IDs that look interchangeable but aren't. Mixing them 
 |---|---|---|---|
 | `clientId` | Per-client integer | First int in URL `/engagement/{clientId}/...` | WPM endpoints; passed as `engagementId={clientId}` in many bodies (misnamed) |
 | `engagementId` | Per-engagement integer | Second int in URL `/engagementview/{engagementId}` | WPM folder GET path slot 3; workbench-api report bodies (as `periodId`) |
-| `engagementGuid` (a.k.a. `binderId`) | Per-engagement GUID — canonical across sister apps | KC `/binder/{engagementGuid}/...`; `GetBinder.result.id` | KC API everywhere; workbench-api TB create body |
+| `engagementGuid` | Per-engagement GUID (engagement/workbench side) | engagement-side boot capture; workbench-api echoes it | workbench-api TB create body; KC `/Home/GetPermissions/{engagementGuid}` |
+| `kcBinderGuid` (KC `binderId`) | KC's OWN per-binder GUID — **CAN DIFFER from `engagementGuid`** (live 2026-07-07: engagement `56cafc04…` vs KC binder `6ca0d3a3…` on the same engagement; on older binders the two matched, so "canonical across sister apps" is UNRELIABLE). GetBinder by the engagement guid → 200-wrapped 404 "Binder not found". Discover it from the KC tab's own traffic (`/api/binder/GetBinder/{guid}` fired on KC open) — never assume it equals the engagement guid. | KC `/binder/{binderGuid}/...`; `GetBinder.result.id` | KC API everywhere (form GET/write, submit `binderId`, add-forms) |
 | `clientGuid` | Per-client GUID, stable across all client engagements | `GetBinder.result.clientGuid` | (KC delete path historically; KC delete not used by this skill) |
 | `workpaperId` (a.k.a. `documentId`) | Per-form GUID | `GetBinder.result.workpapers[].id`, or WPM rows' `documentId`/`fileId` | KC form GET/POST; `wpm.move`/`set_index` objectId |
 | `locationId` | Per-folder integer | WPM folder GET responses | WPM move/index endpoints |
@@ -105,9 +106,20 @@ differs. **workbench-api: no KC-token path** — captured headers (WPM leg) only
 WPM locale headers are NOT optional: omit them and WPM GETs return **200 + empty array
 `[]`** for every folder (silent failure that mimics an empty binder).
 
-**Expiry: there is none to handle.** `kc.refreshToken` is present, so the app
+**Expiry: none to handle — ON A VISIBLE TAB.** `kc.refreshToken` is present, so the app
 self-refreshes the access token in place. **Re-read `localStorage` per call** and you
-always have a current token — no expiry logic, no rotation tracking.
+have a current token — no expiry logic, no rotation tracking. ⚠ **The self-refresh is a
+page TIMER, and Chrome stalls it on hidden/backgrounded tabs** (AX-33 below): on a
+background KC tab `kc.accessToken` can sit in localStorage STALE past expiry — re-reading
+it just re-reads the stale value. If ls-sourced calls start 401ing, don't trust the
+localStorage read: touch the tab (activate it / `chrome_navigate` the KC deep-link) so the
+app re-mints, then take the fresh bearer from a live `chrome_network_recent` capture —
+the wire is the ground truth for freshness, localStorage only tracks it while the tab is
+visible. (SFRC 401k 0100, 2026-07-08.) The wire-captured bearer also works from
+**curl-from-Bash entirely outside the browser** — KC and WPM both accept it (pure
+header-bearer auth; `runbooks/transport.md` → curl section, validated Coop Consulting
+2026-07-09). Write it to a session-scratch token FILE and expand at call time — never
+hand-transcribe (a hand-copied JWT 401'd live).
 
 Builders self-source these tokens at runtime when you pass the `"ls:<family>"`
 SENTINEL as the `headers` argument (`"ls:wpm"` / `"ls:fp"` / `"ls:kc"` — see
@@ -191,7 +203,11 @@ The single variable that governs whether a backgrounded KC/engagement tab keeps 
   its token-refresh timer keeps firing.
 - **`'hidden'`** = another tab is selected in that window, or the window is minimized → Chrome
   throttles aggressively: timer clamping, tab freeze, the **token-refresh timer stalls** (token
-  ages to expiry → 401), and `chrome_eval` times out (CDP 45s).
+  ages to expiry → 401 — and the EXPIRED token stays in `localStorage`, so `ls:` sentinel reads
+  serve it as if current; recovery = touch the tab to re-mint, then capture the fresh bearer via
+  `chrome_network_recent`, per the auth section above), and in-page evals time out (45s is the
+  linked-tab CDP limit; the bridge's `chrome_eval` defaults to 30s — the 45s figure is NOT a
+  bridge property).
 
 Practical solution for autonomous work: **park the KC tab as the lone/selected tab in its own
 non-minimized window off to the side**, then work in Cowork (a separate window). It
@@ -235,9 +251,13 @@ An in-page `chrome_eval`/`javascript_tool` XHR GET of `/api/Workpaper/{eng}/{wp}
 re-GET shows `state 3, valueKey "new"` — but that reflects the pending working copy, not what is
 persisted. **NEVER verify a write by the immediate post-write GET** — it reads back your own
 unsubmitted change and yields false state-3 positives. True committed state requires the full cycle:
-**write → `POST /api/Workpaper/submit` → reload → GET** (and, as the completion oracle, the
+**write → `POST /api/Workpaper/submit` (per-workpaper scoped — empty workpaperId silently DISCARDS
+other forms' pending writes) → reload → GET** (and, as the completion oracle, the
 diagnostics endpoint — see the field model below). A refresh discards any unsubmitted writes, so a
-working-copy "state 3" that was never submitted simply vanishes.
+working-copy "state 3" that was never submitted simply vanishes. And even a correctly submitted
+write can silently vanish — KC drops ~30–50% of write→submit pairs (2026-07-08) — so the re-read
+is not optional: the mandatory loop is write → ~1.2s → per-wp submit → verify-by-read → retry ≤3×
+(field-conventions.md §5 3a).
 
 ### Transport by origin — BRIDGE primary for ALL origins (KC via chrome_api_call) — AX-34
 
@@ -414,7 +434,7 @@ querying `financialgrouptemplate` led a session to wrongly conclude the Natural 
 
 **Token-triggered auth: install monkeypatch, then click "Trial Balance Report" button.** The create-report dialog triggers `GET /checktbreportlimit`, `GET /reporttypesandsettings`, `GET /tbreports/{clientId}`, and `GET /JournalEntryReport/{clientId}` with fresh tokens — all usable for subsequent XHR replays against workbench-api, WPM, and financialprep-api. Navigating to `/reports/{engId}/trialbalance/financial` + clicking the dialog button is the fastest token-refresh path for report work. Full page reloads (URL changes) wipe the monkeypatch.
 
-**Flat folder list via `/v1/NewEngagementView/folders/{clientId}`.** Returns all binder folders as a compact array (~4KB for Kymera EBP). Use regex on raw responseText to extract locationIds — `JSON.parse()` the root-folder (`folderId=0`) endpoint times out the CDP 45s limit. Pattern: `"index"\s*:\s*"1100"[^{}]{0,400}"locationId"\s*:\s*"?(\d+)"?`.
+**Flat folder list via `/v1/NewEngagementView/folders/{clientId}`.** Returns the full folder skeleton compactly (~4KB for Kymera EBP). **The body is WRAPPED: `{engagementId, root: [...]}` — the folder array is under `root`** (rows carry `locationId`, `locationGuid`, `index`, `name`, `parentLocationId`, `children`; live-verified 2026-07-07 — the earlier "compact array" note was written from regex-on-raw-text, which masked the wrapper). The regex shortcut for locationIds still works on raw responseText and remains useful on the linked-tab transport, where `JSON.parse()` of the huge root-folder (`folderId=0`) CONTENTS endpoint times out CDP's 45s limit. Pattern: `"index"\s*:\s*"1100"[^{}]{0,400}"locationId"\s*:\s*"?(\d+)"?`.
 
 ### Fund TB Setup (governmental / NFP only)
 
@@ -451,7 +471,7 @@ group assignment must go through the batched helper, not a Python loop.
 1. **Set-Index only for genuinely NEW (null-index) forms.** Move PRESERVES the index (locationId stable — AX-14 confirmed live); it does NOT clear anything. A Set-Index after Move is needed only when the form arrived with a null index (e.g. just added), never to "restore" an index Move supposedly wiped.
 2. **PUT for Set-Index, not POST.** POST returns 200 but is a silent no-op.
 3. **Sequential writes to one form, not parallel.** Concurrent UpdateProperty POSTs to the same form drop writes (server-side race).
-4. **Submit after batch writes — submit COMMITS (persistence), not just counts.** Writes sit in a pending working copy; `POST /api/Workpaper/submit` is what actually persists them, and a reload discards anything unsubmitted. (It also refreshes the engagement-view diagnostic/missing-form counts, but that is secondary — the primary job is persistence.)
+4. **Submit after batch writes — PER-WORKPAPER, and submit COMMITS (persistence), not just counts.** Writes sit in a pending working copy; `POST /api/Workpaper/submit` `{binderId, workpaperId:"<wpId>"}` is what actually persists them, and a reload discards anything unsubmitted. An EMPTY workpaperId ("submit all pending in binder") silently DISCARDS pending writes on other forms — never use it (2026-07-08). Even a scoped submit silently drops ~30–50% of writes, so always follow with verify-by-read + retry (field-conventions.md §5 3a). (Submit also refreshes the engagement-view diagnostic/missing-form counts, but that is secondary — the primary job is persistence.)
 5. **Answer TQs before dependent descriptions.** Writing `*TQ = No` after populating that section's descriptions resets the descriptions to state=2. See "TQ-cascade" below.
 
 ### Pseudo-folder IDs (WPM)
@@ -597,6 +617,31 @@ Wolters Kluwer publishes a developer portal at `developers.cchaxcess.com` that l
 - The internal endpoints this skill captures are undocumented and not promised to be stable across CCH Angular updates. If a procedure breaks, re-capture before assuming a regression.
 - Don't waste cycles searching for a public spec for the operations in this skill. There isn't one. The endpoint JSON specs in `references/endpoints/` ARE the source of truth.
 
+## Drift monitoring — `tools/cch-drift` (maintainer tooling — NOT shipped with this skill)
+
+Because the surface above is unversioned, the skill MAINTAINER runs a standalone checker
+(`Documents/Code/tools/cch-drift/` on the maintainer's machine — deliberately outside this
+distributable skill; if you installed this skill and that path doesn't exist, this section
+isn't for you). It is pure Python over
+the chrome-bridge WebSocket — no agent in the loop — and runs three read-only layers: bridge
+health + extension pin; SPA asset-manifest version watch on the engagement and KC origins (a
+changed bundle set = WK shipped a release → expect drift, re-run everything); and per-endpoint
+shape probes asserting this file's invariants (wrapped-vs-flat bodies, `financialSubGroup`,
+JSON-encoded-string form fields, the report enum dictionary, the KC title refTag set as a
+new-edition detector), each with a structural fingerprint diffed against a stored baseline.
+Exit codes: 0 green / 1 drift / 2 infra-down. On a FAIL or a version WARN: fix the matching
+`endpoints/*.json` + this file BEFORE the next engagement run, log the change in the CHANGELOG
+(source repo), then `--update-baseline`.
+
+A fourth layer, `--layer bundle`, **lifts the endpoint MAP out of the SPA JS** (fetch the
+bundles, extract every `/v1`·`/api` path literal, diff the set vs baseline). It's the cheap half
+of "stop re-capturing after every release": on a version WARN it points a human at exactly which
+endpoints moved, so the fix is a reviewed diff, not a hand re-capture. It lifts the *map* only —
+the app's own code can't be lifted and fired standalone (it's entangled with the running app's
+injector/auth/component state), and payload bodies are past reliable static extraction, so the
+api/write layers still validate contract + semantics. NOT run under `all` (it fetches every JS
+asset); run it after a version WARN.
+
 ## Annotations (leadsheet & TB report)
 
 Two annotation surfaces, two transports (matrix above): **financialprep-api takes the
@@ -606,9 +651,14 @@ page refresh to appear in the UI.** No triple-fire (single call).
 
 **The mirror is ONE-DIRECTIONAL (live-confirmed 2026-06-04):** FP-API bubbles/tickmarks
 (written on the system-lead surface) render read-only on TB reports (`cpComments`/
-`cpTickMarks`); workbench REF values appear NOWHERE but the TB report. Routing: "comment"/
-"note" → FP-API bubble; "REF"/"reference"/"cross-ref" → workbench Remarks column. A filed
-system lead ⇒ that user is bubble-only (see annotate-tbreport.md terminology block).
+`cpTickMarks`); workbench Remarks-column values (REF, Notes) appear NOWHERE but the TB
+report. Two parallel protocols, routed by which surface the user is on:
+- **System leadsheet (protocol A):** "comment"/"note"/"tickmark" → FP-API bubble
+  (`annotate-leadsheet.md`). Remarks columns don't exist on this surface.
+- **TB-report leadsheet (protocol B, the firm DEFAULT):** "REF"/"reference"/"cross-ref"/
+  "imm" → the Remarks_1 "REF" column; "note"/"comment" → the Remarks_2 "Notes" column — a
+  real editable column, not a bubble (`annotate-tbreport.md`).
+A filed system lead ⇒ that user is bubble-only (see annotate-tbreport.md terminology block).
 
 ### financialprep-api.cchaxcess.com — system leadsheet
 
@@ -627,20 +677,23 @@ Three native annotation types: top-level comment box, inline account comments, t
 - Account comment POST returns `{"commentReferenceId": <int>}` — store for DELETE. Edit = re-POST (server upserts by referenceId+periodId).
 - Tickmarks POST is **set-replace** — send the complete desired set; `[]` clears. ID catalog (1-71) in `references/config/tickmark_ids.json`.
 
-### workbench-api.cchaxcess.com — TB report REF/REF2
+### workbench-api.cchaxcess.com — TB report REF/Notes (Remarks_1/Remarks_2)
 
-REF (Remarks-column) annotations on TB reports. Separate API; REF values live on the TB
-report ONLY (one-directional mirror — see above). **Step-0 preflight is mandatory**: the
-report must HAVE a Remarks column (`tbreportedit` GET → `reportFormat.columns`; add one via
-`editReports` PATCH — `endpoints/wb_editreports.json`). Scripts: `scripts.leadsheet.tbreport_*`,
-`scripts.reports.add_remarks_column`; module: `references/modules/annotate-tbreport.md`.
+Remarks-column annotations on TB reports. Separate API; Remarks-column values live on the
+TB report ONLY (one-directional mirror — see above). Firm standard (locked 2026-07-09) is
+TWO Remarks columns per TB-report leadsheet: Remarks_1 named "REF" (cross-refs/index/imm
+tags), Remarks_2 named "Notes" (free notes). **Step-0 preflight is mandatory**: the report
+must HAVE the Remarks column(s) it needs (`tbreportedit` GET → `reportFormat.columns`; add
+one via `editReports` PATCH — `endpoints/wb_editreports.json`, once per missing column).
+Scripts: `scripts.leadsheet.tbreport_*`, `scripts.reports.add_remarks_column`; module:
+`references/modules/annotate-tbreport.md`.
 
 | Operation | Method | Path | Spec |
 |---|---|---|---|
-| REF-column preflight (Step 0) | GET | `/v1/trialbalancereport/tbreportedit/{clientId}/{engGuid}/{reportGuid}` — body has NO usable id; integer reportId = WPM documentId | `endpoints/wb_tbreportcomment.json` |
-| Add/rename/remove REF column | PATCH | `/v1/trialbalancereport/editReports` | `endpoints/wb_editreports.json` |
-| Create/edit REF or REF2 | POST | `/v1/trialbalancereportcomment/{clientId}/{reportId}` | `endpoints/wb_tbreportcomment.json` |
-| Delete REF or REF2 | DELETE | `/v1/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}` | `endpoints/wb_tbreportcomment.json` |
+| Remarks-column preflight (Step 0) | GET | `/v1/trialbalancereport/tbreportedit/{clientId}/{engGuid}/{reportGuid}` — body has NO usable id; integer reportId = WPM documentId | `endpoints/wb_tbreportcomment.json` |
+| Add/rename/remove a Remarks column | PATCH | `/v1/trialbalancereport/editReports` | `endpoints/wb_editreports.json` |
+| Create/edit REF or Notes | POST | `/v1/trialbalancereportcomment/{clientId}/{reportId}` | `endpoints/wb_tbreportcomment.json` |
+| Delete REF or Notes | DELETE | `/v1/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}` | `endpoints/wb_tbreportcomment.json` |
 
 - `columnId` is positional and tied to the column's `Remarks_{N}` id — `Remarks_1` → 1, `Remarks_2` → 2. RENAME-PROOF (heading text irrelevant; live-captured 2026-06-04).
 - Row identity from the ag-grid row node — no API call (`scripts.leadsheet.tbreport_row_probe_js`). `referenceType` is BY ROW LEVEL: Fund row → `Fund` (+`referenceGuid` REQUIRED); group-total row → `FinancialGroup`; subgroup row → `FinancialSubGroup` (both omit `referenceGuid`).

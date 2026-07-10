@@ -1,7 +1,8 @@
 """Capture helpers for TRAINING MODE — observing Suralink operations the skill
 does not yet know. See ../references/training-mode.md.
 
-These return JS strings for mcp__Claude_in_Chrome__javascript_tool.
+These return JS strings to run in the Suralink tab via the session transport
+(bridge chrome_eval preferred; linked-tab javascript_tool fallback).
 """
 
 # Install a network monkey-patch that records gateway + API calls (with bodies)

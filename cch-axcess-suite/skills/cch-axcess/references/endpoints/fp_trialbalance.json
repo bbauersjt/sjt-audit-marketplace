@@ -44,7 +44,23 @@
       "Row array key is `balances` in current captures, but resolution should stay shape-agnostic (body | body.accounts | body.balances | body.trialBalance | first array prop) — scripts.groups.get_trialbalance_grouped_all already does this.",
       "Period sub-objects beyond `current` appear when the engagement carries comparative periods; same balance-field shape.",
       "accountCount is on the top-level body, not per page — use it as the loop terminator."
-    ]
+    ],
+    "live_variant_2026-07-07": {
+      "warning": "The endpoint ALSO serves a second row shape (captured live 2026-07-07, govt fund engagement 103139; scripts.tb_backup.normalize_tb_rows handles both). Do not assume the shape above — resolve keys defensively:",
+      "differences_vs_shape_above": {
+        "account.number": "replaces accountNumber",
+        "account.name": "replaces accountName",
+        "account.financialSubGroup": "an OBJECT {financialSubGroupId, index, name, order}, not a string",
+        "account.group": "an OBJECT {financialGroupId, id(GUID), index, name, classification, type{acctType,...}}, not a string",
+        "account.fund": "an OBJECT {id, index, name}, not a string",
+        "account.subGroup": "ABSENT entirely on this variant (the legacy always-null key does not even appear)",
+        "periods.current": "balances are COMMA-FORMATTED STRINGS with a trailing space ('1,843,250.00 ') under keys unadjusted / adjusted / final (plus dollarVar, percentVar, ibal*/obal*/oje*) — NOT numeric unadjustedBalance/adjustedBalance/finalBalance",
+        "periods.prior": "an ARRAY of prior-period objects (one per comparative period), NOT a single object — iterate it (observed live 2026-07-07, Rock NPO 103416)",
+        "sign_convention": "⚠ this variant serves DEBITS-POSITIVE values — no flip vs the TB import/export convention, the OPPOSITE of the numeric variant's credits-positive rule above. Never hard-code either flip: spot-check one known account against a TB report before using balances.",
+        "top_level": "body also carries hasJe, id, periodEndDate, periods"
+      },
+      "monitoring": "tools/cch-drift probe fp_trialbalance_shape asserts the cross-variant invariants and fingerprints the current variant."
+    }
   },
   "verify": "Merged row count == accountCount; spot-check one known account's finalBalance against the TB report (remember the sign flip vs exports).",
   "captured": "2026-06-05 — NIN / BT3 live sessions; documented during the AX-27 batch rebuild (docket item 3b)."

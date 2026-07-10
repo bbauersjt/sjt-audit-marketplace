@@ -18,6 +18,8 @@ These functions return JavaScript strings for
 mcp__Claude_in_Chrome__javascript_tool. Python never touches a token.
 """
 
+import re
+
 # Run in the active CCH tab (engagement OR knowledgecoach). Returns a small JSON
 # object that passes the Cowork DLP filter (no tokens, just facts + one GUID).
 DISCOVER_SESSION_JS = r"""
@@ -121,4 +123,44 @@ def claim_tab_js(token: str) -> str:
     call this on claim and cheaply on each in-tab action to keep the claim live."""
     t = (token or "").replace("\\", "").replace('"', "")
     return '(() => { window.__cch_owner = {token:"%s", ts: Date.now()}; return "claimed:%s"; })()' % (t, t)
+
+
+# --- On-warm release check (cheap, throttled; catches drift BEFORE it stalls a write) ---
+#
+# Drift almost always rides a WK release, and the SPA asset manifest is the leading
+# indicator. So at warm time we do the cheapest possible release detector: GET the
+# warmed origin's index page (public HTML, no auth) via the bridge, extract the asset
+# manifest, and compare it to what we saw last time. A change = WK shipped since your
+# last check → endpoint SHAPES may have moved → raise vigilance (and, on the maintainer
+# box, run cch-drift's --layer bundle / --layer all) BEFORE firing writes that would
+# silent-no-op. See session-bootstrap.md "On-warm release check".
+#
+# THROTTLE: the baseline + timestamp live in the ENGAGEMENT WORKING FOLDER (never the
+# read-only install), so the FIRST bot to warm in a work session pays the one GET and
+# every other bot in that engagement skips it until the window lapses.
+RELEASE_CHECK_THROTTLE_SEC = 4 * 3600  # tunable; releases are infrequent, hours is plenty
+
+# Which public index to fetch per leg (the origin that leg talks to).
+SPA_INDEX_URLS = {
+    "wpm": "https://engagement.cchaxcess.com/en-US/",
+    "kc": "https://knowledgecoach.cchaxcess.com/",
+}
+
+# Same asset-ref shape cch-drift's version layer keys on, so the skill's on-warm
+# manifest and the tool's baseline describe the SAME set.
+_ASSET_RE = re.compile(r'(?:src|href)="([^"?]+\.(?:js|css))"')
+
+
+def extract_asset_manifest(html):
+    """Sorted, deduped asset BASENAMES from an SPA index page. Deterministic; the
+    hashed filenames (main.<hash>.js) are what change across a release."""
+    return sorted(set(m.rsplit("/", 1)[-1] for m in _ASSET_RE.findall(html or "")))
+
+
+def compare_manifest(seen, current):
+    """Diff a stored manifest against a freshly-fetched one.
+    Returns {"changed": bool, "added": [...], "removed": [...]}. `changed` False on
+    first run only if you pass the current list as `seen` (caller writes baseline then)."""
+    s, c = set(seen or []), set(current or [])
+    return {"changed": s != c, "added": sorted(c - s), "removed": sorted(s - c)}
 # <!-- END -->

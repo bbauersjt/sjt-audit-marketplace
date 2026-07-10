@@ -114,20 +114,50 @@ def find_by_organized(data, organized_path):
     return None
 
 
+def _segs(p):
+    """Path split into segments, either separator, lowercased for comparison."""
+    return [s.lower() for s in str(p).replace("\\", "/").split("/")
+            if s and s != "."]
+
+
+def _raw_tail(segs):
+    """Segments after the last `_raw` directory, or None if no `_raw` segment."""
+    for i in range(len(segs) - 1, -1, -1):
+        if segs[i] == "_raw":
+            return segs[i + 1:] or None
+    return None
+
+
 def fms_for_raw(manifest, raw_abs, mirror_root):
     """Match a `_raw/` file to its suralink-sync manifest record.
 
-    The manifest stores `rawPath` mirror-relative; this re-derives that and
-    looks it up. Returns (fmsId, record) or (None, None) - None when the file
-    is not from a suralink-sync mirror (standalone / non-Suralink mode), which
-    is expected and fine.
+    The manifest's `rawPath` may be mirror-relative (the design) or an
+    absolute path from whichever machine ran the sync, so a record matches
+    when its rawPath ends with the file's mirror-relative path (segment-wise,
+    case-insensitive) - which subsumes the exact mirror-relative case. If no
+    record matches that way (e.g. the engagement folder was renamed locally),
+    falls back to matching the tail after the last `_raw/` segment. Returns
+    (fmsId, record) or (None, None) - None when the file is not from a
+    suralink-sync mirror (standalone / non-Suralink mode), which is expected
+    and fine.
     """
     try:
-        target = _norm_rel(os.path.relpath(os.path.abspath(raw_abs),
-                                           os.path.abspath(mirror_root)))
+        rel = os.path.relpath(os.path.abspath(raw_abs),
+                              os.path.abspath(mirror_root))
     except ValueError:
-        return None, None
+        rel = None
+    target = _segs(rel) if rel else None
+    if target and ".." in target:
+        target = None  # raw_abs is not under mirror_root
+    target_tail = _raw_tail(_segs(raw_abs))
+    tail_hit = (None, None)
     for fid, rec in manifest.get("files", {}).items():
-        if _norm_rel(rec.get("rawPath", "")) == target:
+        rec_segs = _segs(rec.get("rawPath", ""))
+        if not rec_segs:
+            continue
+        if target and rec_segs[-len(target):] == target:
             return fid, rec
-    return None, None
+        if target_tail and tail_hit[0] is None \
+                and _raw_tail(rec_segs) == target_tail:
+            tail_hit = (fid, rec)
+    return tail_hit

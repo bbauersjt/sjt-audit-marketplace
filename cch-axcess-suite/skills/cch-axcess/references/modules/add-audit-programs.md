@@ -27,17 +27,13 @@ validated_on:
 ---
 # Module — Add Audit Programs (KC Forms) to a Binder
 
-> **S-suffix / Single Audit forms (AX-26).** `diff_against_unfiled` returns a
-> `sa_title_adds` bucket — these add CROSS-TITLE from the Single Audits title
-> (`catalog.SA_TITLE_GUID`; live list via GetWorkpaperListForAddForms — see
-> `endpoints/kc_title_library.json`). NEVER silently skip an unresolved form — name
-> every unmatched form to the user (BT3 B7 dropped 22 silently).
+## Known gotchas
 
-> **Index verification (AX-26).** Read display indexes with
-> `scripts.wpm.verify_index(row, object_type)` — Reports/KCForms use `index`,
-> Workpapers use `documentIndex`; hand-picking the field false-negatives (BT3 B6).
-> And NEVER hand-assemble `folderParentLineItems` — `wpm.move()` now refuses them
-> (semantics are inverted per type; hand-rolled bodies silent-200, BT3 B5/B12).
+- **Check the driving form's "Unnecessary KnowledgeCoach Form" diagnostics BEFORE adding conditional forms.** Several forms are add-gated by an AUD-100 tailoring answer, and KC's design is to never add a gated-off form at all — adding it anyway costs permanent diagnostics on both the form and AUD-100. Live example (SFRC 401k, 2026-07-08): **AID-201** is gated by AUD-100's `OtherServices` TQ; on a no-nonattest engagement KC wants it ABSENT (the PPC habit of an always-present independence checklist with a "None performed" line does NOT map to KC), and adding it anyway costs ~110 permanent diagnostics plus a permanent "remove this workpaper" diagnostic on AUD-100. The diagnostic names the removable form via `unnecessaryWorkpaperReferenceTag` (e.g. `AID_200_NONAUD_SERVI_INDEP_CKLST`) / `unnecessaryWorkpaperDataBindingKey` (e.g. `AID201`) — fixture: `references/data/fixtures/aud100-unnecessary-form-diag.json`. Pre-add, run the diagnostics endpoint on AUD-100 and drop any planned form the `type:"Unnecessary KnowledgeCoach Form"` entries name; post-add, the same entries are the removal worklist for `remove-kc-form.md`.
+- **S-suffix / Single Audit forms add CROSS-TITLE.** `diff_against_unfiled` returns a `sa_title_adds` bucket sourced from the Single Audits title (`catalog.SA_TITLE_GUID`; live list via GetWorkpaperListForAddForms — `endpoints/kc_title_library.json`), NOT the binder's own title.
+- **Never silently skip an unresolved form.** Any plan row not in `to_add`/`sa_title_adds`/`already_in_unfiled` is surfaced to the user BY NAME.
+- **Read display indexes with `scripts.wpm.verify_index(row, object_type)`** — Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs `documentIndex`). Hand-picking the field false-negatives.
+- **Never hand-assemble the move body / `folderParentLineItems`** — `wpm.move()` owns the per-type mapping and refuses raw bodies; the semantics are inverted per type (architecture.md → Move payload semantics).
 
 **Triggers:** "add audit programs", "build out the KC forms", "add the [client type] audit programs", "file the audit programs", "set up the audit programs", "file the auto-populated baseline."
 
@@ -136,7 +132,7 @@ items = [{"index": r["idx"], "name": r["name"], "object_id": r["documentId"], "o
 js = wpm.set_index(client_id, items, wpm_hdrs)  # serializes internally
 ```
 
-**Sequence: Move first, Set-Index second.** Move preserves existing indexes and locationIds (confirmed 2026-06-03); Set-Index is needed because newly-added forms arrive with a null/empty index.
+**Sequence: Move first, Set-Index second.** Move preserves existing indexes and locationIds (architecture.md); Set-Index is needed only because newly-added forms arrive with a null/empty index.
 
 ### 8. File the Trial Balance report
 
@@ -163,7 +159,7 @@ See `architecture.md`. Module-specific:
 
 - Add-Forms body's `index` field is silently ignored. Don't rely on it.
 - Server silently skips forms whose `referenceTag` is unrecognized — always verify post-add Unfiled count matches expected.
-- **Move-then-Set-Index is the correct sequence** — but not for the reason previously documented here. Move PRESERVES any existing index and does NOT change the locationId (both confirmed live 2026-06-03). Newly-added forms arrive in Unfiled with a null/empty index, so Set-Index must run after Move to assign the target index. No re-GET needed after Move — the locationId is stable.
+- **Move-then-Set-Index is the correct sequence** — Move preserves the index and locationId (architecture.md); newly-added forms arrive in Unfiled with a null/empty index, so Set-Index runs after Move to assign the target. No re-GET needed after Move.
 - **`diff_against_unfiled` false-negative** — if a form was filed (moved out of Unfiled) but then soft-deleted back into a folder, it won't appear in Unfiled and the diff will re-add it. Check the binder map if the post-add count looks off.
 
 <!-- END -->

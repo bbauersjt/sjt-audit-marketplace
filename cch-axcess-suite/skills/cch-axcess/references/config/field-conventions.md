@@ -3,9 +3,11 @@
 **The ONE canonical map** of every KC form-field kind, valueKey convention, option-set/enum, per-prop
 convention, collection-targeting rule, and the cross-cutting write protocol. Facts verified live
 2026-06-22 AND untested-but-uncontradicted pre-existing conventions (carried forward, tagged
-`[assume-true]`). Ship as `field-conventions.json` consumed by `scripts/kc.py:classify_property` +
-`build_write_payload`; this MD mirrors it. valueKey conventions are DATA — NOT discoverable from the
-form GET (floatieItemList is empty on convention-driven props) — so the code must carry them.
+`[assume-true]`). This MD is the human-maintained registry; the same conventions are HARD-CODED in
+`scripts/kc.py` (`classify_property` + `build_write_payload`) — there is no runtime JSON consumed by
+the code, so **a convention change here must also land in kc.py** (and vice versa). valueKey
+conventions are DATA — NOT discoverable from the form GET (floatieItemList is empty on
+convention-driven props) — which is why the code must carry them.
 
 Tags: `[V]` = VERIFIED 2026-06-22 (write→submit→reload→state 3). `[A:file]` = pre-existing, untested
 this session, not contradicted — carry forward.
@@ -61,12 +63,23 @@ this session, not contradicted — carry forward.
 | `SigClassTans`/`MaterialAccount`/`SigDisclosure`/`SigAcctEst`/`SigFraudRisk`/`substantivetesting` | X/dash | `NOTDASH`/`DASH` | `.KBA400.Scoping` | V |
 | `FurtherUnderstanding` | recommended | `SCOPINGRECOMMENDEDANSWER` | `.KBA400.Scoping` | V |
 | `CtrlConTestWp` | custom multi | option keys + `KEY_<VALUE>` | `.KBA400.Scoping` C09 | A:kba-400 |
+| `Applicable` | yes/no | `YES`/`NO` (UPPER) | AID-201: header rows of `.AID201.TypeofNonauditService` — a header's `NO` gates its nested `childObjectList` rows off; EXCEPTION: Header1 "General Considerations" children are UNGATED and must each be answered individually | V 2026-07-08 |
+| `Consideration` / `IndependenceRequirementMet` | per kind (child rows) | per kind | AID-201 child/grandchild rows under `TypeofNonauditService` headers (rows live in `childObjectList`, NOT the flat objectList — see §4 note) | V 2026-07-08 |
 | `performedby` | signoff | token | AUD-8xx steps | V |
 | `Description` | text | `""` | eng-level TQ comment; KBA-401 `Noncomplex*.description` | V |
 | `Comment`/`Comments`/`comment` | text | `""` | KBA-502 FinancialLevelRisks (ONLY writable), KBA-400 Scoping/AuditareaRelevantAssertions | V |
 
 ## 4. Collection-targeting — INPUT vs DISPLAY
 `inventory_form` over-filters grid forms → for KBA-4xx/5xx read raw `result.collections` and target INPUT.
+
+**Nested rows: never hand-count the flat `objectList`.** Answerable rows nest in `childObjectList`
+(children/grandchildren/great-grandchildren) — AID-201's `TypeofNonauditService` is 17 flat objects
+but 112 rows / 195 fillable fields across depths 0–3 (fixture:
+`data/fixtures/aid201-form-get.json`). `inventory_form` DOES walk the nesting (rows carry
+`children[]`; `fillable` includes nested fields) — the under-count trap is sizing work from
+`len(objectList)` on a raw GET or from top-level `sections[].rows` only. Same class of surprise as
+the KBA-4xx grid over-filtering above: when a UI count disagrees with your estimate, trust
+`inventory_form.stats` / the diagnostics endpoint, not a flat count. [V 2026-07-08]
 | Form | INPUT (write) | DISPLAY (never write) |
 |---|---|---|
 | AUD-100 | `.AUD100.OverAllTailoringQuestions` (note caps: OverAll), `.AUD100.TQComments`, `.AUD100.Overallauditareastemp` (`Description`, seeded -1 + spawn) | — |
@@ -80,11 +93,12 @@ this session, not contradicted — carry forward.
 
 ## 5. Cross-cutting write protocol (EVERY write)
 1. **Content-Type: application/json** on every body-bearing write (`build_batch_xhr` omitted it → 415 on all KC writes; single-call builders already inject it). [V]
-2. **Submit to commit.** Writes are PENDING until `POST /api/Workpaper/submit` `{binderId, workpaperId:""}`. A refresh discards unsubmitted writes. (The "persists without submit" note is WRONG.) [V]
+2. **Submit to commit — PER-WORKPAPER ONLY.** Writes are PENDING until `POST /api/Workpaper/submit` `{binderId, workpaperId:"<wpId>"}`. A refresh discards unsubmitted writes. (The "persists without submit" note is WRONG.) **Never submit with an EMPTY workpaperId** — the "submit all pending in binder" form silently DISCARDS pending writes on other forms instead of committing them (isolated-test confirmed, batch-2 2026-07-08). [V 2026-07-08]
 3. **Verify AFTER reload — never the immediate GET** (it reads the uncommitted working copy; false state-3). [V]
-4. **Completion oracle = diagnostics endpoint.** `POST /api/Workpaper/refresh/{eng}/{wp}` → `GET /api/diagnostics/GetWorkpaperDiagnostics/{eng}/{wp}` → `result.diagnostics[]`. Drive the loop from it. Form `diagnosticCount` is STALE. `type:"Missing KnowledgeCoach Form"` = a Yes-answer needs a dependent form → flip to No or add it. [V]
+3a. **Mandatory write→verify→retry loop — the standard KC write pattern.** KC silently drops a large share of UpdateProperty→submit pairs even when payloads match this registry exactly: ~60% loss at ~350ms pacing (batch-2), still ~30–50% loss with a 1–2s inter-write sleep (SFRC 401k 0100, 2026-07-08) — sleeps reduce but do NOT eliminate drops, so pacing alone is never sufficient. Binding pattern for every KC write: **write → settle ~1.2s → per-workpaper submit → re-read COMMITTED state after reload → rewrite ONLY the dropped cells → iterate until the committed read matches intent** (the CONVERGE loop; 2–4 rounds converges); batch the verify (one re-read covers the whole write set). The drop set ROTATES between rounds — each write echoes state 3 but the commit loses a different subset — so a counted "retry ≤3 misses" pass under-delivers on large sets; converge to match-intent (81-write form converged, Coop Consulting 2026-07-09). A write not re-read as state-3-after-reload was NOT made — never count it, never blind-repeat it (re-read first; see RECOVERY.md). [V 2026-07-09]
+4. **Completion oracle = diagnostics endpoint.** `POST /api/Workpaper/refresh/{eng}/{wp}` → `GET /api/diagnostics/GetWorkpaperDiagnostics/{eng}/{wp}` → `result.diagnostics[]`. Drive the loop from it. Form `diagnosticCount` is STALE. `type:"Missing KnowledgeCoach Form"` = a Yes-answer needs a dependent form → flip to No or add it. `type:"Unnecessary KnowledgeCoach Form"` = the inverse: an answer gates a form OFF and KC wants it REMOVED — the entry names it via `unnecessaryWorkpaperReferenceTag`/`unnecessaryWorkpaperDataBindingKey` (fixture: `data/fixtures/aud100-unnecessary-form-diag.json`); check these on the driving form BEFORE adding conditional forms (add-audit-programs.md), and treat existing ones as a removal worklist — the diagnostic is PERMANENT while the form stays. [V 2026-07-08]
 5. **Transport by origin, then verb.** KC origin -> **bridge via `chrome_api_call`** (SW fetch, CSP-exempt) PRIMARY, linked tab fallback; the bridge's IN-PAGE verbs (eval/fetch) stay CSP-blocked on KC. engagement/WPM/FP/workbench -> bridge primary, linked tab fallback. [V 2026-06-23]
-6. Sequential writes; settle ~1.5s before a verify GET. [V]
+6. Sequential writes; settle ~1.2–1.5s between write and submit/verify. (The old ~300ms pacing floor is WRONG — ~60% silent drop at ~350ms; and no sleep alone fully prevents drops, see 3a.) [V 2026-07-08]
 7. Fixed-point fill: choices-with-options → re-read → repeat (cap ~8) before text/signoffs; reset* = not-answered. [A:fill-kc-form]
 8. TQ-cascade: answer `*TQ` first; skip descriptions where TQ=No. [A:architecture]
 9. `build_reset_payload` FORBIDDEN (leaves state 3 blank; diagnostic never re-fires). [A:fill-kc-form]
@@ -94,7 +108,7 @@ this session, not contradicted — carry forward.
 13. Batch multi-write into ONE in-page JS call (KC tab times out on many sequential per-call XHRs). [A:architecture]
 
 ### Endpoint quick-ref
-Write: `POST kc/api/Workpaper/UpdateProperty/{engGuid}/{wpId}` body `{collectionKey,objectKey,propertyKey,value,valueKey,dataEntryExpression:"",dataEntryExpressionContextObjectKey:""}` + Content-Type. Spawn: same, identity keys `""`, collection path in dataEntryExpression. Submit: `POST /api/Workpaper/submit`. Diagnostics: refresh then GET GetWorkpaperDiagnostics. wpId lookup: `GET /api/binder/GetBinder/{engGuid}` → result.workpapers[].
+Write: `POST kc/api/Workpaper/UpdateProperty/{engGuid}/{wpId}` body `{collectionKey,objectKey,propertyKey,value,valueKey,dataEntryExpression:"",dataEntryExpressionContextObjectKey:""}` + Content-Type. Spawn: same, identity keys `""`, collection path in dataEntryExpression. Submit: `POST /api/Workpaper/submit` `{binderId, workpaperId:"<wpId>"}` (per-workpaper ONLY — empty wpId discards other forms' pending writes). Diagnostics: refresh then GET GetWorkpaperDiagnostics. wpId lookup: `GET /api/binder/GetBinder/{engGuid}` → result.workpapers[].
 
-**Provenance (2026-06-22, Coop "Bridge test", commercial, eng 102417/399548):** AUD-100 0-diag, KBA-400 176/176, KBA-401 0-diag, KBA-403, KBA-105, KBA-502 rollup, AUD-801/807. See `cch-axcess_kc-write-415_diagnosis.md`, `cch-axcess_kba401-matrix-CAPTURE.md`.
+**Provenance (2026-06-22, Coop "Bridge test", commercial, eng 102417/399548):** AUD-100 0-diag, KBA-400 176/176, KBA-401 0-diag, KBA-403, KBA-105, KBA-502 rollup, AUD-801/807. (Session capture notes live in the source repo, not this install.)
 <!-- END -->

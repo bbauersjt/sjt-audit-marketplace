@@ -29,19 +29,29 @@ status: validated
 
 Adds, edits, or removes the annotation types on a **system-generated** CCH Axcess
 leadsheet: the top-level comment box, inline comments (account-level AND group-level), and
-tickmarks. All via `financialprep-api.cchaxcess.com`. (TB-report REF columns are a
-different API — see `annotate-tbreport.md`.)
+tickmarks. All via `financialprep-api.cchaxcess.com`. (This is protocol A of the firm's two
+leadsheet-annotation protocols. Protocol B — the firm-default TB-report leadsheet, annotated
+via TWO editable Remarks columns — is a different API; see `annotate-tbreport.md`.)
 
 ## Terminology + routing (firm-specific — prevents mis-routing)
 
-- The system leadsheet is the WRITE SURFACE for bubbles/tickmarks; they flow ONE WAY onto
-  the firm's TB-report leadsheets (render read-only there in `cpComments`/`cpTickMarks`).
-  REF column values flow NOWHERE — they live on the TB report only (`annotate-tbreport.md`).
-- **Routing vocabulary:** "comment" / "note" / bubble language → THIS module.
-  "REF" / "reference" / "cross-ref" / "W/P ref" → `annotate-tbreport.md`. Staff use
-  comment/note interchangeably — both mean a bubble, never a Remarks column.
+The firm runs two parallel protocols:
+
+- **Protocol A (THIS module) — system-generated leadsheet.** WRITE SURFACE = bubbles/
+  tickmarks; they flow ONE WAY onto the firm's TB-report leadsheets (render read-only there
+  in `cpComments`/`cpTickMarks`). On a system lead, "comment" / "note" / "tickmark" → a
+  bubble via THIS module, never a Remarks column (system leads don't have any).
+- **Protocol B (the firm DEFAULT) — TB-report leadsheet.** WRITE SURFACE = two editable
+  Remarks columns (`annotate-tbreport.md`): Remarks_1 "REF" for cross-refs/index/imm tags,
+  Remarks_2 "Notes" for free notes. On a TB-report lead, "REF"/"reference"/"cross-ref"/
+  "W/P ref"/"imm" → Remarks_1 "REF"; "note"/"comment" → Remarks_2 "Notes" (a real column,
+  not a bubble).
+- **The mirror is one-directional and Remarks values don't cross it.** Bubbles/tickmarks
+  mirror system lead → TB report (read-only). Remarks_1/Remarks_2 (REF/Notes) column values
+  flow NOWHERE — they live on the TB report only (`annotate-tbreport.md`).
 - **Filed-system-lead rule:** if a system LeadSheet is FILED in the binder, that user works
-  off system leads — route ALL their annotation asks here (REF columns don't exist for them).
+  off system leads (protocol A) — route ALL their annotation asks here (Remarks columns
+  don't exist for them).
 - System leads auto-generate from the DEFAULT grouping list only — alternate group lists
   (common for analytics) have NO system leads, so bubbles for those rows can only be
   written via the default-list lead that contains the account, if any.

@@ -14,8 +14,7 @@ inputs:
   - "list of {name, wpId} for forms to capture"
   - "user-mounted download directory"
 calls:
-  - scripts.kc
-  - scripts.http_runner.ls_headers_js_expr (ls:kc sentinel)
+  - scripts.kc.bulk_capture_forms_js
 status: validated
 validated_on:
   - "Kymera 2025 EBP — 22 forms, 11.81 MB bundle, 2026-05-21"
@@ -47,79 +46,28 @@ The rule: **raw form JSON never enters Claude's context**. The browser writes on
 
 ## Procedure
 
-### Step 1 — Confirm token availability
+### Step 1 — Fetch, bundle, download (one built call)
 
-```js
-const accessToken = localStorage.getItem('kc.accessToken');
-const idToken     = localStorage.getItem('kc.idToken');
-if (!accessToken || !idToken) throw new Error('KC tokens missing — open a KC tab first');
+```python
+from scripts import kc
+wp_ids = [{"name": "AUD-801 ...", "wpId": "01c38855-..."}]  # one per form
+js = kc.bulk_capture_forms_js(eng_guid, wp_ids, "<engagement-slug>-forms-bundle.json", concurrency=5)
+# Run js in the KC tab (chrome_api_call bridge, or linked-tab JS tool).
 ```
 
-### Step 2 — Loop GET, bundle, download
+The built JS reads `kc.accessToken`/`kc.idToken` from localStorage itself (open a KC tab first — it throws if they're missing), loops `GET /api/Workpaper/{eng}/{wpId}` at the given concurrency (5 observed safe), bundles every response, stashes it on `window.__bundle`, and triggers the Chrome download. Raw form JSON never enters context.
+
+### Step 2 — Get past Chrome's multi-download prompt
+
+If a prior download fired in the same tab, Chrome blocks the second with a `"Allow this site to download multiple files?"` banner — the user clicks **Allow**. If they miss it, re-trigger from the stashed bundle (no re-fetch):
 
 ```js
-const eng = '<engagementGuid>';
-const wpIds = [
-  {name: 'AUD-801 ...', wpId: '01c38855-...'},
-  // one per form
-];
-
-const hdrs = {
-  'Authorization': 'Bearer ' + accessToken,
-  'IdToken': idToken,            // mixed-case on KC; all-caps IDToken on WPM
-  'Accept': 'application/json'
-};
-
-const fetchOne = async (f) => {
-  try {
-    const r = await fetch(`https://knowledgecoach.cchaxcess.com/api/Workpaper/${eng}/${f.wpId}`, {headers: hdrs});
-    return {name: f.name, wpId: f.wpId, status: r.status, data: r.status === 200 ? await r.json() : await r.text()};
-  } catch(e) {
-    return {name: f.name, wpId: f.wpId, error: String(e)};
-  }
-};
-
-// Concurrency 5 — respectful, no throttling observed at this rate
-const results = [];
-for (let i=0; i<wpIds.length; i+=5) {
-  const batch = wpIds.slice(i, i+5);
-  results.push(...await Promise.all(batch.map(fetchOne)));
-}
-
-const bundle = {
-  capturedAt: new Date().toISOString(),
-  engagement: '<friendly name>',
-  engagementGuid: eng,
-  titleGuid: '<from binder URL>',
-  forms: results
-};
-
-// Stash on window for retry if Chrome's multi-download prompt blocks the first attempt
-window.__bundle = bundle;
-
-const blob = new Blob([JSON.stringify(bundle, null, 2)], {type:'application/json'});
-const a = document.createElement('a');
-a.href = URL.createObjectURL(blob);
-a.download = '<engagement-slug>-forms-bundle.json';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
+const b = new Blob([JSON.stringify(window.__bundle,null,2)],{type:'application/json'});
+const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(b),download:'<filename>'});
+document.body.appendChild(a); a.click();
 ```
 
-### Step 3 — Get past Chrome's multi-download prompt
-
-If a prior download fired in the same tab (e.g. an earlier form-bundle or POST-shape archive download), Chrome will block the second with a `"Allow this site to download multiple files?"` banner. The user must click **Allow**. If they miss it, re-trigger from `window.__bundle`:
-
-```js
-const blob = new Blob([JSON.stringify(window.__bundle, null, 2)], {type:'application/json'});
-const a = document.createElement('a');
-a.href = URL.createObjectURL(blob);
-a.download = '<filename>';
-document.body.appendChild(a);
-a.click();
-```
-
-### Step 4 — Process locally
+### Step 3 — Process locally
 
 Move (or just read in-place) the bundle into the sister-skill's `captures/` folder. Run a Python script that:
 
@@ -135,7 +83,7 @@ Move (or just read in-place) the bundle into the sister-skill's `captures/` fold
 
 Reference implementation: `cch-risk-assessment/captures/process_bundle.py` (when present).
 
-### Step 5 — Clean up the binder
+### Step 4 — Clean up the binder
 
 Loop `remove-kc-form.md` over each captured wpId. Verify via `GetBinder` that the AUD-8xx (or whichever filter) count is back to baseline.
 

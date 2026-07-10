@@ -6,6 +6,52 @@ status: BRIDGE=primary for ALL origins — engagement/WPM/workbench/FP via in-pa
 ---
 # Runbook — Transport selection (route by origin, then verb)
 
+> **GATE — the page-context transport below is the ONLY sanctioned path; using it presumes Step 0
+> ran.** Reading this file is not initialization. Do NOT hand-forge external HTTP calls with copied
+> headers — execute in the bridged tab's page context (`chrome_api_call` SW-fetch / `chrome_eval`+XHR)
+> so session/XSRF ride along. (ONE documented exception: KC/WPM auth is pure header-bearer — no
+> cookies, no XSRF — so the **curl-from-Bash wire-captured-bearer path** below is sanctioned, and
+> is the PREFERRED KC pattern when the user's tabs are throttled.) If you have ALREADY made platform calls this session without Step 0
+> (`session-bootstrap.md`): **STOP now** — run Step 0 in full, switch to this transport, RE-VERIFY BY
+> READ everything written while side-entered (200s may be silent no-ops), then resume from the last
+> verified step. (SKILL.md → "Initialization gate".)
+
+## Bounded execution — HARD RULES for every injected eval (any origin, any transport)
+
+These are not style preferences. Each one was paid for in a wedged or silently-failing agent
+(Rock binder build, 2026-07-07 — 3 agent attempts, 2 kills before these rules made the run
+survivable). They apply to every `chrome_eval` / `javascript_tool` payload that executes
+platform operations.
+
+1. **≤10 operations per injected eval.** Never assemble one giant payload ("the walk") that
+   creates/moves/writes everything in a single eval. Split the op list into chunks of at most
+   10 and run them as separate evals.
+2. **Mandatory JS-side timeout — every eval must ALWAYS return.** Wrap the work in
+   `Promise.race` against a 30–60s timer (default ~45s) so the tool round returns *something*
+   even when a call hangs. An eval that can hang forever blocks the agent mid-tool-call: it
+   goes silent AND unreachable (queued messages only deliver at the next tool round) and only
+   a kill recovers it. Pattern:
+   ```js
+   const r = await Promise.race([runOps(), new Promise(res => setTimeout(() => res({timedOut: true}), 45000))]);
+   return JSON.stringify(r);
+   ```
+3. **Verify each chunk BY READ before sending the next.** Re-GET what the chunk claims to have
+   written; resume from the last verified op after any failure — never blind-repeat writes.
+4. **One-line progress note between chunks.** On delegated/background runs this is the
+   heartbeat the orchestrator's watchdog feeds on; silence reads as a stall.
+5. **Batch ops beat call loops.** Before chunking N single calls, check whether a batch call
+   exists for the operation (`wpm.move` takes an `items` LIST — 2 PUTs filed 19 objects live;
+   `kc_add_forms` takes the whole form array). Chunk the batch payload, don't loop singles.
+
+**Validate every response by BODY SHAPE, never by HTTP status.** CCH answers **200 with an
+error or HTML body** when the transport or auth is wrong — a silent no-op that looks like
+success. Real examples: a body starting `<!DOCTYPE html` (login/error page where JSON was
+expected), or a JSON error wrapper (`{"message": "An error has occurred..."}`,
+`{"result": null, "statusCode": ...}`). A write's 200 means *accepted*, not *applied*
+(architecture.md) — success = the expected JSON shape in the body AND a re-GET showing the
+change. Anything "written" during a 200-error stretch gets RE-VERIFIED BY READ before you
+build on it.
+
 ## Bridge is PRIMARY everywhere; linked tab is the FALLBACK
 
 Detect the bridge ONCE per session (below). If it's up, it is the preferred transport for **every**
@@ -41,7 +87,7 @@ Call `chrome_bridge_status` (MCP tool, chrome-bridge plugin).
 
 | Operation | BRIDGE (preferred) | LINKED-TAB (fallback) |
 |---|---|---|
-| **KC-origin read/write** (KC form GET, GetBinder, `UpdateProperty`, spawn, `submit`, diagnostics) | **`chrome_api_call(url, method, headers, body)`** — SW fetch, CSP-exempt + CORS-bypassed; pass KC bearer + `IdToken` in headers | the linked Claude-in-Chrome tab on a `knowledgecoach.cchaxcess.com` tab (same endpoints/builders) |
+| **KC-origin read/write** (KC form GET, GetBinder, `UpdateProperty`, spawn, `submit`, diagnostics) | **`chrome_api_call(url, method, headers, body)`** — SW fetch, CSP-exempt + CORS-bypassed; pass KC bearer + `IdToken` in headers. **Throttled-tab sessions: curl-from-Bash with the wire-captured bearer** (section below) | the linked Claude-in-Chrome tab on a `knowledgecoach.cchaxcess.com` tab (same endpoints/builders) |
 | Find the CCH tab | `chrome_list_tabs` -> pick by URL (returns id+url+title for ALL real tabs, incl. the user's own) | `tabs_context_mcp` + `tab_probe_js` + `claim_tab_js` (session.py) |
 | Run JS in page (engagement origin only) | `chrome_eval(code, target=tabId)` | `mcp__Claude_in_Chrome__javascript_tool(code, tabId)` |
 | Backend API call (any origin) | `chrome_api_call(url, headers=captured)` — SW, CORS-bypassed for *.cchaxcess.com (cleanest); OR `chrome_eval` + http_runner XHR builder for engagement-origin in-page | `javascript_tool` running the same builder |
@@ -52,14 +98,57 @@ Call `chrome_bridge_status` (MCP tool, chrome-bridge plugin).
 | Capture the bearer | `chrome_network_recent(host_filter)` — webRequest auto-captures it off live API calls; **no monkeypatch, no provoke**. User-scoped; reuse across the batch | install monkeypatch (auth_capture.py) + provoke one boot XHR |
 | KC localStorage auth | pass tokens from `chrome_network_recent` to `chrome_api_call` for KC | `javascript_tool` with the `ls:*` sentinel |
 
-## chrome_api_call body — must be pre-serialized JSON
+## chrome_api_call body — dict OR string both work (fix shipped)
 
-`chrome_api_call` forwards `body` to the SW as-is. For a JSON POST the body must be a **JSON string**
-(the verb does not auto-serialize a dict; the current `server.py` types `body: str` and rejects a dict).
-The skill's payload builders return dicts — **`json.dumps` them before the call**. (Bridge fix pending:
-`server.py` to accept a dict and `json.dumps` it; until shipped, json.dumps at the call site. A bare
-strict-JSON object passed inline can be coerced/rejected by the arg layer — pass it as a serialized
-string.)
+`chrome_api_call` accepts `body` as a JSON **string or a dict** — `server.py` `json.dumps`'s a dict
+before forwarding, and the extension self-serializes non-string bodies as a second net (verified in
+code 2026-07-07; the old "server rejects a dict / json.dumps at the call site" rule is OBSOLETE).
+Passing the builders' dict output directly is fine. If an arg layer ever mangles an inline JSON
+object, pass it pre-serialized — but that is a fallback, not the rule.
+
+**⚠ Top-level JSON ARRAY bodies are NOT covered — do not fight `chrome_api_call` on them.** Some
+endpoints take a bare JSON array as the whole body (the KC **add-forms batch**
+`POST knowledgecoach.cchaxcess.com/api/binder/{guid}` — body is `[ {form}, {form}, … ]`, not an
+object). Observed live 2026-07-07 (Rock binder build, agents `ac7dabb` + `ac67226`): the tool's
+`body.str` validation **rejects a Python list** (`Input should be a valid string`), and passing the
+array as a **stringified** JSON literal **double-encodes** — the array arrives on the wire as a JSON
+*string*, and the server returns **400** (a 200 here is likewise the wrong shape — validate by body,
+not status). Resolution used in-run: POST it via an **in-page same-origin XHR** on a tab already on
+the KC origin (`chrome_eval`, controlling `JSON.stringify` yourself so the raw array — not a quoted
+string — hits the wire) with a freshly-captured KC bearer. **Flagged for revalidation / a proper
+`array_body` path** — until then, array-bodied writes take the in-page-XHR route, never a bare
+`chrome_api_call(body=[...])`. (This is the single most re-derived transport fact in delegated
+platform runs; it is a doc gap, not per-agent cleverness — read it, don't rediscover it.)
+
+## curl-from-Bash with a wire-captured bearer — the preferred KC auth pattern (validated 2026-07-09)
+
+KC and WPM auth is **pure header-bearer** — no cookies, no XSRF — so a captured token works from
+ANY HTTP client, entirely outside the browser. On a session where the user's KC tabs are throttled
+background tabs, this is the RELIABLE KC path (validated live 2026-07-09, Coop Consulting 0200 —
+GetBinder + the full read/UpdateProperty/submit/refresh/diagnostics pipeline over curl from Git
+Bash, same endpoint/payload shapes as the skill's builders).
+
+1. **Token source = the wire, not localStorage.** `chrome_network_recent(host_filter="cchaxcess")`
+   — the user's OWN KC/engagement browsing mints fresh `auditprod` bearers (~32-minute life) that
+   BOTH KC and WPM accept. `kc.accessToken` in localStorage goes STALE on throttled background
+   tabs (the refresh timer stalls — architecture.md AX-33), and re-reading it just re-reads the
+   stale value; the wire capture is the ground truth for freshness.
+2. **Write the token to a FILE — never hand-transcribe.** A hand-copied JWT 401'd
+   `chrome_api_call` live (transcription error, not a platform problem). Land the capture in a
+   session-scratch token file and expand it at call time
+   (`curl -H "Authorization: Bearer $(cat "$TOKFILE")" ...`) — no transcription step exists to
+   fail. Scratch only: the token never goes into any workspace file (secrets rule).
+3. **Verify with one cheap GET** (e.g. KC `GetBinder`) before building on it — a 401 here means
+   transcription or staleness; re-capture, don't debug the platform.
+4. **Headers by leg:** KC = `Authorization: Bearer <at>` + `IdToken: <it>`; WPM adds `IDToken`
+   (ALL-CAPS) + `USERLocale: en-US` + `CountryCode: US`. Same bearer serves both legs; send
+   exactly ONE IdToken casing per call (architecture.md header-case gotcha).
+
+Why curl wins under throttling: `chrome_api_call` remains fine with a file-sourced token, but
+in-page `chrome_eval` fetch on a throttled background KC tab **hangs the bridge channel** — never
+eval on the user's throttled tabs — and curl touches NONE of the user's open tabs (no
+foreground-grab, no collision with the user's own live KC session). Build payloads in Python as
+usual; only the send changes.
 
 ## Uploads — chrome_upload is the primary path (verified end-to-end)
 

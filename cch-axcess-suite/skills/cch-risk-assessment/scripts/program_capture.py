@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# NOTE (2026-07-07): the JS_ADD / JS_CAPTURE snippets below assume raw in-page
+# fetch() against knowledgecoach.cchaxcess.com. KC now ships a strict CSP that
+# blocks in-page fetch/eval (both MAIN and ISOLATED worlds) on that origin — a
+# pasted-into-the-tab capture like this will be CSP-blocked. Run captures
+# through the chrome-bridge `chrome_api_call` verb (service-worker fetch,
+# CSP-exempt + CORS-bypassed for *.cchaxcess.com) instead, or drive the calls
+# from the engagement-tab origin rather than the KC tab. See
+# cch-axcess/references/architecture.md "Transport by origin" (AX-34).
 """Re-runnable capture of AUD-8xx program TAILORING QUESTIONS into program_question.
 
 WHY THIS EXISTS: the CCH tailoring-question set changes every year (new title

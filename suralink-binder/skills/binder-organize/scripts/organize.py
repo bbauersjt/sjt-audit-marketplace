@@ -126,6 +126,29 @@ def perm_split(taxonomy, doc_year, fiscal_year):
     return ds.get("current", "New This Year")
 
 
+def perm_subfolder_for(taxonomy, client_type, signals):
+    """Ruled topical Perm File subfolder for a perm-bucket file, or None (root).
+
+    Client types with rules under perm_file.subfolders (EBP: 9100 Plan
+    Documents / 9200 Service Agreements / 9300 SOC 1 Reports, per the EBP
+    binder template) get topical filing; a type with no rules (standard) always
+    returns None. Scored like classify() — most keyword hits wins; ties go to
+    the first rule in template order. A topical match WINS over the optional
+    date split; date-split (if the user asked for it) applies only to files
+    this returns None for.
+    """
+    rules = taxonomy["perm_file"].get("subfolders", {}).get(client_type, [])
+    if not isinstance(rules, list):
+        return None
+    text = signal_text(signals)
+    best, best_hits = None, 0
+    for rule in rules:
+        hits = len(_hits(text, rule.get("keywords", [])))
+        if hits > best_hits:
+            best, best_hits = rule["name"], hits
+    return best
+
+
 # --- destination planning -------------------------------------------------
 
 def folder_name(taxonomy, index, name):
@@ -147,7 +170,8 @@ def plan_destination(taxonomy, classification, sample_flag=False,
       other                  -> ['Other']
 
     Samples get a 'Samples' subfolder for section/single_audit buckets only.
-    Perm File is a flat dump - the only optional split is the date subfolder.
+    Perm File is flat by default; perm_subfolder carries either a ruled topical
+    subfolder (perm_subfolder_for) or the optional date split (perm_split).
     """
     b = classification["bucket"]
     if b == "perm":

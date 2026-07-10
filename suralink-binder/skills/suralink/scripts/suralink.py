@@ -1,6 +1,8 @@
 """Suralink operations.
 
-Each *_js() returns a JavaScript string for mcp__Claude_in_Chrome__javascript_tool.
+Each *_js() returns a JavaScript string to run in the Suralink tab via the
+session transport (bridge chrome_eval preferred; linked-tab javascript_tool
+fallback — see ../references/architecture.md "Transport").
 Prerequisite: a Chrome tab logged into app.suralink.com.
 IDs and gotchas: see ../references/architecture.md.
 """
@@ -8,6 +10,60 @@ import json
 from . import browser
 
 CONTROLLER_AUDIT = "/Controllers/Auditors/Audit"
+
+
+# --------------------------------------------------------------------------
+# Session / audit verification
+# --------------------------------------------------------------------------
+
+def verify_audit_js(audit_id):
+    """JS: the cheap session+identity check. Run AFTER navigating, BEFORE any
+    real work on an audit. Asserts the tab actually reflects the REQUESTED
+    auditId — not merely that "a Suralink page loaded".
+
+    Why identity, not just liveness: a reused stale tab's login bounce carries
+    a `returnTo` pointing at whatever audit that tab was LAST on. Observed
+    2026-07-09 (SCDC 401k): requested auditId 2852254, but the stale tab's
+    bounce returnTo pointed at 2871416 — a naive "did a Suralink page load"
+    check green-lights against the WRONG audit. See architecture.md
+    "Session verification".
+
+    ok:true only when the tab is on app.suralink.com AND both the URL
+    `auditId=` param and `window.auditId` equal the requested id. Otherwise
+    returns a structured failure:
+      - on accounts.suralink.com: `logoutBounce` (the `logout=true` signature =
+        session invalidated, distinct from an idle-timeout bounce) and
+        `returnToAuditId` (the auditId buried in the bounce's returnTo — if it
+        differs from `requestedAuditId`, the tab was stale; re-navigate to the
+        requested audit after the user logs back in, never trust the bounce).
+      - on app.suralink.com but wrong/missing auditId: the mismatching ids.
+
+    Returns JSON string {ok, requestedAuditId, urlAuditId, pageAuditId, path}
+    or {ok:false, error, host, logoutBounce, returnToAuditId, requestedAuditId}.
+    (No raw URLs in the output — Cowork content filter, see architecture.md.)
+    """
+    rid = json.dumps(str(audit_id))
+    return (
+        "(() => {\n"
+        "  const R = " + rid + ";\n"
+        "  const u = new URL(location.href);\n"
+        "  const q = u.searchParams;\n"
+        "  if (u.hostname !== 'app.suralink.com') {\n"
+        "    const logout = q.get('logout') === 'true';\n"
+        "    const rt = (((q.get('returnTo')||'').match(/auditId=(\\d+)/)||[])[1])||'';\n"
+        "    return JSON.stringify({ok:false,\n"
+        "      error: logout ? 'session invalidated (logout=true bounce)'\n"
+        "                    : 'not on app.suralink.com (login bounce or wrong site)',\n"
+        "      host: u.hostname, logoutBounce: logout,\n"
+        "      returnToAuditId: rt, requestedAuditId: R});\n"
+        "  }\n"
+        "  const urlAid = q.get('auditId') || '';\n"
+        "  const pageAid = String(window.auditId || '');\n"
+        "  return JSON.stringify({ok: (urlAid === R && pageAid === R),\n"
+        "    requestedAuditId: R, urlAuditId: urlAid, pageAuditId: pageAid,\n"
+        "    path: u.pathname});\n"
+        "})()"
+    )
 
 
 # --------------------------------------------------------------------------
