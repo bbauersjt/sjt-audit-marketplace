@@ -1,7 +1,11 @@
 """Shared DB access for cch-risk-assessment scripts.
 
 Source of truth is the editable CSV seeds in data/seed/*.csv. build_db.py
-builds data/cch_ra.db IN PLACE from them. The skill folder is a FUSE mount
+builds data/cch_ra.db IN PLACE from them. program_step.csv and
+program_question_effect.csv are schema-ready but ship header-only (0 rows) --
+forward scaffolding for the capture pipeline, with no query consumer yet;
+program_question.csv is the only program seed read today (by program.py).
+The skill folder is a FUSE mount
 that rejects SQLite's default rollback -journal lock file, so the build runs
 with journal_mode=OFF + locking_mode=EXCLUSIVE (no journal file is created).
 Reads open the .db immutable=1 (no locks), which works even on the read-only

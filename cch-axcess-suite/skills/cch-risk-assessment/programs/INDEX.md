@@ -4,7 +4,7 @@ Per-FS-area audit program references. Each MD captures the firm's step library f
 
 ## Template
 
-**`cash.md` is the canonical template.** Every program MD follows the same structure: Form anatomy → How a program ties together (cross-form workflow) → Primary Audit Objectives → Tailoring Questions → Complete Step Library (V=visible, L=library) → Step→Assertion coverage matrix → PlannedAuditApproach mapping → Default Step Selection per audit type → Typical Workpaper References → API specifics → Validation log → TODO.
+**`cash.md` is the canonical template.** Every program MD follows the same structure: Form anatomy → How a program ties together (cross-form workflow) → Primary Audit Objectives → Tailoring Questions → Complete Step Library (V=visible, L=library) → Step→Assertion coverage matrix → PlannedAuditApproach mapping → Default Step Selection per audit type → Typical Workpaper References → API specifics → TODO.
 
 ## How a program ties together (universal chain)
 
@@ -48,7 +48,7 @@ The AUD-8xx **numbers below are the NPO (Not-for-Profit) title's numbering** and
 | Program | AUD # (NPO) | dataBindingKey | Status |
 |---|---|---|---|
 | Cash | AUD-801 | CASH | **Complete inventory** — 20 steps captured, linking verified |
-| Investments | AUD-802 | INVEST | Skeleton |
+| Investments | AUD-802 | INVEST | **Complete inventory** |
 | Accounts Receivable & Revenue | AUD-803 | AR | Skeleton |
 | Split-Interest Agreements | AUD-804 | SPLITINTX | Skeleton (NPO-specific) |
 | Contributions, Support, Program Revenue | AUD-805 | REVANDRECEIVABLESX | Skeleton (NPO-specific) |
@@ -64,7 +64,7 @@ The AUD-8xx **numbers below are the NPO (Not-for-Profit) title's numbering** and
 | Other Income/Expense | AUD-815 | OTHREV | Skeleton |
 | Journal Entries | AUD-816 | JE2 | Skeleton |
 | Related Party Transactions | AUD-817 | RPTRNS2 | Skeleton |
-| Fair Value Measurements | AUD-818 | FAIRVALUE2 | Skeleton |
+| Fair Value Measurements | AUD-818 | FAIRVALUE2 | **Complete inventory** |
 | Commitments & Contingencies | AUD-819 | COMMIT | Skeleton |
 | Accounting Estimates | AUD-820 | ESTIMATES | Skeleton |
 | Concentrations | AUD-821 | CONCENT | Skeleton |
@@ -88,7 +88,7 @@ The AUD-8xx **numbers below are the NPO (Not-for-Profit) title's numbering** and
 - **HOA** has Replacement Reserves — separate AUD-8xx, captures TBD.
 - **ALG** has Governmental Funds / Proprietary Funds revenue, Debt Service, Landfills, Grants — separate AUD-8xx, captures TBD.
 
-The 22 skeletons above cover the common cross-title program set. Add new MDs as industry-specific forms are encountered.
+The skeletons above cover the common cross-title program set. Add new MDs as industry-specific forms are encountered.
 
 ## Why this matters
 

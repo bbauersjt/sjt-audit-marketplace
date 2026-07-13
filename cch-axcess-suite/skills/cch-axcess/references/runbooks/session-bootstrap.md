@@ -42,7 +42,7 @@ within a session.
 ## Persist vs ephemeral — the memory contract (memory-first bootstrap)
 
 What may be cached across chats vs what must be captured fresh every session. This is the
-whole answer to "can we skip the bootstrap next time" (complaint 2026-06-10):
+whole answer to "can we skip the bootstrap next time":
 
 - **PERSISTABLE — check memory FIRST, write back on first discovery.** Stable identifiers
   only: `clientId`, `engagementId`, the full engagement-view URL, `engagementGuid`, one KC
@@ -57,7 +57,7 @@ whole answer to "can we skip the bootstrap next time" (complaint 2026-06-10):
   backgrounded KC tab `kc.accessToken` sits STALE past expiry and `ls:kc` serves it as if
   current; on 401s, touch/activate the tab (or `chrome_navigate` the KC deep-link) to
   re-mint, then take the fresh bearer from a live `chrome_network_recent` capture
-  (architecture.md → auth section / AX-33; SFRC 2026-07-08). A cached token buys nothing
+  (architecture.md → auth section). A cached token buys nothing
   and a pasted one is side-entry by construction (SKILL.md → Initialization gate).
 - **What memory-first actually saves:** with GUID + workpaperId in memory the kc leg warms
   with ZERO clicks (deep-link); the wpm leg always costs its one provoke click per fresh
@@ -65,13 +65,13 @@ whole answer to "can we skip the bootstrap next time" (complaint 2026-06-10):
 
 | Leg | Holds | Serves | Warm test |
 |---|---|---|---|
-| `wpm` | monkeypatch-captured engagement-tab headers (bearer + IDToken + locale + traceparent) | WPM, financialprep-api, workbench-api (WPM-bearer reuse — validated 2026-06-05) | `window.__cch_capture_installed` true AND a `workpapermanagementapi` capture with an Authorization header exists |
+| `wpm` | monkeypatch-captured engagement-tab headers (bearer + IDToken + locale + traceparent) | WPM, financialprep-api, workbench-api (WPM-bearer reuse) | `window.__cch_capture_installed` true AND a `workpapermanagementapi` capture with an Authorization header exists |
 | `kc` | `engagementGuid` + `kc.accessToken`/`kc.idToken` in localStorage + a KC-origin tab | KC API; also WPM/FP via `ls:wpm`/`ls:fp` sentinels | a claimed `knowledgecoach.cchaxcess.com` tab (its localStorage carries the tokens; self-refreshing while VISIBLE — stale-past-expiry on a background tab, see NON-PERSISTABLE note) |
 
 **Cross-serving (don't double-warm):** a warm KC leg serves WPM/FP via the `ls:*`
 sentinels — skip the engagement-tab capture for those calls. A warm WPM leg never
 serves KC-form writes. GUID is NOT required for reads/annotations/WPM ops
-(validated 2026-06-05); workbench **creates** need it — seed/boot-capture first,
+; workbench **creates** need it — seed/boot-capture first,
 full KC warmup only if it isn't there.
 
 ## Shared preliminaries (run once, first warmup only)
@@ -137,10 +137,10 @@ indicator, so this is the highest-signal thing you can do at warm time — catch
 moment you start work instead of discovering it when a 55-field form fill silently no-ops.
 
 **Throttle — once per work session, not per warm.** The baseline + timestamp live in the
-ENGAGEMENT WORKING FOLDER as `.cch-release-baseline.json` (never the read-only install — AX-33
-state rule). Skip the whole check when its `checked_at` is within
-`session.RELEASE_CHECK_THROTTLE_SEC` (default 4h): the first bot to warm in the engagement pays
-the one GET, every other bot skips until the window lapses. To turn it off for an engagement,
+ENGAGEMENT WORKING FOLDER as `.cch-release-baseline.json` (never the read-only install —
+the state rule). Skip the whole check when its `checked_at` is within
+`session.RELEASE_CHECK_THROTTLE_SEC` (default 4h): the first caller to warm the engagement pays
+the one GET; every other caller skips until the window lapses. To turn it off for an engagement,
 write that file with `{"off": true}`.
 
 **Procedure (bridge; ~1 unauthenticated GET, read-only):**
@@ -166,8 +166,8 @@ in your lap at the start of the session, not at the next morning's cron.
 ## Warming the `kc` leg
 
 > **KC-origin ops are BRIDGE-FIRST via `chrome_api_call`** (service-worker fetch — CSP-exempt + CORS-
-> bypassed for `*.cchaxcess.com`). Validated live 2026-06-23: read, `UpdateProperty`, `submit`, refresh,
-> diagnostics all over `chrome_api_call`, no CSP error, no linked tab. The bridge's IN-PAGE verbs
+> bypassed for `*.cchaxcess.com`). Read, `UpdateProperty`, `submit`, refresh,
+> diagnostics all run over `chrome_api_call`, no CSP error, no linked tab. The bridge's IN-PAGE verbs
 > (`chrome_eval`/`chrome_fetch`) remain CSP-blocked on KC — don't use them there. The linked Claude-in-
 > Chrome tab is the FALLBACK (bridge/extension down). On the bridge, KC data is NOT DLP-filtered — return
 > JSON directly; the download-to-disk path is the linked-tab fallback only.
@@ -218,17 +218,16 @@ cookie-only calls are rejected, the token isn't in the Angular tree to depth 5).
 
 ## 401 mid-task (the ONLY re-auth rule)
 
-A 401 (or auth-shaped failure) on a call → re-warm the **failing leg only**, retry the
-call **once**, then surface to the user. No proactive re-auth, no mid-task re-bootstrap,
-no touching the healthy leg.
+Governed by SKILL.md's failure-discipline bullet — re-warm the **failing leg only**, retry
+**once**, then surface. Recovery specifics for this runbook are in "Session recovery" below.
 
 ## Data channel — deterministic by TRANSPORT (not origin)
 
 The data channel is fixed by which TRANSPORT carries the call:
 
 - **Any origin on the BRIDGE (`chrome_api_call` / `chrome_eval`) -> NOT filtered.** Return JSON directly;
-  skip download-to-disk. KC reads over `chrome_api_call` come back as real JSON (validated 2026-06-23 —
-  GetBinder + form reads, no `[BLOCKED]`). If a payload is too large to return inline it auto-saves to the
+  skip download-to-disk. KC reads over `chrome_api_call` come back as real JSON (GetBinder + form
+  reads, no `[BLOCKED]`). If a payload is too large to return inline it auto-saves to the
   tool-results tree (or use `chrome_eval(out_path=...)`); read it from disk.
 - **KC on the LINKED-TAB fallback -> DLP-FILTERED.** A raw KC form/TB blob comes back `[BLOCKED...]`, so on
   the fallback read KC forms by **download-to-disk** (pattern: `bulk-capture-forms.md` Step 2; mount the

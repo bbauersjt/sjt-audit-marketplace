@@ -160,9 +160,9 @@ PPC-derived CCH inherent risk defaults. CR defaults to MAX. Tune per engagement.
 
 ## Universal risk-area defaults (apply to all entity types)
 
-These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaults. CCH-determined applicable assertions only — empty assertions are N/A for the area. CR defaults to MAX; RMM derives from IR×CR (will equal IR when CR=MAX).
+These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaults. CCH-determined applicable assertions only — empty assertions are N/A for the area. CR defaults to MAX; RMM derives from IR×CR (will equal IR when CR=MAX). The parenthetical is the area **binding key**, not a form number — the AUD-8xx number is title-specific; resolve it for this title via `scoping/area-map-by-title.md`.
 
-### Journal Entries (JE2 / AUD-816)
+### Journal Entries (JE2)
 
 | Assertion | IR |
 |---|---|
@@ -171,7 +171,7 @@ These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaul
 | AV | LOW |
 | UC | LOW |
 
-### Related Party Transactions (RPTRNS2 / AUD-817)
+### Related Party Transactions (RPTRNS2)
 
 | Assertion | IR |
 |---|---|
@@ -179,14 +179,14 @@ These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaul
 | AV | LOW |
 | UC | MOD |
 
-### Fair Value Measurements and Disclosures (FAIRVALUE2 / AUD-818)
+### Fair Value Measurements and Disclosures (FAIRVALUE2)
 
 | Assertion | IR |
 |---|---|
 | AV | MOD |
 | UC | MOD |
 
-### Commitments and Contingencies (COMMIT / AUD-819)
+### Commitments and Contingencies (COMMIT)
 
 | Assertion | IR |
 |---|---|
@@ -194,7 +194,7 @@ These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaul
 | AV | MOD |
 | UC | MOD |
 
-### Concentrations (CONCENT / AUD-821)
+### Concentrations (CONCENT)
 
 | Assertion | IR |
 |---|---|

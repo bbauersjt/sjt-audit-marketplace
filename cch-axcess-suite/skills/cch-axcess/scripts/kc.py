@@ -30,7 +30,7 @@ def get_binder(eng_guid: str, headers: dict) -> str:
 
     Response is wrapped: {"result": {..., workpapers: [...], clientGuid, ...}}.
     Parse at parsed["result"]["workpapers"] — top-level "workpapers" does not
-    exist (returns undefined/0 forms; confirmed 2026-06-03).
+    exist (returns undefined/0 forms).
     """
     return http_runner.build_fetch_call("GET", f"{KC}/api/binder/GetBinder/{eng_guid}", headers)
 
@@ -49,7 +49,7 @@ def add_forms(eng_guid: str, forms: list[dict], headers: dict) -> str:
     forms: list of form objects assembled by scripts.catalog.build_add_forms_body().
     `index` field is silently ignored.
 
-    RESPONSE SHAPE (settled live 2026-06-04): {"result": [...], "statusCode": ...,
+    RESPONSE SHAPE: {"result": [...], "statusCode": ...,
     "message": ...}. `result` ECHOES every SUCCESSFULLY-added form, each with its
     server-assigned `workpaperId`/`id`/`wState` — it is NOT failures-only and is
     NOT empty on full success. (The old "result lists only flagged/failed forms;
@@ -82,17 +82,16 @@ def update_property(eng_guid: str, wp_id: str, payload: dict, headers: dict) -> 
 
 
 def update_properties_sequential(eng_guid: str, wp_id: str, payloads: list[dict], headers: dict) -> str:
-    """JS for: N sequential POSTs to UpdateProperty. Returns a COMPACT array of {i, status, attempts, ok, bodyDrop} -- NO response body (the ~88KB UpdateProperty echo stays in-page; AX-36). Parse: results=json.loads(js); failures=[r for r in results if not r['ok']]; drops=[r for r in results if r['bodyDrop']].
+    """JS for: N sequential POSTs to UpdateProperty. Returns a COMPACT array of {i, status, attempts, ok, bodyDrop} -- NO response body (the ~88KB UpdateProperty echo stays in-page). Parse: results=json.loads(js); failures=[r for r in results if not r['ok']]; drops=[r for r in results if r['bodyDrop']].
 
     Sequential is REQUIRED — parallel POSTs on the same form drop writes.
 
-    Retry-on-body-drop (AX-33, the "stick" fix): UpdateProperty intermittently
+    Retry-on-body-drop: UpdateProperty intermittently
     returns a 200 wrapping {"errors":["A non-empty request body is required."],
     "statusCode":400} — the POST body sporadically isn't received and the write
     silently no-ops. Same field/payload: fails one call, succeeds the next. The
     batch runner retries each write (≤5x, ~200ms) until the body no longer matches
-    /non-empty request body|Bad Request/. Demonstrated 100% stick on a repeating
-    risk row. This is almost certainly the audit-program step-edit flakiness too.
+    /non-empty request body|Bad Request/.
 
     VERIFY correctly: these writes are PENDING until kc.submit (per-workpaper
     scoped — never empty wpId). The completion sequence is submit → reload → GET
@@ -103,8 +102,8 @@ def update_properties_sequential(eng_guid: str, wp_id: str, payloads: list[dict]
     own diagnosticCount is stale. (200 ≠ applied — architecture.md.)
 
     SILENT DROPS ARE THE NORM, NOT THE EXCEPTION: KC silently drops ~30-50% of
-    write→submit pairs even with convention-correct payloads and 1-2s pacing
-    (SFRC 401k 0100 + batch-2 isolated tests, 2026-07-08). Every write set MUST
+    write→submit pairs even with convention-correct payloads and 1-2s pacing.
+    Every write set MUST
     run the loop: write → settle ~1.2s → per-wp submit → verify by re-read after
     reload → retry misses (cap ~3). field-conventions.md §5 3a is binding.
     """
@@ -130,7 +129,7 @@ def submit(eng_guid: str, wp_id: str, headers: dict) -> str:
 
     NEVER submit with an EMPTY workpaperId. The old "submit all pending in
     binder" form ({workpaperId:""}) silently DISCARDS pending writes on other
-    forms instead of committing them (isolated-test confirmed, 2026-07-08).
+    forms instead of committing them.
     Only per-workpaper-scoped submits persist — hence the required wp_id.
 
     Even scoped correctly, KC silently drops ~30-50% of write→submit pairs
@@ -149,13 +148,12 @@ def program_step_signoff_payload(area_key: str, step_object_key: str, entries=No
     """UpdateProperty payload for a program-step SignOff cell — the IN-FORM (pt=3) sign-off /
     N/A marker. DISTINCT from the document-level WPM sign-off (that one is wpm.remove_signoff).
 
-    The `SignOff` property on a `.{AREA}.ProgramSteps` step object is a JSON-ARRAY-IN-A-STRING
-    (captured live, Coop AUD-808, 2026-07-09):
+    The `SignOff` property on a `.{AREA}.ProgramSteps` step object is a JSON-ARRAY-IN-A-STRING:
       - sign-off:  [{"userId","userReportName","date","staffId","type":0}]
       - N/A mark:  [{"userId","date","staffId","type":1}]   (note: N/A carries no userReportName)
       - CLEARED :  "[]"                                       (un-sign OR un-N/A — same empty clear)
 
-    entries=None → CLEAR (value "[]"). Passing a list sets it, but a bot rarely should:
+    entries=None → CLEAR (value "[]"). Passing a list sets it, but a caller rarely should:
     populate_program.js already applies step sign-offs; applying is not this op's purpose.
     area_key e.g. "AP" — the AUD-8xx NUMBER is NOT in the key (.AP.ProgramSteps, never
     .AP808.ProgramSteps; same rule as build_write_payload).
@@ -210,8 +208,7 @@ def decode_form(form_response: dict) -> dict:
 
     Returns {name, ceid, dataBindingKey, titleId, elements: [...], collections: [...]}.
 
-    Accepts the parsed RESPONSE DICT or its raw JSON string (AX-26 — BT3 B8 hit a
-    confusing str/dict TypeError here).
+    Accepts the parsed RESPONSE DICT or its raw JSON string.
     """
     if isinstance(form_response, str):
         form_response = json.loads(form_response)
@@ -276,9 +273,9 @@ def is_answered(prop: dict) -> bool:
     state==2 means "not answered yet"; state==3 + isValueDefault==True means
     the default ships pre-filled — treat as not-yet-answered for QA purposes.
 
-    AX-26 fix: inventory records carry isValueDefault=None (absent), and
-    `None is False` is always False — the old check false-negatived EVERY
-    inventory record (BT3 B8). Only an EXPLICIT isValueDefault=True demotes
+    Inventory records carry isValueDefault=None (absent), and
+    `None is False` is always False — a naive check would false-negative EVERY
+    inventory record. Only an EXPLICIT isValueDefault=True demotes
     an answered state.
     """
     if not prop:
@@ -307,7 +304,7 @@ def _list_items(prop: dict) -> list:
     """Pull the option list out of a renderProperty's floatieItemList.
 
     floatieItemList is ALWAYS an object `{isCustomizable, list}` on live KC
-    forms (verified across 1535 fields / 10 default NPO forms) — NEVER a bare
+    forms — NEVER a bare
     array. The options live under `.list`. The defensive array branch only
     covers hypothetical older shapes.
     """
@@ -435,7 +432,7 @@ def rendered_binding_keys(decoded_form: dict) -> set:
 def addable_empty_grids(decoded_form: dict) -> list:
     """Identify addable GRID tables and the editable column(s) they expose.
 
-    THE GAP this surfaces (KBA-103, validated 2026-05-30): KC renders some
+    THE GAP this surfaces (KBA-103): KC renders some
     tables - e.g. the control-deficiency / noncompliance grids - as add-row
     lists whose collection ships with an EMPTY objectList ([]). inventory_form
     walks EXISTING row objects only, so an empty grid contributes ZERO fillable
@@ -519,7 +516,7 @@ def addable_empty_grids(decoded_form: dict) -> list:
 
 # --- Typed field model (the parser) ----------------------------------------
 #
-# Field-kind taxonomy, derived from 1535 fields across the 10 default NPO forms
+# Field-kind taxonomy, derived from the default forms
 # (AUD-100/101, KBA-101/102/103/105/200/400/502/503). The discriminator is
 # `propertyType` (int), refined by `floatieType` + option-list length:
 #
@@ -595,8 +592,8 @@ def is_heading_object(obj: dict) -> bool:
     skips it (see _is_fillable / inventory_form['heading_answers']).
 
     CAUTION: this keys off a CSS class (`PfxTableTextBold`), NOT a semantic
-    isHeading flag (objType is the same on heading and normal rows). Validated on
-    AUD-100; confirm against new forms before trusting — a normal question that
+    isHeading flag (objType is the same on heading and normal rows). Confirm
+    against new forms before trusting — a normal question that
     happens to bold its label would be a false positive (it stays in `writable`
     and is surfaced in `heading_answers` for exactly this review).
     """
@@ -632,8 +629,7 @@ def _kba401_class(f: dict):
 def _is_fillable(f: dict) -> bool:
     """Whether a writable field is a real, answerable UI control.
 
-    Three gates, each catching a distinct class of phantom (all confirmed live on
-    AUD-100):
+    Three gates, each catching a distinct class of phantom (all on AUD-100):
       (a) rendered    — its column is placed by the `elements` layout. Drops latent
                         COLUMNS the layout never shows (the AUD-100 per-row
                         `.Comment` class: 91 writable, 0 rendered).
@@ -659,12 +655,12 @@ def _is_fillable(f: dict) -> bool:
 
 
 def _seal_field(rec: dict) -> str:
-    """Integrity seal over a field record's write-identity (AX-26).
+    """Integrity seal over a field record's write-identity.
 
     build_write_payload verifies it, refusing records whose collection_path /
     object_key / key_original / kind were mutated AFTER inventory_form() built
-    them (the BT3 B9 guard hole: a valid record with a hand-edited
-    collection_path sailed through the key-presence check)."""
+    them (a valid record with a hand-edited collection_path would otherwise sail
+    through the key-presence check)."""
     import hashlib
     basis = "|".join(str(rec.get(k)) for k in ("collection_path", "object_key", "key_original", "kind"))
     return hashlib.sha256(basis.encode()).hexdigest()[:16]
@@ -727,7 +723,7 @@ def inventory_form(decoded_form: dict) -> dict:
     children[] and `fillable` includes nested fields at every depth. Do NOT size
     work from len(objectList) on a raw GET — AID-201's TypeofNonauditService is
     17 flat objects but 112 rows / 195 fillable fields across depths 0-3
-    (fixture: references/data/fixtures/aid201-form-get.json, verified 2026-07-08).
+    (fixture: references/data/fixtures/aid201-form-get.json).
     """
     sections, writable_flat = [], []
     by_kind: dict[str, int] = {}
@@ -810,12 +806,12 @@ def custom_value_key(text: str) -> str:
     arbitrary valueKey for it — it derives the key as ``"KEY_" + value`` with the
     text upper-cased and runs of non-alphanumerics collapsed to "_".
 
-    Observed live 2026-05-30 (KBA-400, Other Income C09): typing "Control Memo"
+    Example: typing "Control Memo"
     POSTs valueKey "KEY_CONTROL_MEMO". A REST write that invents its own token
     instead (e.g. "ZZ_CUSTOM_9931" / "ZZQX_CUSTOM_9931") is accepted into the
     working copy — so an immediate GET looks fine — but it is DROPPED on the next
-    server refresh/reload and never persists. This was the "custom value didn't
-    stick" bug. ALWAYS derive the key with this function, and confirm a custom
+    server refresh/reload and never persists. ALWAYS derive the key with this
+    function, and confirm a custom
     value truly stuck by re-reading AFTER POST /api/Workpaper/refresh (not by the
     GET right after the write — that's the false-positive trap).
 
@@ -838,7 +834,7 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
       options) OR pass valueKey directly.
     - multiselect: pass `value` as a list of display strings OR a list of
       valueKeys via `valueKey`. Emitted semicolon-joined (full-state replacement;
-      confirmed live — the server normalizes any trailing semicolon).
+      the server normalizes any trailing semicolon).
     - multiselect CUSTOM values: pass `custom` as a free-text string or list to
       append "add custom value" entries; each gets valueKey = custom_value_key(c).
       Combine with the standard selection (e.g. valueKey=[<option keys>],
@@ -851,8 +847,8 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
     a sentinel-detected choice has no loadable options (skip it, don't free-text).
 
     GUARD — `field` MUST be an inventory record, never a hand-assembled key. Passing
-    a bare collectionKey string (or a dict missing the inventory fields) is the B13
-    antipattern: it lets a caller invent a collectionKey by hand, the server accepts
+    a bare collectionKey string (or a dict missing the inventory fields) lets a
+    caller invent a collectionKey by hand, the server accepts
     it with a silent HTTP 200 (the silent-200 class), and the write never lands. The
     only safe source of `field` is `inventory_form(decode_form(read_form(...)))`. This
     function refuses anything else at the gate (signature break is intended — the
@@ -981,7 +977,7 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
 # --- Addable repeating-list rows ------------------------------------------
 #
 # KC renders many list/narrative answers as "Type here to add new item" rows.
-# Two shapes (both verified live on KBA-200):
+# Two shapes (both on KBA-200):
 #
 #   TEMPLATE list  - ships pre-seeded with ONE empty object keyed `{collKey}-1`
 #                    (hyphen + digits, base == the collection key). Single-cell:
@@ -992,7 +988,7 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
 #                    build_spawn_payload (see below), then fill its cells
 #                    (`text1..textN`, pt0) by the returned GUID objectKey.
 #
-# ROW CREATION IS REST (corrected 2026-05-30, was previously believed SignalR-only).
+# ROW CREATION IS REST.
 # To append a row: POST UpdateProperty with the three identity keys EMPTY and the
 # collection PATH in `dataEntryExpression` (build_spawn_payload). The server
 # creates a fresh GUID row and lands `value` in its first writable cell. The old
@@ -1011,8 +1007,7 @@ def build_spawn_payload(collection_path: str, value: str = "", value_key: str = 
     """Assemble an UpdateProperty payload that CREATES (appends) a new row in an
     addable repeating list / grid - the operation the empty-grid blocker needed.
 
-    Confirmed live (KBA-200, 2026-05-30, ThirdPartyInfo200 + BankingEntities200):
-    posting UpdateProperty with collectionKey/objectKey/propertyKey all EMPTY and
+    Posting UpdateProperty with collectionKey/objectKey/propertyKey all EMPTY and
     the collection PATH in `dataEntryExpression` makes the server create a fresh
     GUID-keyed row and land `value` in its first writable cell -
 
@@ -1152,7 +1147,7 @@ def enrich_repeating_choice(field: dict, decoded_form: dict) -> dict:
 
 
 def build_reset_payload(field: dict) -> dict:
-    """REMOVED 2026-05-30 — the token reset is FORBIDDEN. Do not reintroduce.
+    """REMOVED — the token reset is FORBIDDEN. Do not reintroduce.
 
     This used to emit a reset payload (select -> valueKey "resetanswer",
     multiselect -> "resetcheckbox", text/signoff -> ""). The choice-token reset
@@ -1162,9 +1157,7 @@ def build_reset_payload(field: dict) -> dict:
       leaves `state == 3`. KC's diagnostic engine keys "Question Unanswered" off
       `state`, so the blanked field NEVER re-fires its diagnostic and the
       right-side counter never returns. The field reads COMPLETE while empty.
-      Confirmed live 2026-05-30 (KBA-400): a full 96-radio token-reset left the
-      form blank with ZERO diagnostics, and **a Submit did NOT reconcile it** —
-      KC still reported the empty form as ready. A reviewer would see a clean,
+      A reviewer would see a clean,
       done form over blank answers. That is a peer-review / QC defect, so the
       capability is scrapped rather than shipped.
 
@@ -1177,8 +1170,7 @@ def build_reset_payload(field: dict) -> dict:
     raise NotImplementedError(
         "build_reset_payload is forbidden: the resetanswer/resetcheckbox token "
         "leaves state==3, so a blanked required field falsely reads COMPLETE and "
-        "Submit does not reconcile it (peer-review defect, confirmed live "
-        "2026-05-30). KC toggles are write-once; do not blank them via the API."
+        "Submit does not reconcile it. KC toggles are write-once; do not blank them via the API."
     )
 
 
@@ -1229,7 +1221,7 @@ def bulk_capture_forms_js(eng_guid: str, wp_ids: list, download_filename: str, c
     download. The Python side never sees the raw form JSON — too large.
 
     wp_ids: list of {"name": str, "wpId": str}.
-    download_filename: e.g. 'kymera-2025-forms-bundle.json'.
+    download_filename: e.g. 'forms-bundle.json'.
     concurrency: 5 has been observed safe; lower if the server starts rate-limiting.
 
     Stashes the bundle in `window.__bundle` before triggering the download so

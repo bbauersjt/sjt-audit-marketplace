@@ -1,7 +1,6 @@
 {
   "purpose": "Static map of CCH financialprep-api accountType + accountTypeClassification IDs (1..5 / 1..10). Mirrors GET /v1.0/FinancialGroup/{clientId}/groupaccounttypes - bundle saves a round-trip when you already know the classification by name or abbreviation.",
-  "captured_from": "engagement 90773, 2026-05-25",
-  "abbreviation_drives_behavior": "Brett's rule: the UI shows a friendly classification name but the SYSTEM cares about the accountType abbreviation (A/L/E/R/X). The classification name is a UX layer over the int ID.",
+  "abbreviation_drives_behavior": "The UI shows a friendly classification name but the SYSTEM cares about the accountType abbreviation (A/L/E/R/X). The classification name is a UX layer over the int ID.",
   "rows": [
     {"accountTypeId": 1, "accountType": "Asset",     "abbr": "A", "classificationId": 1,  "classification": "Current Assets"},
     {"accountTypeId": 1, "accountType": "Asset",     "abbr": "A", "classificationId": 2,  "classification": "Non-Current Assets"},

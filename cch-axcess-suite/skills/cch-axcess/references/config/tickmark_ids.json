@@ -1,5 +1,5 @@
 {
-  "_doc": "CCH Axcess leadsheet tickmark catalog. id is what scripts.leadsheet.post_tickmarks expects. IDs 1-51 are standard marks in 3 color variants (red=base, blue=base+1, green=base+2). IDs 52-71 are explanatory circle marks, red only. Source: live capture NIN 2026-06-02.",
+  "_doc": "CCH Axcess leadsheet tickmark catalog. id is what scripts.leadsheet.post_tickmarks expects. IDs 1-51 are standard marks in 3 color variants (red=base, blue=base+1, green=base+2). IDs 52-71 are explanatory circle marks, red only.",
   "count": 71,
   "color_rule": "standard marks (id<=51): red=base, blue=base+1, green=base+2. base IDs: 1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49. circle marks (52-71): red only.",
   "tickmarks": [

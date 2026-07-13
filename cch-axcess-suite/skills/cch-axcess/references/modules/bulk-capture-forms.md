@@ -16,8 +16,6 @@ inputs:
 calls:
   - scripts.kc.bulk_capture_forms_js
 status: validated
-validated_on:
-  - "Kymera 2025 EBP — 22 forms, 11.81 MB bundle, 2026-05-21"
 ---
 # Module — Bulk Capture KC Forms to Disk
 
@@ -31,7 +29,7 @@ Pairs with `add-audit-programs.md` (to add the forms first) and `remove-kc-form.
 
 ## Why disk, not context
 
-A 22-form bundle weighed 11.81 MB live on 2026-05-21 (Kymera EBP). Each AUD-8xx response carries 50-200 KB of JSON — `collections`, `elements`, full step library with `childObjectList` sub-steps. Dragging that through chat context would burn budget for nothing, since the parsing is mechanical Python work, not Claude reasoning.
+A 22-form bundle can weigh well over 10 MB. Each AUD-8xx response carries 50-200 KB of JSON — `collections`, `elements`, full step library with `childObjectList` sub-steps. Dragging that through chat context would burn budget for nothing, since the parsing is mechanical Python work, not Claude reasoning.
 
 The rule: **raw form JSON never enters Claude's context**. The browser writes one bundle file. Python parses it locally. Claude only reads the summarized step counts + file paths after the parse.
 
@@ -89,14 +87,14 @@ Loop `remove-kc-form.md` over each captured wpId. Verify via `GetBinder` that th
 
 ## Path-pattern gotchas in `collections[i].path`
 
-Step-library collections are NOT always named `*.ProgramSteps`. Observed variants (EBP 2025):
+Step-library collections are NOT always named `*.ProgramSteps`. Observed variants:
 
 | Path pattern | Example form | Notes |
 |---|---|---|
 | `.{DBK}.ProgramSteps` | AUD-801 CASH | Standard naming |
 | `.{FORM-ID}.taxstatusprocedure` | AUD-810 | "procedure" suffix |
 | `.{FORM-ID}.MinutesSubstantiveprocedure` | AUD-815 | "Substantiveprocedure" infix |
-| `.{workpaperGuid}.EstimatesSubstantiveProcedure` | AUD-818 | **Path prefix is the workpaperGuid, not the DBK.** Discovered 2026-05-21. The parser must not assume DBK as the prefix — match by suffix (`procedure`, `programstep`, etc.) instead. |
+| `.{workpaperGuid}.EstimatesSubstantiveProcedure` | AUD-818 | **Path prefix is the workpaperGuid, not the DBK.** The parser must not assume DBK as the prefix — match by suffix (`procedure`, `programstep`, etc.) instead. |
 
 When writing the step-collection matcher, use:
 ```python
@@ -112,14 +110,10 @@ The mechanical bits — auth, bundling, Chrome download trigger, path-pattern ma
 
 The *destination layout* — which MD file an AUD-8xx form maps to, what section structure to write — is domain-specific and lives in the calling skill (e.g. `cch-risk-assessment`).
 
-## Validated on
-
-- Kymera Physicians 401k Plan (EBP 2025), 2026-05-21: 22 EBP AUD-8xx forms captured in one bundle (11.81 MB). All 22 GETs returned 200. Local Python parser extracted 1,171 program steps and 102 tailoring questions across 18 target MD files (5 newly-created for EBP-only areas: `notes-receivable-participants.md`, `benefit-payments.md`, `tax-status-plan.md`, `changes-in-provider.md`, `participant-data.md`, `minutes-documents.md`). Subsequent batch DELETE cycle cleaned all 22 forms back to baseline; GetBinder verified zero AUD-8xx remaining.
-
 ## Cross-reference
 
 - `add-audit-programs.md` — Step 1 of the campaign: get the forms into the binder.
-- `remove-kc-form.md` — Step 3 of the campaign: clean up. Bonus learning from Kymera 2026-05-21: **KC tokens (`kc.accessToken` + `IDToken` all-caps) work directly for WPM `DELETE` calls** — no separate WPM header capture needed when driving from a KC tab. Single Bearer is interchangeable; only the IdToken header-name case differs across the two subdomains.
+- `remove-kc-form.md` — Step 3 of the campaign: clean up. **KC tokens (`kc.accessToken` + `IDToken` all-caps) work directly for WPM `DELETE` calls** — no separate WPM header capture needed when driving from a KC tab. Single Bearer is interchangeable; only the IdToken header-name case differs across the two subdomains.
 
 
 <!-- END -->

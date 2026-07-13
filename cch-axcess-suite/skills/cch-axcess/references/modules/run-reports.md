@@ -21,18 +21,13 @@ calls:
   - scripts.wpm.move
   - scripts.wpm.set_index
 status: validated
-validated_on:
-  - "APNM 2025 (client 97509, eng 381325) — 2026-05-24"
 ---
 # Module — Run Trial Balance + Journal Entry Reports
 
-> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
-> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
-> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
-> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
-> semantics are inverted per type; architecture.md → Move payload semantics).
-
-**Status:** validated on APNM 2025 (client 97509, eng 381325), 2026-05-24. TB body validated across all-groups, sliced-groups, three ReportType levels, all settings flags ON and OFF, and custom column overrides. JE body validated for SeparateReports and CombinedReports modes.
+> **Index verification & Move body.** Use `scripts.wpm.verify_index(row, object_type)` for display
+> indexes and `wpm.move()` for the move body — never hand-pick the index field or hand-assemble
+> `folderParentLineItems`. Rules live in architecture.md → `index` vs `documentIndex` and → Move
+> payload semantics.
 
 **Triggers:** "run a TB report", "create a trial balance report", "make me a TB workpaper", "generate the TB", "run AJEs", "run journal entries report", "create an AJE workpaper", "make the RJE/TJE/PAJE report", "run JE reports", "create a journal entry report".
 
@@ -47,7 +42,7 @@ Two report families:
 
 ## Prerequisites
 
-- **Leg: `wpm` warm (Step 0); Rules 0–3 apply (SKILL.md).** TB/JE report CREATES go to `workbench-api` — engagement-tab monkeypatch-captured headers (incl. `traceparent`); the captured WPM bearer is accepted by workbench-api and FP-API (validated 2026-06-05; transport matrix, architecture.md). No KC-token path. FP-API/WPM steps (filing, set_index) take the `"ls:wpm"`/`"ls:fp"` sentinel from any kc-token tab, or the same captured headers. ⚠ Refresh-Report hard-reloads kill the monkeypatch — capture from the engagement view or reuse the captured bearer; never re-capture on a report page.
+- **Leg: `wpm` warm (Step 0); Rules 0–3 apply (SKILL.md).** TB/JE report CREATES go to `workbench-api` — engagement-tab monkeypatch-captured headers (incl. `traceparent`); the captured WPM bearer is accepted by workbench-api and FP-API (transport matrix, architecture.md). No KC-token path. FP-API/WPM steps (filing, set_index) take the `"ls:wpm"`/`"ls:fp"` sentinel from any kc-token tab, or the same captured headers. ⚠ Refresh-Report hard-reloads kill the monkeypatch — capture from the engagement view or reuse the captured bearer; never re-capture on a report page.
 - `engagement_guid` for TB reports — pull from `scripts.kc.get_binder(...).result.id` if not already known.
 
 ## Procedure
@@ -86,7 +81,7 @@ js = reports.create_tb_report(
 # Fund engagements (govt/NFP) — scope the report's funds:
 #   fund_settings=reports.build_fund_settings('all' | 'none' | [fundId, ...])
 # Omit (default None) on non-fund engagements. Wire shapes + mode semantics:
-# references/config/fund_settings.json. (Restored 2026-07-07 — AX-37.)
+# references/config/fund_settings.json.
 
 # Verify
 js = reports.list_tb_reports(client_id, hdrs)
@@ -140,7 +135,7 @@ unfiled = wpm.folder_get(client_id, eng_id, -2, hdrs)
 # e.g. {"locationId": "3100799", "documentId": "tbreports/31596", "name": "Notes Receivable Lead"}
 
 # object_id for BOTH move and set_index is "tbreports/{integer}" (NOT "reports/{guid}")
-# Using "reports/{guid}" returns 200 but silently no-ops on move. Confirmed 2026-05-28.
+# Using "reports/{guid}" returns 200 but silently no-ops on move.
 items = [{"object_type": "Report",
           "own_loc": rpt_loc,
           "dest_loc": destination_folder_loc,
@@ -153,7 +148,7 @@ wpm.set_index(client_id, [{"index": "1200", "name": rpt_name,
 
 The TB create's `report_index` parameter only stamps the index attribute on the workpaper — it does NOT auto-file. Move + Set-Index is required to place it in a folder.
 
-**objectId gotcha (confirmed 2026-05-28):** Both `wpm.move` and `wpm.set_index` require `objectId = "tbreports/{integer_report_id}"`. Using `"reports/{report_guid}"` returns 200 on move but is a silent no-op — the report stays in Unfiled. The integer report id comes from the create response (`id` field) or from the WPM unfiled listing (`documentId` field).
+**objectId gotcha:** Both `wpm.move` and `wpm.set_index` require `objectId = "tbreports/{integer_report_id}"`. Using `"reports/{report_guid}"` returns 200 on move but is a silent no-op — the report stays in Unfiled. The integer report id comes from the create response (`id` field) or from the WPM unfiled listing (`documentId` field).
 
 ### Custom columns (TB)
 
@@ -181,20 +176,20 @@ cols = [
 
 ### Leadsheet Batch
 
-**▶ TB report vs leadsheet — pick the ReportType deliberately (AX-05):**
+**▶ TB report vs leadsheet — pick the ReportType deliberately:**
 - **TB report** (the whole-TB deliverable) → `report_type="SummaryByGroup"` (group totals). Default.
 - **Leadsheet** → DETAIL. `report_type="AccountDetail"` **plus** `include_sum_of_account_groups=True`
   + `hide_unused_groups_and_subgroups=True` + `hide_accounts_with_zero_balances=True`. A leadsheet
   shows accounts under each group with the group subtotal; group-totals-only is wrong for a leadsheet.
 - **⚠️ EVERY leadsheet — single or batch — MUST pass `columns=build_leadsheet_columns(...)`.**
   `columns=[]` (CCH defaults) produces a leadsheet with NO Remarks columns — annotation is then
-  impossible until they're added (BT3 B6/B10 regression). The firm layout is UNADJ/AJE/RJE/FINAL/
-  REF/Notes + FINAL-PY — TWO Remarks columns (REF, Notes), firm standard as of 2026-07-09.
+  impossible until they're added. The firm layout is UNADJ/AJE/RJE/FINAL/
+  REF/Notes + FINAL-PY — TWO Remarks columns (REF, Notes), firm standard.
   Include the PY column ONLY when a comparative TB exists (prior_period_id +
   prior_end_date); if you can't establish the prior period, ASK the user whether a comparative
   TB is imported rather than silently omitting it.
 
-**⚠️ CRITICAL: Always pass `journal_entry_details=False` for leadsheets.** The default is `True`, which adds JE detail columns and makes the report look like a transaction listing instead of a leadsheet. This was confirmed the hard way on Kymera EBP 2025 (2026-05-28).
+**⚠️ CRITICAL: Always pass `journal_entry_details=False` for leadsheets.** The default is `True`, which adds JE detail columns and makes the report look like a transaction listing instead of a leadsheet.
 
 Full batch workflow:
 
@@ -213,8 +208,8 @@ groups_js = groups.list_financial_groups(client_id, grouping_list_id, hdrs)
 sections = reports.group_by_leadsheet(all_groups)
 # Returns: [{"section_index": "1100", "section_name": "Investments", "group_ids": [...]}, ...]
 
-# 3. Build the firm-standard leadsheet columns (6, or 7 with comparative — AX-43,
-#    now TWO Remarks columns: REF + Notes)
+# 3. Build the firm-standard leadsheet columns (6, or 7 with comparative;
+#    TWO Remarks columns: REF + Notes)
 # current_period_id = engagement_id (e.g. 387698)
 # prior_period_id   = PY engagement_id (e.g. 381325)
 cols = reports.build_leadsheet_columns(
@@ -232,7 +227,7 @@ for section in sections:
         client_id, engagement_id, engagement_guid, name, hdrs,
         report_index=section["section_index"],
         groups=section["group_ids"],
-        report_type="AccountDetail",          # ← leadsheets are DETAIL (AX-05), not SummaryByGroup
+        report_type="AccountDetail",          # ← leadsheets are DETAIL, not SummaryByGroup
         include_sum_of_account_groups=True,    # group subtotal lines
         hide_unused_groups_and_subgroups=True, # drop empty groups
         journal_entry_details=False,           # ← MUST be False; True adds JE columns
@@ -257,7 +252,7 @@ for (rpt_loc, rpt_int_id, section_name, section_idx, dest_folder_loc) in new_rep
 ```
 
 **Standard column layout** (`build_leadsheet_columns` output, TWO Remarks columns —
-locked 2026-07-09, supersedes the single-REF layout from 2026-06-04):
+firm standard):
 
 | Order | Abbrev | Name | Type | Period |
 |-------|--------|------|------|--------|
@@ -289,14 +284,6 @@ other column types must NOT carry that field).
 - **JE quota exceeded** (`canCreate: false`, limit 100/engagement) → delete old reports first.
 - **Stale headers** → 401 with a generic body on workbench-api. Re-run the monkey-patch capture.
 - **Custom columns 400** → missing required field on Remarks columns (must include `engagementId`) or stray `engagementId` on non-Remarks columns (must be omitted). See `endpoints/tb_create_report.json` for full column object shape.
-
-## Validated on
-
-- APNM 2025, client 97509, eng 381325 — 2026-05-24.
-  - TB sliced (group 755937 "Investments", `AccountDetail`, `journalEntryDetails=true`) — confirmed in `tbreports` list as `reportId 31404`.
-  - JE single AJE — confirmed in JE list as `AJEs_AJE`.
-  - JE all-four-separate — produced four reports `AJE_AJE`, `AJE_RJE`, `AJE_TJE`, `AJE_PAJE` in sequential reportId order, locking the type→ID enum.
-
 
 ## See also (endpoint specs)
 

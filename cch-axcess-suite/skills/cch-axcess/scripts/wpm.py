@@ -6,8 +6,8 @@ use the helpers below, never assemble the body by hand. See
 references/endpoints/wpm_move.json.
 
 Tab requirements: an engagement.cchaxcess.com tab — OR a KC tab: KC tab tokens
-(kc.accessToken + kc.idToken) work for ALL WPM reads and writes (confirmed
-2026-06-03), header names per WPM case (Authorization + IDToken).
+(kc.accessToken + kc.idToken) work for ALL WPM reads and writes,
+header names per WPM case (Authorization + IDToken).
 Headers requirements: capture WPM headers via scripts.auth_capture monkeypatch.
 Locale headers (USERLocale / Accept-Language / CountryCode) are REQUIRED on
 every WPM call — without them GETs return status 200 with an EMPTY ARRAY
@@ -18,10 +18,10 @@ automatically; hand-rolled XHRs must merge them too.
 
 HARD DELETE IS NOT A CAPABILITY OF THIS SKILL.
 
-Past incident (Kymera 2025 EBP, 2026-05-28): two DELETE calls to
+Known hazard: DELETE calls to
 /v1/KnowledgeCoach/.../deleteform/... corrupted the binder — `lastUsedTitleGuid`
-went null and ALL workpapers became invisible (not just the two deleted).
-Recycle Bin did NOT recover them. Binder had to be rebuilt from scratch.
+went null and ALL workpapers became invisible (not just the deleted ones).
+Recycle Bin did NOT recover them. The binder had to be rebuilt from scratch.
 
 Rule: NEVER hard-delete anything in CCH from this skill — forms, folders,
 leadsheets, reports. If a user requests a delete, soft-delete: move the
@@ -65,7 +65,7 @@ def folder_get(client_id: int | str, eng_id: int | str, folder_id: int | str, he
     Response body is a FLAT JSON ARRAY of rows — there is NO {lineItems:[...]}
     or {result:[...]} wrapper. Parse with json.loads(body) directly.
     Locale headers are merged automatically; without them the server returns
-    200 + [] for every folder (confirmed 2026-06-03).
+    200 + [] for every folder.
     """
     return http_runner.build_xhr_call(
         "GET",
@@ -84,8 +84,6 @@ def folder_tree(client_id: int | str, headers: dict) -> str:
     Use this to discover locationIds for any folder (section folders, "User to delete",
     etc.) without having to scan individual folder IDs. Walk `root[0].children` for
     top-level binder sections.
-
-    Confirmed working: Kymera 401(k) 2025 (client 99286), 2026-05-28.
     """
     return http_runner.build_xhr_call(
         "GET",
@@ -101,11 +99,11 @@ def create_folder(client_id: int | str, folder_index: str, folder_name: str,
     parent_folder_id=None creates a top-level folder. Returns the new locationId
     as plain text. Note the misnamed `engagementId` body field — it carries clientId.
 
-    NAMING CONVENTION (double-index bug, fixed 2026-06-04): folder_name must be the
+    NAMING CONVENTION: folder_name must be the
     CLEAN descriptive name with NO index prefix — folder_index carries the index and
-    the binder UI renders both ("01 | 01 Front of File" was the bug). Wrapper folder:
-    NO index (folder_index="" — changed 2026-06-04 AX-16; empty index unverified live,
-    fallback branch in setup-binder-from-index.md), folder_name="[ShortClientName] [Year]".
+    the binder UI renders both (a prefixed name double-renders, e.g. "01 | 01 Front
+    of File"). Wrapper folder: NO index (folder_index=""; fallback branch in
+    setup-binder-from-index.md), folder_name="[ShortClientName] [Year]".
     """
     body = {
         "engagementId": client_id,
@@ -120,8 +118,7 @@ def rename_folder(client_id: int | str, location_id: int | str, folder_index: st
                   folder_name: str, headers: dict) -> str:
     """JS for: PUT /v1/NewEngagementView/{clientId}/folder — rename / re-index a folder.
 
-    Captured live 2026-06-03 (Properties-dialog monkeypatch; 24 folders batch-renamed
-    at 200 from a KC tab — see endpoints/wpm_folder_rename.json). The load-bearing
+    Endpoint spec: endpoints/wpm_folder_rename.json. The load-bearing
     field is `oldLocationId`: attempts with `locationId` return 400 "Parent not
     found"; PUT/PATCH on /folder/{locId} return 405. The misnamed `engagementId`
     body field carries clientId (same convention as create_folder). folder_name must
@@ -148,7 +145,7 @@ def _move_line_item(object_type: str, client_id: int | str, own_loc: int | str,
     For LeadSheet / KCForms / Report: locationId=DEST, parentLocationId=OWN.
     For Folder: locationId=OWN, parentLocationId=DEST, objectId=None.
 
-    WORKPAPER TYPE (confirmed 2026-05-28, Kymera EBP):
+    WORKPAPER TYPE:
     Uploaded Excel/PDF files have type="Workpaper" in the API response.
     When moving them, use objectType="Workpaper" and periodId=None (NOT "LeadSheet"
     and NOT periodId=""). Using "LeadSheet" returns 200 but silently no-ops.
@@ -182,9 +179,8 @@ def move(client_id: int | str, items: list[dict], headers: dict) -> str:
     For LeadSheet/KCForms/Report, object_id is documentId (or 'reports/{type}'
     for Report). For Folder, object_id is ignored (None).
 
-    Move PRESERVES any existing index and does NOT change the locationId
-    (both confirmed live 2026-06-03 — earlier docs claiming the opposite were
-    wrong). Move-then-Set-Index is still the right sequence for newly-added
+    Move PRESERVES any existing index and does NOT change the locationId.
+    Move-then-Set-Index is still the right sequence for newly-added
     forms, which arrive in Unfiled with a null/empty index: Set-Index runs
     after Move to assign the target index. No re-GET needed after Move.
     """
@@ -196,13 +192,13 @@ def move(client_id: int | str, items: list[dict], headers: dict) -> str:
                 f"move() item missing {sorted(missing)}: {i!r}. Pass the SIMPLE item shape "
                 "{object_type, own_loc, dest_loc, object_id} — NEVER hand-assemble "
                 "folderParentLineItems (locationId/parentLocationId semantics are INVERTED "
-                "per type and hand-rolled bodies silent-200 — BT3 B5 and B12).")
+                "per type and hand-rolled bodies silent-200).")
         if "locationId" in i or "parentLocationId" in i:
             raise ValueError(
                 "move() received a hand-assembled folderParentLineItems entry "
                 f"({i!r}). Pass {{object_type, own_loc, dest_loc, object_id}} — the "
                 "builder derives locationId/parentLocationId with the type-correct "
-                "(inverted) semantics. Hand-rolled bodies silent-200 (BT3 B5/B12).")
+                "(inverted) semantics. Hand-rolled bodies silent-200.")
         if i["object_type"] not in _VALID_TYPES:
             raise ValueError(f"move() unknown object_type {i['object_type']!r} — one of {sorted(_VALID_TYPES)}")
     body = {
@@ -225,7 +221,7 @@ def set_index(client_id: int | str, items: list[dict], headers: dict) -> str:
 
     USE PUT, NOT POST. POST returns 200 but is a silent no-op.
 
-    STALE INDEX GOTCHA (confirmed 2026-05-28, Kymera EBP):
+    STALE INDEX GOTCHA:
     If a WPM location is hard-deleted via the UI (e.g., user empties "User to delete"
     folder), the WPM index registry entry for that (index, name) pair persists.
     Any later set_index call with the same index+name returns 400:
@@ -270,8 +266,7 @@ def rename_workpaper(client_id: int | str, document_id: str,
       2. `tags` converted from string "[]" to array [].
       3. The 2 fields folder_get omits (`fileName`, `setNotesToDoNotRollForward`)
          injected with defaults. (The other setdefault lines below are harmless
-         belt-and-braces — those 11 fields ARE present in the GET, confirmed
-         2026-06-03.)
+         belt-and-braces — those 11 fields ARE present in the GET.)
 
     Response body on success is EMPTY (status 200) — it does NOT echo the
     document. Verify with a follow-up folder_get, never the PUT response.
@@ -306,7 +301,7 @@ def rename_workpaper(client_id: int | str, document_id: str,
 
 
 # ============================================================================
-# Download / replace path (file-io.md) — live-validated 2026-06-03 (T08).
+# Download / replace path (file-io.md).
 # ============================================================================
 
 
@@ -421,7 +416,7 @@ def soft_delete_form(client_id: int | str, parent_folder_location_id: int | str,
 
     parent_folder_location_id = the form's CURRENT PARENT FOLDER's INTEGER
     locationId — NOT the form's own GUID. Passing the form GUID returns
-    400 "Error converting value '...' to type System.Nullable<Int64>" (BT3 B15).
+    400 "Error converting value '...' to type System.Nullable<Int64>".
     Find the parent loc on the form's binder-map / GetBinder / folder_get row.
     Negative pseudo-folders (-4 Unfiled, -1, -2) are VALID sources.
 
@@ -433,7 +428,7 @@ def soft_delete_form(client_id: int | str, parent_folder_location_id: int | str,
     if not loc.lstrip("-").isdigit():
         raise ValueError(
             f"parent_folder_location_id must be the parent FOLDER's integer locationId, "
-            f"got {parent_folder_location_id!r} (a GUID here = the BT3 B15 400). "
+            f"got {parent_folder_location_id!r} (a GUID here causes a 400). "
             f"Read it from the form's binder-map/folder_get row.")
     items = [{
         "object_type": "KCForms",
@@ -481,7 +476,7 @@ def soft_delete_workpaper(client_id: int | str, workpaper_location_id: int | str
     return move(client_id, items, headers)
 
 
-# --- AX-26: field-aware index verification --------------------------------------
+# --- field-aware index verification --------------------------------------
 INDEX_FIELD_BY_TYPE = {
     "Report": "index",
     "KCForms": "index",
@@ -495,7 +490,7 @@ def verify_index(row: dict, object_type: str):
 
     Reports/KCForms/LeadSheets surface it as `index`; uploaded Workpapers as
     `documentIndex`. Reading the wrong one false-negatives (`documentIndex` is
-    ALWAYS null on Report rows — BT3 B6 set an index that was already set).
+    ALWAYS null on Report rows).
     NEVER pick the field by hand — call this.
     """
     try:
@@ -518,9 +513,8 @@ def remove_signoff(client_id, object_id, object_type_id, signature_type,
                    application_id=1, period_id=None, consolidated_engagement_id=None):
     """JS for: POST /v1/signoff/removeSignOff — remove ONE document-level sign-off.
 
-    This is BB's "a bot removes the stale sign-off on a form it modified" operation
-    (captured live 2026-07-09, Coop Consulting). Applying sign-offs stays HUMAN-ONLY:
-    there is deliberately NO add_signoff() here. The add endpoints
+    Removes the stale sign-off on a form that was modified. Applying sign-offs
+    stays HUMAN-ONLY: there is deliberately NO add_signoff() here. The add endpoints
     (POST /v1/signoff/preparer, POST /v1/signoff/reviewer — identical body, they differ
     only by URL + signatureType) are documented in references/endpoints/signoff_remove.json
     but intentionally not scripted.
@@ -531,8 +525,8 @@ def remove_signoff(client_id, object_id, object_type_id, signature_type,
 
     Removal is keyed by (object_id, signature_type) with NO userId in the body, so the API
     will remove whichever sign-off occupies that leg — INCLUDING another staff member's.
-    OUT OF BOUNDS (api-ui-parity rule, BB 2026-07-09): the binder UI only lets you remove
-    your OWN sign-off, so a bot must NOT use this to remove anyone else's — using the API to
+    OUT OF BOUNDS (api-ui-parity rule): the binder UI only lets you remove
+    your OWN sign-off, so this skill must NOT use it to remove anyone else's — using the API to
     exceed what the UI permits creates untested, corrupt states. Before calling, read the leg
     (document_get) and confirm the sign-off's userId is the CURRENT logged-in user; if it
     belongs to someone else, STOP — do not remove it via API and do not "probe" whether the

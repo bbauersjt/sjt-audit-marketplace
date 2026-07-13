@@ -24,8 +24,6 @@ calls:
   - scripts.tb_backup.build_workbook
   - scripts.tb_backup.verify_workbook
 status: wip
-validated_on:
-  - "Scripted 2026-06-05 (AX-27) from endpoint families validated on NIN/BT3; deliverable shape per the loved-but-improvised BT3 workbook. Not yet run end-to-end as a script — first live run validates."
 ---
 
 # Module — TB Backup Package
@@ -104,7 +102,7 @@ user-visible folder.
 - **Partial TB (parse_tb raises)** → single-page endpoint used or pagination loop broke →
   re-pull with `get_trialbalance_grouped_all`; do not build from a short merge.
 - **Every subgroup blank** → something read `account.subGroup` → it's
-  `account.financialSubGroup` (`fp_trialbalance.json`; the NIN package bug).
+  `account.financialSubGroup` (`fp_trialbalance.json`).
 - **Balances inverted vs the client's TB** → raw API values used without the flip →
   import sheets/Account Map must be debits-positive (`import-tb-format.md`).
 - **Funds pulls 401/empty on a non-fund engagement** → expected; omit the sheet, don't

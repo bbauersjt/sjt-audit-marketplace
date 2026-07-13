@@ -12,8 +12,8 @@ mcp__Claude_in_Chrome__javascript_tool. The Python side never sees a token direc
 """
 
 def KC_HEADERS_JS():
-    """DEPRECATED shim (AX-26). The old string constant caused a TypeError when
-    called (BT3 B1). Use the "ls:<family>" headers sentinel on any builder
+    """DEPRECATED shim. The old string constant caused a TypeError when
+    called. Use the "ls:<family>" headers sentinel on any builder
     (http_runner.ls_headers_js_expr) instead. This shim returns the ls:kc JS
     expression wrapped to return JSON, for any straggler call-sites."""
     from . import http_runner

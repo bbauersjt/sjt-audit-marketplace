@@ -50,7 +50,7 @@ Used when porting the PPC PCAS Inherent Risk workbook defaults to CCH defaults f
 **Risk-level mapping:**
 - PPC **L** → CCH **LOW**
 - PPC **M** → CCH **MOD**
-- PPC **H** → CCH **SBM** (use **MAX** only when an explicit fraud-risk or significant-accounting-estimate driver applies)
+- PPC **H** → CCH **SBM** (**never MAX** — the defaults top out at SBM; a fraud-risk or estimate driver is handled by the significant-risk flag + response, not an IR of MAX)
 
 **Assertion mapping:**
 - PPC **E/O** → CCH **EO**
@@ -72,7 +72,7 @@ In CCH, a "Significant Risk" is **not** a risk level in this 4-level matrix. It 
 5. High subjectivity in measurement (wide estimate range).
 6. Significant non-routine transactions outside normal course.
 
-When one of these is identified, mark the risk Significant on the Identified Risks table (surfaced on KBA-502 and the area's AUD-8xx program); it pushes IR toward SBM/MAX on the affected assertion(s) and requires a substantive response. The Significant flag itself is separate from the IR/CR/RMM cells.
+When one of these is identified, mark the risk Significant on the Identified Risks table (surfaced on KBA-502 and the area's AUD-8xx program) and address it with a substantive response (targeted response steps). **Do NOT push the grid IR up to "match" the flag** — IR stays at the `defaults/{CODE}.md` value (never MAX); the Significant flag and its response carry the elevated treatment, and any true IR deviation is a firm-principal call.
 
 ## Linked-risk references on AUD-8xx forms
 
@@ -93,13 +93,18 @@ Three checkboxes on each KBA-502 assertion row determine the planned audit appro
 
 At least one must be checked per assertion. The selection drives which steps cch-axcess pulls into AUD-8xx by default.
 
-## Data ownership (architectural note) — VERIFIED 2026-05-30
+## Data ownership (architectural note)
 
-The editable per-assertion **IR/CR/RMM/PlannedAuditApproach grid lives on each AUD-8xx program workpaper**, in `.{AREA}.RelevantAssertion`. **Write there.** A live read of KBA-502 confirmed it has **no `.{AREA}.RelevantAssertion` grid of its own** — it carries the 6-assertion legend, linked AUD-100 drivers, the area registry (`.AUD100.OverallAuditAreas`, read-through), and `.KBA502.FinancialLevelRisks` (the FS-level risk rows it *does* own — but only the row-level `Comment` is writable there; 14 of 15 `FinancialLevelRisks` properties are pt5-linked read-through, not writable). **Approach checkboxes live only on the AUD-8xx programs, never on KBA-502** — do not attempt to write them on a KBA-502 FS-level-risk row. KBA-502 is a **read-through summary**; it rolls up the program grids for the reviewer.
+**KBA-502 owns the editable per-assertion IR/CR/RMM/PlannedAuditApproach grid — write there**, with
+collectionKey `.{AREA}.RelevantAssertion` posted against **KBA-502's wpId**. The AUD-8xx program's grid is
+the **derived / read-through** view: a write aimed at the program's wpId lands in a working copy the
+KBA-502-owned recompute discards on refresh. KBA-502's bulk form GET does not embed the RelevantAssertion
+child rows (`OverallAuditAreas[].childObjectList` returns `[]`) and `inventory_form` over-filters the form,
+so a GET-only read shows just `Comment`. The grid is real (defined in KBA-502's `elements`) and the UI
+writes it against KBA-502's wpId. KBA-502 also owns `.KBA502.FinancialLevelRisks` (FS-level risk
+rows; only the row-level `Comment` is directly writable there — 14 of 15 properties are pt5-linked).
 
-The relevant-assertion **selection** happens upstream on **KBA-400** (`.KBA400.AuditareaRelevantAssertions`: AuditAreaName + Assertion + comment), which drives which program assertions are in play. So the chain is: KBA-400 selects assertions → CCH recommends programs → IR/CR written on the program's `.{AREA}.RelevantAssertion` → KBA-502 summarizes.
-
-> The original skill was right that IR/CR live on the AUD-8xx programs (a brief reframe calling KBA-502 the "home" was wrong and has been corrected). What the original missed was the KBA-400 scoping + assertion-selection front end. See `references/cascade/kba-400.md`, `references/cascade/kba-502.md`, and `cch-axcess/references/modules/fill-kc-form.md`.
+The relevant-assertion **selection** happens upstream on **KBA-400** (`.KBA400.AuditareaRelevantAssertions`: AuditAreaName + Assertion + comment), which drives which assertion rows render (and are writable) per area on KBA-502. So the chain is: KBA-400 selects assertions → CCH recommends programs → IR/CR/RMM/approach written on **KBA-502** → the program grids read through; program step→assertion linkage + sign-off feeds back and clears KBA-502's "Relevant Assertion Unaddressed".
 
 ## Where the risk assessment is documented (supporting forms)
 

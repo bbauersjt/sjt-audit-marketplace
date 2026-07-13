@@ -17,8 +17,6 @@ calls:
   - scripts.binder_map.build_map_js
   - scripts.binder_map.fetch_chunk_js
 status: validated
-validated_on:
-  - "Nansemond Indian Nation 2025 (client 94136 / eng 368481) — 2026-05-28"
 ---
 
 # Module — Map Binder

@@ -11,8 +11,7 @@ of an explicit yes = do not enter. There is no auto-learn path.
 NOT a prose how-to.** Markdown that documents the steps "by hand" is a failure state.
 
 > **Where artifacts go (read this — the install is READ-ONLY).** The installed skill
-> directory is a per-session cache; writing into it truncates files (the AX-12 failure
-> class) and is wiped on reinstall. Capture artifacts are **rebuild inputs, not runtime
+> directory is a per-session cache; writing into it truncates files and is wiped on reinstall. Capture artifacts are **rebuild inputs, not runtime
 > installs**: write them to the user-visible working folder for this session (ask which if
 > none is connected), and log the capture in the complaint log (`i-wanna-complain`) so the
 > batch-rebuild pipeline folds them into the skill source repo at the next build. Do NOT
@@ -87,7 +86,7 @@ calls:
   - scripts.wpm.set_index
 status: validated   # or: wip | ui-only
 validated_on:
-  - "APNM 2025 — 2026-05-07"
+  - "<engagement> — <date>"
 ---
 ```
 

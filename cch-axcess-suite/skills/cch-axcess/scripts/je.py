@@ -1,15 +1,14 @@
 """je.py — post actual journal entries into the TB via FinancialPrep.
 
-NEW capability (capture 2026-06-19). Distinct from reports.create_je_report,
+Distinct from reports.create_je_report,
 which only builds a JE *report* workpaper. This posts a real AJE/RJE/PAJE/TJE.
 
 House style: this module BUILDS JS; the browser executes it (chrome_eval on the
 bridge). The built JS sources the FP bearer in-page via the `cap:fp` sentinel
 (`http_runner.capture_headers_js_expr('fp')` — reads window.__cch_capture, the
-engagement-only-tab leg) so the token never crosses the tool channel. AX-33 wired
-this through the sentinel instead of an inline __cch_capture filter, so JE auth now
-matches the rest of the skill (the `ls:wpm` localStorage sentinel is dead on an
-engagement-only tab; `cap:fp` is its capture-leg counterpart — see architecture.md).
+engagement-only-tab leg) so the token never crosses the tool channel. The
+`ls:wpm` localStorage sentinel is dead on an engagement-only tab; `cap:fp` is
+its capture-leg counterpart — see architecture.md.
 
 Endpoint spec: references/endpoints/fp_journalentry.json.
 
@@ -42,9 +41,8 @@ def build_post_je_js(client_id, eng_id, je_type, lines, comment, document_id=Non
     je_type = {"PJE": "PAJE"}.get(str(je_type).upper(), str(je_type).upper())  # CCH term is PAJE; accept PJE synonym
     if je_type not in ("AJE", "RJE", "PAJE", "TJE"):
         raise ValueError(f"je_type must be AJE/RJE/PAJE(/PJE)/TJE, got {je_type!r}")
-    # NOTE: AJE/RJE/PAJE validated live. TJE (tax JE) rides the SAME path/body shape but was
-    # NOT captured — this firm has no commercial tax clients so it is never used. Supported for
-    # completeness only; confirm the "TJE" type string on first (unlikely) real use.
+    # NOTE: AJE/RJE/PAJE are the confirmed types. TJE (tax JE) rides the SAME path/body
+    # shape; supported for completeness only — confirm the "TJE" type string on first real use.
     if not lines:
         raise ValueError("lines is empty")
     cfg = {

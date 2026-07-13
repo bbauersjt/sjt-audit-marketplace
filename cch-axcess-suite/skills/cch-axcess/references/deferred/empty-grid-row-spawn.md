@@ -1,6 +1,6 @@
 # Empty add-row grid spawn — SOLVED
 
-Status: **SOLVED 2026-05-30.** End-to-end recipe is codified — `scripts.kc.build_spawn_payload()` creates the row, `scripts.kc.build_write_payload()` fills it.
+Status: **SOLVED.** End-to-end recipe is codified — `scripts.kc.build_spawn_payload()` creates the row, `scripts.kc.build_write_payload()` fills it.
 
 ## Recipe
 1. `kc.addable_empty_grids(form)` → list empty grid collection paths.
@@ -10,6 +10,5 @@ Status: **SOLVED 2026-05-30.** End-to-end recipe is codified — `scripts.kc.bui
 ## Caveats
 - **One spawn = one row.** Loop a known count; never loop "until no add-row remains" — the trailing UI add-box has no backing collection object and never disappears.
 - **Double occurrence.** A spawned row appears in TWO collection paths: the semantic data row (`…UserEntry`, writes accepted) and a generic display row in the parent (writes 200 but no-op). De-dup by GUID; write only to the data row.
-- **Validated:** KBA-200 ThirdPartyInfo200 + BankingEntities200; KBA-103 control deficiency grids (16/16 cells per row after spawn).
 
 <!-- END -->

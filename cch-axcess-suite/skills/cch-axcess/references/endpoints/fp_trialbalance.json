@@ -1,6 +1,6 @@
 {
   "operation": "fp_trialbalance",
-  "purpose": "Read the grouped trial balance rows for one grouping list + period. The balances[] row schema documented here is the source of truth for account/group/subgroup/fund keys (documented 2026-06-05 from live NIN/BT3 captures).",
+  "purpose": "Read the grouped trial balance rows for one grouping list + period. The balances[] row schema documented here is the source of truth for account/group/subgroup/fund keys.",
   "request": {
     "method": "GET",
     "url": "https://financialprep-api.cchaxcess.com/v1.0/financialTrialBalance/{clientId}/{financialListId}/trialbalance/{periodId}?skip={skip}&take={take}",
@@ -10,7 +10,7 @@
       "periodId": "engagement period id; the CURRENT period id equals the URL's engagementId. Prior-period ids come from the engagement/period metadata (GET /v1.0/engagement/{clientId}) or the report-settings dialog captures.",
       "skip_take": "PAGINATION IS MANDATORY for full reads: without ?skip&take the endpoint returns only the FIRST 50 accounts while the body's accountCount shows the true total — a silent partial read. Use scripts.groups.get_trialbalance_grouped_all (loops pages)."
     },
-    "headers": "ls:fp sentinel (KC localStorage, any kc-token tab) OR monkeypatch-captured WPM-leg headers from the engagement tab (bearer accepted by financialprep-api — validated 2026-06-05). XHR transport, never fetch.",
+    "headers": "ls:fp sentinel (KC localStorage, any kc-token tab) OR monkeypatch-captured WPM-leg headers from the engagement tab (bearer accepted by financialprep-api). XHR transport, never fetch.",
     "body": null
   },
   "response": {
@@ -25,7 +25,7 @@
             "accountName": "string",
             "group": "string|null — financial GROUP name in this grouping list",
             "financialSubGroup": "string|null — the SUBGROUP key. ⚠ THIS is the populated field.",
-            "subGroup": "ALWAYS NULL — legacy field name; reading it instead of financialSubGroup silently nulls every subgroup (the NIN package bug). Do not use.",
+            "subGroup": "ALWAYS NULL — legacy field name; reading it instead of financialSubGroup silently nulls every subgroup. Do not use.",
             "fund": "string|null — fund name/number on fund engagements; null on non-fund",
             "accountTypeClassificationId": "int — see config/group_account_types.json"
           },
@@ -34,7 +34,7 @@
               "unadjustedBalance": "number",
               "adjustedBalance": "number",
               "finalBalance": "number",
-              "sign_convention": "⚠ CREDITS POSITIVE (API-internal). This is NOT the TB import/export convention (debits positive) — FLIP SIGNS when building import files or comparing to exports. See modules/import-tb-format.md (provenance corrected 2026-06-05)."
+              "sign_convention": "⚠ CREDITS POSITIVE (API-internal). This is NOT the TB import/export convention (debits positive) — FLIP SIGNS when building import files or comparing to exports. See modules/import-tb-format.md."
             }
           }
         }
@@ -45,8 +45,8 @@
       "Period sub-objects beyond `current` appear when the engagement carries comparative periods; same balance-field shape.",
       "accountCount is on the top-level body, not per page — use it as the loop terminator."
     ],
-    "live_variant_2026-07-07": {
-      "warning": "The endpoint ALSO serves a second row shape (captured live 2026-07-07, govt fund engagement 103139; scripts.tb_backup.normalize_tb_rows handles both). Do not assume the shape above — resolve keys defensively:",
+    "live_variant": {
+      "warning": "The endpoint ALSO serves a second row shape (scripts.tb_backup.normalize_tb_rows handles both). Do not assume the shape above — resolve keys defensively:",
       "differences_vs_shape_above": {
         "account.number": "replaces accountNumber",
         "account.name": "replaces accountName",
@@ -55,13 +55,12 @@
         "account.fund": "an OBJECT {id, index, name}, not a string",
         "account.subGroup": "ABSENT entirely on this variant (the legacy always-null key does not even appear)",
         "periods.current": "balances are COMMA-FORMATTED STRINGS with a trailing space ('1,843,250.00 ') under keys unadjusted / adjusted / final (plus dollarVar, percentVar, ibal*/obal*/oje*) — NOT numeric unadjustedBalance/adjustedBalance/finalBalance",
-        "periods.prior": "an ARRAY of prior-period objects (one per comparative period), NOT a single object — iterate it (observed live 2026-07-07, Rock NPO 103416)",
+        "periods.prior": "an ARRAY of prior-period objects (one per comparative period), NOT a single object — iterate it",
         "sign_convention": "⚠ this variant serves DEBITS-POSITIVE values — no flip vs the TB import/export convention, the OPPOSITE of the numeric variant's credits-positive rule above. Never hard-code either flip: spot-check one known account against a TB report before using balances.",
         "top_level": "body also carries hasJe, id, periodEndDate, periods"
       },
       "monitoring": "tools/cch-drift probe fp_trialbalance_shape asserts the cross-variant invariants and fingerprints the current variant."
     }
   },
-  "verify": "Merged row count == accountCount; spot-check one known account's finalBalance against the TB report (remember the sign flip vs exports).",
-  "captured": "2026-06-05 — NIN / BT3 live sessions; documented during the AX-27 batch rebuild (docket item 3b)."
+  "verify": "Merged row count == accountCount; spot-check one known account's finalBalance against the TB report (remember the sign flip vs exports)."
 }

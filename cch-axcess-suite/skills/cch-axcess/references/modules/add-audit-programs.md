@@ -21,19 +21,15 @@ calls:
   - scripts.wpm.set_index
   - scripts.wpm.folder_get
 status: validated
-validated_on:
-  - "APNM 2025 NFP — 2026-05-07"
-  - "Kymera 2025 EBP — 2026-05-21"
 ---
 # Module — Add Audit Programs (KC Forms) to a Binder
 
 ## Known gotchas
 
-- **Check the driving form's "Unnecessary KnowledgeCoach Form" diagnostics BEFORE adding conditional forms.** Several forms are add-gated by an AUD-100 tailoring answer, and KC's design is to never add a gated-off form at all — adding it anyway costs permanent diagnostics on both the form and AUD-100. Live example (SFRC 401k, 2026-07-08): **AID-201** is gated by AUD-100's `OtherServices` TQ; on a no-nonattest engagement KC wants it ABSENT (the PPC habit of an always-present independence checklist with a "None performed" line does NOT map to KC), and adding it anyway costs ~110 permanent diagnostics plus a permanent "remove this workpaper" diagnostic on AUD-100. The diagnostic names the removable form via `unnecessaryWorkpaperReferenceTag` (e.g. `AID_200_NONAUD_SERVI_INDEP_CKLST`) / `unnecessaryWorkpaperDataBindingKey` (e.g. `AID201`) — fixture: `references/data/fixtures/aud100-unnecessary-form-diag.json`. Pre-add, run the diagnostics endpoint on AUD-100 and drop any planned form the `type:"Unnecessary KnowledgeCoach Form"` entries name; post-add, the same entries are the removal worklist for `remove-kc-form.md`.
+- **Check the driving form's "Unnecessary KnowledgeCoach Form" diagnostics BEFORE adding conditional forms.** Several forms are add-gated by an AUD-100 tailoring answer, and KC's design is to never add a gated-off form at all — adding it anyway costs permanent diagnostics on both the form and AUD-100. **AID-201** is gated by AUD-100's `OtherServices` TQ; on a no-nonattest engagement KC wants it ABSENT (the PPC habit of an always-present independence checklist with a "None performed" line does NOT map to KC), and adding it anyway costs ~110 permanent diagnostics plus a permanent "remove this workpaper" diagnostic on AUD-100. The diagnostic names the removable form via `unnecessaryWorkpaperReferenceTag` (e.g. `AID_200_NONAUD_SERVI_INDEP_CKLST`) / `unnecessaryWorkpaperDataBindingKey` (e.g. `AID201`) — fixture: `references/data/fixtures/aud100-unnecessary-form-diag.json`. Pre-add, run the diagnostics endpoint on AUD-100 and drop any planned form the `type:"Unnecessary KnowledgeCoach Form"` entries name; post-add, the same entries are the removal worklist for `remove-kc-form.md`.
 - **S-suffix / Single Audit forms add CROSS-TITLE.** `diff_against_unfiled` returns a `sa_title_adds` bucket sourced from the Single Audits title (`catalog.SA_TITLE_GUID`; live list via GetWorkpaperListForAddForms — `endpoints/kc_title_library.json`), NOT the binder's own title.
 - **Never silently skip an unresolved form.** Any plan row not in `to_add`/`sa_title_adds`/`already_in_unfiled` is surfaced to the user BY NAME.
-- **Read display indexes with `scripts.wpm.verify_index(row, object_type)`** — Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs `documentIndex`). Hand-picking the field false-negatives.
-- **Never hand-assemble the move body / `folderParentLineItems`** — `wpm.move()` owns the per-type mapping and refuses raw bodies; the semantics are inverted per type (architecture.md → Move payload semantics).
+- **Index & move body:** use `scripts.wpm.verify_index(row, object_type)` for display indexes and `wpm.move()` for the move body — never hand-pick the index field or hand-assemble `folderParentLineItems` (architecture.md → `index` vs `documentIndex`; → Move payload semantics).
 
 **Triggers:** "add audit programs", "build out the KC forms", "add the [client type] audit programs", "file the audit programs", "set up the audit programs", "file the auto-populated baseline."
 
@@ -64,7 +60,7 @@ plan_rows = binder_planner.plan(client_type, flags)
 
 ### 3. Capture auth headers (both subdomains)
 
-- KC: localStorage fast path — pass `headers="ls:kc"` to the builders (AX-26 sentinel).
+- KC: localStorage fast path — pass `headers="ls:kc"` to the builders.
 - WPM: monkey-patch on the engagement tab, trigger one UI action, read capture.
 
 ### 4. Diff against current state
@@ -77,7 +73,7 @@ buckets = binder_planner.diff_against_unfiled(plan_rows, unfiled_items)
 #   to_add        -> forms from the binder's OWN title (Step 5a)
 #   sa_title_adds -> S-suffix forms that live in the Single Audits title (Step 5b, cross-title)
 # NEVER silently drop a form: any plan row not in to_add/sa_title_adds/already_in_unfiled
-# must be surfaced to the user BY NAME (BT3 B7 dropped 22 S-forms).
+# must be surfaced to the user BY NAME.
 ```
 
 ### 5a. Add the binder's-own-title forms (one batched POST)
@@ -88,10 +84,10 @@ body = catalog.build_add_forms_body(catalog_rows)
 js = kc.add_forms(eng_guid, body, kc_hdrs)
 # Response is {"result": [...], "statusCode", "message"}. `result` ECHOES every
 # SUCCESSFULLY-added form (each with its server-assigned workpaperId) — NOT
-# failures-only, NOT empty on full success (settled live 2026-06-04). Confirm by
+# failures-only, NOT empty on full success. Confirm by
 # matching each planned referenceTag to a result[] entry. NEVER blind-retry the
 # POST — not because successes are invisible (they're in result[]) but because
-# every extra POST adds duplicate forms (live incident 2026-06-03); a re-GET of
+# every extra POST adds duplicate forms; a re-GET of
 # Unfiled (-4) still satisfies the re-GET-after-write doctrine.
 ```
 
@@ -113,7 +109,7 @@ Re-GET Unfiled (-4) to pick up server-assigned `locationId` values for ALL new r
 
 Combine `already_in_unfiled` + newly-added forms into one move call:
 ```python
-# target_folder_idx is the 4-DIGIT section index (AX-26: binder_planner.section_for_index —
+# target_folder_idx is the 4-DIGIT section index (binder_planner.section_for_index —
 # "0201"→"0200", "81xx"→"8000" Single Audit exception). Build target_folder_locations keyed
 # by the section's 4-digit index from folder_get of the wrapper.
 items = [
@@ -147,11 +143,6 @@ wpm.set_index(client_id, [{"index": "0900", "name": "Trial Balance", "object_id"
 ### 9. Verify
 
 Re-GET each target folder. Confirm form list + indexes match plan. GET `-4` and confirm Unfiled KC Forms count = 0 (or matches deferred-by-flag count).
-
-## Validated on
-
-- APNM 2025 NFP — 26 forms, 2026-05-07
-- Kymera 2025 EBP — 22 forms, 2026-05-21
 
 ## Known failure modes
 

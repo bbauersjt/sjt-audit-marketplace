@@ -15,8 +15,8 @@ Every sentinel-protected file ends with a fixed marker line:
 
 Code files carry it as a trailing comment: `# <!-- END -->` (.py) or
 `// <!-- END -->` (.js). This matters for .py especially — a truncation that
-lands inside a trailing comment block still COMPILES (kc.py shipped that way
-on 2026-06-04), so the marker is the only deterministic tell.
+lands inside a trailing comment block still COMPILES, so the marker is the only
+deterministic tell.
 
 A write that gets cut off cannot land the marker, so a missing marker == the
 file is truncated. This script checks the marker (and a per-file minimum byte
@@ -92,7 +92,7 @@ def check():
         elif size < MIN_BYTES:
             failures.append((rel, f"under {MIN_BYTES}B floor ({size}B) — likely truncated"))
     # Null-byte sweep over ALL skill .py/.md/.json files (not just manifested):
-    # the installer overlay defect (2026-06-03) zero-pads any file that SHRANK
+    # the installer overlay defect zero-pads any file that SHRANK
     # between versions, and Python refuses to import a NUL-containing source.
     import glob
     for pattern in ("scripts/**/*.py", "references/**/*.md", "references/**/*.json", "SKILL.md"):
@@ -141,7 +141,6 @@ def stamp(rel):
     return 0
 
 
-# [recovery 2026-06-01: stamp() tail + main() reconstructed from docstring USAGE spec; verify]
 def main(argv):
     if len(argv) >= 2 and argv[0] == "--stamp":
         return stamp(argv[1])

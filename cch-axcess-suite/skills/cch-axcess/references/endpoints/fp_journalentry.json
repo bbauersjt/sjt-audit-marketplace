@@ -42,10 +42,9 @@
   "verify": "Trust 201 + returned id, or GET /v1.0/journalentry?engagementId={clientId}&periodId={engagementId} and match by id/comment.",
   "gotchas": [
     "Request body uses lowercase 'rollforwardOption'; the read-back echoes 'rollForwardOption' (capital R).",
-    "journalEntryType is a STRING. AJE/RJE/PAJE captured live. CCH term is 'PAJE' (accept 'PJE' as a synonym). TJE rides the same path but was not captured — firm never uses it (no commercial tax clients).",
+    "journalEntryType is a STRING. AJE/RJE/PAJE are confirmed. CCH term is 'PAJE' (accept 'PJE' as a synonym). TJE rides the same path but is not verified — firm never uses it (no commercial tax clients).",
     "Workpaper reference is a TOP-LEVEL 'documentId' (int), NOT a per-lineItem field.",
     "journalEntryId != 0 edits an existing JE — NOT scripted (no edit/delete; manual per firm rule)."
   ],
-  "no_hard_delete": "CREATE only. No edit/delete call scripted.",
-  "validated_on": "2026-06-19 Coop / Axcess Blind Test 03 (client 100930, eng 393137) — manual AJE+RJE captures + programmatic replay (id 391378, 201)."
+  "no_hard_delete": "CREATE only. No edit/delete call scripted."
 }

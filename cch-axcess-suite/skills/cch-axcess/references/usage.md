@@ -32,6 +32,9 @@ It works through your Chrome browser, not a separate login:
 - Fill out **Knowledge Coach forms** (KBA / AID / AUD), fast-fill, scan cross-references
 - Record a **risk assessment / audit plan** into the binder — planning built with the
   `cch-risk-assessment` skill, written through to the forms by this one
+- Fill the **non-risk planning forms and program-step answers** — entity info, acceptance,
+  independence, AUD-8xx responses, EBP areas — determined by the `cch-form-fill` skill and
+  written through to the forms by this one
 - Build out and tailor **AUD-8xx audit programs** — bring in steps, link risks, sign off
 - Manage **TB groupings** and **fund** setup
 - Run **TB and Journal Entry reports**; build leadsheets

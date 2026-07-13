@@ -4,7 +4,7 @@ The per-title list of audit areas and the AUD-8xx program each maps to. Used at 
 
 ## The stable key is the AREA (binding key), NOT the AUD number
 
-**Critical:** AUD-8xx program *numbers are title-specific* — the same number maps to different areas across titles. AUD-804 is Inventory under Commercial/Construction, Other Assets under EBP, Nonexchange Revenue under Governmental, and Split-Interest Agreements under NPO. **Always resolve a program by its area binding key + title, never by AUD number alone.** (The old `programs/INDEX.md` assumed NPO numbering was universal — it is not.)
+**Critical:** AUD-8xx program *numbers are title-specific* — the same number maps to different areas across titles. AUD-804 is Inventory under Commercial/Construction, Other Assets under EBP, Nonexchange Revenue under Governmental, and Split-Interest Agreements under NPO. **Always resolve a program by its area binding key + title, never by AUD number alone.**
 
 `cch-axcess` resolves the actual form for a (binding key, title) pair via `catalog.lookup_by_reference_tag` / the rich catalog. This table is the judgment map; the catalog is the source of truth for the exact form ID on a given engagement.
 
@@ -61,7 +61,7 @@ Source: `cch-axcess/references/data/kc-forms-catalog-rich.xlsx` (1,660-form cata
 Numbers are the AUD-8xx suffix (801 = AUD-801). A/B suffixes are distinct forms (Commercial:
 802A Investments, 802B Derivatives & Hedging; EBP: 802A Investments non-certified/ERISA, 802B
 Investments certified; EBP 814A DC participant data, 814B DB participant data, 814C H&W DB,
-814D Benefit Obligations DB/H&W). † CNS (Construction 2025) not re-verified live — resolve via
+814D Benefit Obligations DB/H&W). † CNS (Construction 2025) — resolve via
 the catalog before relying on its Investments/Derivatives rows. Resolve the exact form on the
 engagement through `cch-axcess`.
 
@@ -84,6 +84,6 @@ JE2, RPTRNS2, FAIRVALUE2, COMMIT, CONCENT, and Accounting Estimates are scoped o
 3. On KBA-400, the scoping selections should produce exactly this set; reconcile CCH's recommended forms against your list and resolve differences (CCH may recommend a program you scoped out, or miss one you scoped in — your significance call governs, document the deviation).
 4. Hand the program set to `cch-axcess` (`add-audit-programs.md`), which plans against `binder-program-template-{type}.xlsx` and files them.
 
-## Provenance / maintenance
+## Maintenance
 
-Built 2026-05-30 from the rich form catalog (titles: Commercial/Construction/EBP 2025, Governmental 2025, NFP 2026). **Verified live 2026-07-07** against the KC title library (`GetWorkpaperListForAddForms`) for GOV.2025.1, NFP.2026.1, COM.2025.1, EBP.2025.1 — all rows confirmed except the corrections applied that day (INVEST/DERIVATIVE 802A/802B on Commercial+EBP; participant-data 814A–D row added). CNS not re-verified (†). When titles re-version, re-query the catalog rather than hand-editing — numbering shifts. The binding keys are stable across versions; the AUD numbers are not.
+When titles re-version, re-query the catalog rather than hand-editing — numbering shifts. The binding keys are stable across versions; the AUD numbers are not.

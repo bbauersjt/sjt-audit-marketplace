@@ -41,10 +41,5 @@
     "Path is just /v1/JournalEntryReport — no /createReports suffix like the TB endpoint has."
   ],
   "verification": "GET /v1/JournalEntryReport/{clientId} — new reportGuid(s) should appear in the response array.",
-  "validated_on": [
-    "APNM 2025, client 97509, eng 381325, 2026-05-24 — SeparateReports [1] alone",
-    "APNM 2025, 2026-05-24 — SeparateReports [1,4,2,3] all four → AJE/RJE/TJE/PAJE separate workpapers",
-    "APNM 2025, 2026-05-24 — CombinedReports [{postFix: null, jeTypes: [1,4,2,3]}] → single combined workpaper"
-  ],
   "script_function": "scripts.reports.create_je_report(client_id, engagement_id, report_name, headers, je_types=('AJE',), combined=False, combined_postfix=None, ...)"
 }

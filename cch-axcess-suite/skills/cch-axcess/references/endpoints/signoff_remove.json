@@ -1,6 +1,6 @@
 {
   "operation": "signoff_remove",
-  "purpose": "Remove ONE document-level (WPM) sign-off from a workpaper or KC form. Backs BB's fleet rule that a bot clears the stale sign-off on a form it modified. Applying sign-offs stays human-only (add endpoints documented here but NOT scripted).",
+  "purpose": "Remove ONE document-level (WPM) sign-off from a workpaper or KC form. Supports the rule that a stale sign-off is cleared on a form after it is modified. Applying sign-offs stays human-only (add endpoints documented here but NOT scripted).",
   "host": "workpapermanagementapi.cchaxcess.com",
   "method": "POST",
   "path": "/v1/signoff/removeSignOff",
@@ -21,12 +21,11 @@
   "response": "200 with {\"signoffDetails\":[...remaining sign-offs...],\"documentStatus\":<int>}. signoffDetails reflects the POST-removal state (empty when the last sign-off was pulled).",
   "verify": "GET /v1/Documents/{clientId}/{documentId} — the removed leg's preparedBy*/reviewedBy* fields (FirstName/LastName null, UserId all-zero, CreatedDateTime null). Or folder_get and read the row's signOffs[] array.",
   "gotchas": [
-    "Removal is keyed by (objectId, signatureType) with NO userId — the API removes whichever sign-off holds that leg, including another user's. OUT OF BOUNDS (api-ui-parity, BB 2026-07-09): the binder UI only lets you remove your OWN sign-off, so a bot must not remove anyone else's via this API. Confirm the leg's userId == the logged-in user (document_get) before calling; do NOT probe the foreign-removal path — exceeding the UI corrupts untested state.",
+    "Removal is keyed by (objectId, signatureType) with NO userId — the API removes whichever sign-off holds that leg, including another user's. OUT OF BOUNDS (api-ui-parity): the binder UI only lets you remove your OWN sign-off, so you must not remove anyone else's via this API. Confirm the leg's userId == the logged-in user (document_get) before calling; do NOT probe the foreign-removal path — exceeding the UI corrupts untested state.",
     "NOT a hard delete — POST that clears a sign-off state slot, not a document DELETE; in-bounds under the wpm.py hard-delete policy.",
     "objectTypeId is document-type-specific: 4 (KC form, GUID objectId) vs 1 (uploaded workpaper, numeric-string objectId). Read it off the row.",
     "engagementId in the body carries the clientId (misnamed-engagementId quirk, architecture.md).",
     "ADD endpoints (NOT scripted — human-only): POST /v1/signoff/preparer and POST /v1/signoff/reviewer take the identical body and differ only by URL + signatureType."
   ],
-  "captured": "2026-07-09 — engagement-tab XHR monkeypatch, Coop Consulting (clientId 101229 / eng 394343). BB drove add+remove for both preparer and reviewer in the UI; scripted removeSignOff replayed live via build_xhr_call + cap:wpm against a throwaway preparer sign-off (200, verified gone by document_get).",
   "script": "scripts.wpm.remove_signoff  (read helper: scripts.wpm.document_get)"
 }

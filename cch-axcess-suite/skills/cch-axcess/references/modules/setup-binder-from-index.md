@@ -16,9 +16,7 @@ calls:
   - scripts.wpm.rename_folder
   - scripts.wpm.move
   - scripts.wpm.folder_get
-status: validated (4-tier flow); wip (2-level default + custom groupings, 2026-06-04 — unvalidated live)
-validated_on:
-  - "APNM 2025 NFP — 2026-05-07"
+status: validated (4-tier flow); wip (2-level default + custom groupings)
 ---
 # Module — Set Up New Binder
 
@@ -30,17 +28,16 @@ validated_on:
 > while side-entered (200s may be silent no-ops), then resume from the last verified step.
 > (SKILL.md → "Initialization gate".)
 
-**Status:** validated on one real engagement (APNM 2025). Re-run cautiously on new client types.
+**Status:** Re-run cautiously on new client types.
 
 ## Batch-first — check this table BEFORE looping single calls
 
-Building a binder one call per object is the known runaway failure (RULES-§T class; the Rock
-build looped folder-by-folder while 2 batched PUTs moved 19 objects). Chunk per
+Building a binder one call per object is the known runaway failure. Chunk per
 `transport.md` → "Bounded execution" (≤10 ops per eval, JS-side timeout, verify by read).
 
 | Doing this N times? | Use instead |
 |---|---|
-| Move / file N workpapers, leadsheets, or forms | ONE `scripts.wpm.move(client_id, items, hdrs)` — `items` is a LIST; batch it (2 PUTs filed 19 objects live, 2026-07-07) |
+| Move / file N workpapers, leadsheets, or forms | ONE `scripts.wpm.move(client_id, items, hdrs)` — `items` is a LIST; batch it |
 | Add N KC forms | ONE `kc_add_forms` batch body via `scripts.catalog.build_add_forms_body` — array body; see `transport.md` → array-body note for the wire path |
 | Create N folders | No batch endpoint exists — per-call is correct, but run them in bounded chunks (≤10 per injected eval), not one eval per folder |
 | Inventory the binder / find items | `scripts.binder_map.build_map_js` / `fetch_chunk_js` — never a folder-by-folder GET loop |
@@ -49,7 +46,7 @@ build looped folder-by-folder while 2 batched PUTs moved 19 objects). Chunk per
 
 ## What this does
 
-Wrapper folder (client name, NO index) with section folders directly beneath — **two levels is the default** (changed 2026-06-04, AX-16; the old 01/02/03/04 parent tier is gone from the default). The section list comes from `binder-template.xlsx` when the user wants the default, from the user verbatim when they bring their own, or is co-developed with the user. Deeper nesting remains fully supported via `parent_folder_id` chains — but ONLY when the user asks for it. Files BS leadsheets from `Unfiled Leadsheets` into their matching section folders with explicit per-folder moves (no auto-cascade exists — confirmed 2026-06-03).
+Wrapper folder (client name, NO index) with section folders directly beneath — **two levels is the default**. The section list comes from `binder-template.xlsx` when the user wants the default, from the user verbatim when they bring their own, or is co-developed with the user. Deeper nesting remains fully supported via `parent_folder_id` chains — but ONLY when the user asks for it. Files BS leadsheets from `Unfiled Leadsheets` into their matching section folders with explicit per-folder moves (no auto-cascade exists).
 
 ## Prerequisites
 
@@ -62,11 +59,11 @@ Wrapper folder (client name, NO index) with section folders directly beneath —
 ### Phase 0 — Pre-flight
 
 1. **Confirm target engagement** (read breadcrumb; don't trust a stale tab).
-2. **Determine entity type — in THIS order (rebuilt 2026-06-04 after a 6-complaint blind run):**
+2. **Determine entity type — in THIS order:**
    - **2a. Authoritative: KC title.** `scripts.kc.get_binder` → parse `result.lastUsedTitleGuid` → `scripts.catalog.resolve_title_guid()` → e.g. "2025 - Knowledge-Based Audits of Governmental Entities". The user picks this title at binder creation, so it is never null on a real engagement. Parse the binder FIRST — every new binder comes seeded with KC forms in Unfiled KC Forms (`-4`); their presence confirms the binder is live, but form refs (AUD-100/KBA-1xx) are SHARED across entity types and must NOT be used to infer type.
    - **2b. Corroborate: TB account structure.** Fund-prefixed account numbers, `Fund Balance`, `Property Tax`, `Gas Tax`, `Intergovernmental`, `Public Safety/Works`, `Federal Grant` → governmental, definitively. Read the TB BEFORE asking the user anything.
    - **2c. Confirming signal only:** the `Funds Setup` right-sidebar button (govt/consolidated-NFP). Never primary.
-   - **NEVER infer entity type from the client name** ("Coop Consulting, Inc." was a governmental fund entity).
+   - **NEVER infer entity type from the client name.**
    - **Conflict = blocker.** If the KC title/form set disagrees with TB structure (e.g. commercial title, governmental TB), STOP and surface the conflict — the binder may have been created under the wrong title. Do not declare entity type "confirmed" until 2a and 2b agree.
 3. **Inventory existing structure.** If anything beyond the four Unfiled pseudo-folders, ask the user: abort / build alongside / delete-and-rebuild. **If any folder slated for deletion has workpapers**, offer to move them to `Unfiled Workpapers` first.
 4. **Capture WPM auth.** Monkey-patch the tab, trigger one UI action (`Unfiled Workpapers` click works), read capture.
@@ -98,17 +95,16 @@ Wrapper folder (client name, NO index) with section folders directly beneath —
 ### Phase 2 — Show plan, get approval
 
 11. **Render the tree** with `(always)` vs `(from FS)` annotations. When proposing per-workpaper indexes inside a back-of-file section (lead / main / supporting), follow the AUTHORITATIVE convention in `rename-workpaper-index.md` (`XX00-PROG` program, `XX00` lead, `XX01/XX02` main, `XX01.1/.2` supporting).
-12. **Propose wrapper name.** folderName `[ShortClientName] [Year]`, **NO folderIndex at all** (empty string — nothing forces sort order at the top level; changed 2026-06-04). Drop legal suffixes. Suggest acronym if obvious (`Animal Protection New Mexico` → `APNM`). User can override. ⚠ Empty folderIndex is UNVERIFIED against the API as of 2026-06-04 — see Known failure modes.
+12. **Propose wrapper name.** folderName `[ShortClientName] [Year]`, **NO folderIndex at all** (empty string — nothing forces sort order at the top level). Drop legal suffixes. Suggest acronym if obvious. User can override. ⚠ Empty folderIndex is UNVERIFIED against the API — see Known failure modes.
 13. **Get user go-ahead** before writing anything.
 
 ### Phase 3 — Build via API
 
-> **NAMING CONVENTION (double-index regression, fixed 2026-06-04):** `folderName` is
+> **NAMING CONVENTION (double-index regression):** `folderName` is
 > the CLEAN descriptive name with NO index prefix — `folderIndex` carries the index
 > and the binder UI renders both, so "01 Front of File" as a name displays as
 > "01 | 01 Front of File". `binder-template.xlsx`'s Group-name column is already
-> clean — use it verbatim. Wrong names are remediable: `scripts.wpm.rename_folder`
-> (endpoint captured 2026-06-03).
+> clean — use it verbatim. Wrong names are remediable: `scripts.wpm.rename_folder`.
 
 ```python
 from scripts import wpm
@@ -128,7 +124,7 @@ for index, name in section_rows:   # Sections sheet, or the user's approved list
 js = wpm.folder_get(client_id, eng_id, -3, wpm_hdrs)   # Unfiled Leadsheets
 # For each leadsheet whose index matches a created section (BS only — skip 4xxx/5xxx):
 #    Move DIRECTLY to that section folder's locationId — there is NO auto-cascade
-#    (disproven live 2026-06-03: moving to a parent does NOT distribute downward).
+#    (moving to a parent does NOT distribute downward).
 items = [{"object_type": "LeadSheet", "own_loc": ls["locationId"], "dest_loc": section_map[ls["index"]], "object_id": ls["documentId"]}
          for ls in bs_leadsheets]
 wpm.move(client_id, items, wpm_hdrs)
@@ -151,13 +147,7 @@ See `architecture.md` for platform-level. Module-specific:
 - Workpapers with an active user behave differently on delete (CCH dialog warns). Untested — surface and ask before proceeding.
 - Recycle Bin endpoint not yet captured. Bin URL: `/en-US/engagement/{clientId}/wpRecycleBin`.
 - **Double-indexed folder names** ("01 | 01 Front of File") → index prefix embedded in `folderName` → strip prefixes and fix with `scripts.wpm.rename_folder(client_id, loc_id, index, clean_name, headers)`. The load-bearing body field is `oldLocationId` (see `endpoints/wpm_folder_rename.json`).
-- **Empty wrapper folderIndex rejected** (UNVERIFIED 2026-06-04 — the no-index wrapper has not been tried live yet) → if `create_folder(client_id, "", …)` 400s, create with index `00`, then `rename_folder` to clear the index; if THAT also fails, keep `00`, tell the user, and log the finding so this bullet gets resolved.
+- **Empty wrapper folderIndex rejected** (UNVERIFIED — the no-index wrapper has not been tried live) → if `create_folder(client_id, "", …)` 400s, create with index `00`, then `rename_folder` to clear the index; if THAT also fails, keep `00`, tell the user, and log the finding so this bullet gets resolved.
 - **Entity type declared from client name or KC form refs** → both are non-signals → re-run Phase 0 step 2 (titleGuid → catalog, corroborate with TB).
-
-## Validated on
-
-- APNM 2025 (NFP), client 97509, eng 381325 — 2026-05-07.
-- Coop Consulting playground (Govt) — 2026-06-03: entity-type path + folder rename captured live; naming convention corrected.
-- 2-level default + custom-groupings flow + no-index wrapper: introduced 2026-06-04 (AX-16) — NOT yet validated live; first rerun validates.
 
 <!-- END -->

@@ -17,16 +17,13 @@ calls:
   - scripts.wpm.rename_workpaper
   - scripts.auth_capture.INSTALL_MONKEYPATCH_JS
 status: validated
-validated_on:
-  - "APNM 2025 — Investments folder, 10 PDFs renamed N-1-* to 1105-1114, 2026-05-20"
 ---
 # Module — Rename Workpaper Index
 
-> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
-> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
-> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
-> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
-> semantics are inverted per type; architecture.md → Move payload semantics).
+> **Index verification & Move body.** Use `scripts.wpm.verify_index(row, object_type)` for display
+> indexes and `wpm.move()` for the move body — never hand-pick the index field or hand-assemble
+> `folderParentLineItems`. Rules live in architecture.md → `index` vs `documentIndex` and → Move
+> payload semantics.
 
 **Trigger phrases:** "re-index these workpapers", "change the indexes on [folder]", "rename workpaper indexes", "renumber the workpapers", "convert from old indexing to new", "renumber [N-1-*] to [1105]", "fix the indexes on the investments folder", "set workpaper [name] to index [X]".
 
@@ -79,7 +76,7 @@ Take the Workpaper object from the folder GET. Three things to fix before sendin
 
 1. **Set `documentIndex`** to the new index value (this is the field the server persists as the displayed Index).
 2. **Convert `tags` from string to array.** Folder GET returns `tags: "[]"` (a string). PUT requires `tags: []` (an actual array). Failure to convert returns 400 `"Error converting value '[]' to type 'System.Collections.Generic.List`1[System.String]'."`
-3. **Add the 2 fields missing from the folder GET response** — `fileName` and `setNotesToDoNotRollForward` (the PUT requires them; the GET omits them). The other defaults below are belt-and-braces only: those 11 fields ARE present in the GET (confirmed 2026-06-03), and `rename_workpaper` uses `setdefault` so passing the real row through is always safe. What is NOT safe is a synthetic dict — required fields like `rollForwardOption` and `documentId` 400 if absent, so always start from an actual `folder_get` row:
+3. **Add the 2 fields missing from the folder GET response** — `fileName` and `setNotesToDoNotRollForward` (the PUT requires them; the GET omits them). The other defaults below are belt-and-braces only: those 11 fields ARE present in the GET, and `rename_workpaper` uses `setdefault` so passing the real row through is always safe. What is NOT safe is a synthetic dict — required fields like `rollForwardOption` and `documentId` 400 if absent, so always start from an actual `folder_get` row:
 
 ```js
 const body = Object.assign({
@@ -112,7 +109,7 @@ PUT https://workpapermanagementapi.cchaxcess.com/v1/Documents/{clientId}/{docume
 Body: <body from Step 3>
 ```
 
-**Sequential, not parallel.** Concurrent PUTs are not verified safe (same race-condition caveat as KC form writes). Status 200 = success. The response body is EMPTY — it does NOT echo the document (confirmed 2026-06-03). Verify with a follow-up folder GET (Step 5), never the PUT response.
+**Sequential, not parallel.** Concurrent PUTs are not verified safe (same race-condition caveat as KC form writes). Status 200 = success. The response body is EMPTY — it does NOT echo the document. Verify with a follow-up folder GET (Step 5), never the PUT response.
 
 ### Step 5 — Verify
 
@@ -135,10 +132,5 @@ Re-trigger the folder GET (click away from the folder and back, or call the GET 
 | Index field | `index` | `documentIndex` |
 | objectType value | `"KCForms"` | n/a (URL-routed by documentId) |
 | Order matters | Set-Index AFTER Move (new forms arrive with null index; Move preserves the index — architecture.md) | n/a — rename in place |
-
-## Validated on
-
-- **APNM 2025 (NFP), 2026-05-20** — Investments folder (locationId 2964799). 10 PDFs renamed from `N-1-1` through `N-1-10` to `1105` through `1114`. First write via UI Properties dialog (to capture the request shape); remaining 9 via direct PUT replay. All 9 returned 200 after fixing the `tags` field. Visual verification: Index column updated immediately.
-
 
 <!-- END -->

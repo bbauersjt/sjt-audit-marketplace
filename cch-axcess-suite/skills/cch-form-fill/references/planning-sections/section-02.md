@@ -35,6 +35,12 @@ Type of presentation (general-purpose vs special-purpose government); list of ba
 ### D. Audit team & timing — the genuine *new* inputs (logistics)
 Engagement team members & roles; dates for RMM discussion meeting, fraud brainstorming, year-end fieldwork start/end, manager review, partner review, EQ review, wrap-up meeting; timing of any interim procedures. *Scheduling/staffing — not in client documents; planned by the firm.*
 
+**Fill defaults for the critical-dates / timetable form (it's a required check-the-box form — every row gets a response, none left blank):**
+- **Timetable / critical dates** — make up reasonable dates from the engagement letter's timeline (fieldwork, review, report). Generic and internally consistent; this is filler, but it's required filler.
+- **Engagement-team meeting & fraud-discussion rows** → forward-ref the team-discussion KC form by its index ("see engagement team discussion, [index]"), don't restate it here.
+- **Physical inspection / observation of assets** → year-end if the entity has inventory to observe, else **N/A** (the firm does not observe fixed assets).
+- Everything else → short, generic, unchallengeable. (Generic is fine, blank is not.)
+
 ### E. Independence documentation (KBA-101)
 ET 1.295 nonattest-independence documentation prepared — **Yes**; GAGAS non-audit-services independence documentation prepared — **Yes**. (Firm prepares; ties to AID-201.)
 

@@ -1,6 +1,6 @@
 {
   "operation": "wb_editreports",
-  "purpose": "Edit an existing TB report's settings/columns \u2014 ADD/RENAME/REMOVE Remarks (REF) columns programmatically. Live-captured 2026-06-04 (UI 'Edit report -> Columns -> add remarks column -> Save').",
+  "purpose": "Edit an existing TB report's settings/columns \u2014 ADD/RENAME/REMOVE Remarks (REF) columns programmatically (UI path: 'Edit report -> Columns -> add remarks column -> Save').",
   "host": "workbench-api.cchaxcess.com",
   "method": "PATCH",
   "path": "/v1/trialbalancereport/editReports",
@@ -25,8 +25,5 @@
     "Remarks entries need engagementId=clientId; other types must NOT carry it.",
     "SPA reloads the page after save \u2014 page must be reloaded for new columns to render; a monkeypatch dies with it.",
     "tbreportedit GET response is the createReports shape incl. remarksInlineView flag."
-  ],
-  "validated_on": [
-    "BT3 binder 100736/392557 expense leadsheet (32387), 2026-06-04 \u2014 add + rename to 'REF' + remove second column"
   ]
 }

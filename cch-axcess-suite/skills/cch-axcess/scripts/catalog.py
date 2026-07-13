@@ -2,8 +2,7 @@
 
 Pure Python, runs in the sandbox. Does not hit any HTTP endpoint.
 
-ACTUAL xlsx columns (sheet "Catalog", confirmed 2026-06-03 — earlier versions
-of this file used invented camelCase names and every lookup returned 0 rows):
+ACTUAL xlsx columns (sheet "Catalog"):
     Form ID | Form Name | Category | Title | Reference Tag | Data Binding Key
     | Description | Tags | Title GUID | Add-Form Constants
 "Add-Form Constants" packs the POST constants as "rf=3;copy=15;upd=15;mpk=KEY".
@@ -63,8 +62,7 @@ def resolve_title_guid(title_guid: str) -> str | None:
 
     GetBinder's `lastUsedTitleGuid` (set when the user picks the KC title at binder
     creation; never null on a real engagement) resolves here to e.g.
-    '2025 - Knowledge-Based Audits of Governmental Entities'. Confirmed live
-    2026-06-03 (3ac49bd1-... -> Governmental, Coop playground). Use THIS for entity
+    '2025 - Knowledge-Based Audits of Governmental Entities'. Use THIS for entity
     type — never the client name, and never KC form ref prefixes (KBA-1xx refs are
     shared across entity types). Corroborate with TB account structure
     (see setup-binder-from-index.md Phase 0).
@@ -99,7 +97,7 @@ def build_add_forms_body(rows: list[dict]) -> list[dict]:
 
     Maps the REAL xlsx columns to body fields and unpacks "Add-Form Constants".
     Other fields are constants or placeholder GUIDs the server replaces —
-    captured live, documented in references/endpoints/kc_add_forms.json.
+    documented in references/endpoints/kc_add_forms.json.
     """
     PLACEHOLDER_GUID = "00000000-0000-0000-0000-000000000000"
     bodies = []
@@ -118,14 +116,14 @@ def build_add_forms_body(rows: list[dict]) -> list[dict]:
     return bodies
 
 
-# --- Single Audit (S-suffix) title support — AX-26 ------------------------------
+# --- Single Audit (S-suffix) title support ------------------------------
 SA_TITLE_GUID = "531eb5ad-5eae-4f12-ac51-ea998bb8472e"   # Knowledge-Based Single Audits SAS.2024.1
 SA_TITLE_NAME = "Knowledge-Based Single Audits"
 
 
 def load_sa_title_forms() -> list[dict]:
-    """Static fallback list of the Single Audits title's 84 forms (captured
-    2026-06-04, references/data/sa-title-forms.tsv).
+    """Static fallback list of the Single Audits title's 84 forms
+    (references/data/sa-title-forms.tsv).
 
     S-suffix forms are NOT in the binder's own title — they live in the separate
     Single Audits title and are added CROSS-TITLE (same add_forms POST, SA

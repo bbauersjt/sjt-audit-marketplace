@@ -21,8 +21,7 @@ happens, because the token stays in-page.
 What cannot happen is *Python-side HTTP* — which this skill never does. The builders are the
 whole point: they encode the correct payload shapes, header casing, XHR-vs-fetch choice, and
 silent-200 defenses **once**, so callers don't hand-roll inline JS and breed the errors that
-hand-rolling bred in testing (the B13 hand-assembled collectionKey, the B7 improvised
-window-relay). **Builders are MANDATORY for writes; inline JS is allowed only for trivial
+hand-rolling breeds. **Builders are MANDATORY for writes; inline JS is allowed only for trivial
 reads.** Payload construction routes through the builders (see `build_write_payload`, which
 refuses a raw key). The two patterns that were previously improvised inline are now named
 helpers in `scripts/http_runner.py` (`build_relay_*`, `build_chunked_read_js`).
@@ -49,7 +48,7 @@ CCH uses several distinct IDs that look interchangeable but aren't. Mixing them 
 | `clientId` | Per-client integer | First int in URL `/engagement/{clientId}/...` | WPM endpoints; passed as `engagementId={clientId}` in many bodies (misnamed) |
 | `engagementId` | Per-engagement integer | Second int in URL `/engagementview/{engagementId}` | WPM folder GET path slot 3; workbench-api report bodies (as `periodId`) |
 | `engagementGuid` | Per-engagement GUID (engagement/workbench side) | engagement-side boot capture; workbench-api echoes it | workbench-api TB create body; KC `/Home/GetPermissions/{engagementGuid}` |
-| `kcBinderGuid` (KC `binderId`) | KC's OWN per-binder GUID — **CAN DIFFER from `engagementGuid`** (live 2026-07-07: engagement `56cafc04…` vs KC binder `6ca0d3a3…` on the same engagement; on older binders the two matched, so "canonical across sister apps" is UNRELIABLE). GetBinder by the engagement guid → 200-wrapped 404 "Binder not found". Discover it from the KC tab's own traffic (`/api/binder/GetBinder/{guid}` fired on KC open) — never assume it equals the engagement guid. | KC `/binder/{binderGuid}/...`; `GetBinder.result.id` | KC API everywhere (form GET/write, submit `binderId`, add-forms) |
+| `kcBinderGuid` (KC `binderId`) | KC's OWN per-binder GUID — **CAN DIFFER from `engagementGuid`** on the same engagement; on older binders the two matched, so "canonical across sister apps" is UNRELIABLE. GetBinder by the engagement guid → 200-wrapped 404 "Binder not found". Discover it from the KC tab's own traffic (`/api/binder/GetBinder/{guid}` fired on KC open) — never assume it equals the engagement guid. | KC `/binder/{binderGuid}/...`; `GetBinder.result.id` | KC API everywhere (form GET/write, submit `binderId`, add-forms) |
 | `clientGuid` | Per-client GUID, stable across all client engagements | `GetBinder.result.clientGuid` | (KC delete path historically; KC delete not used by this skill) |
 | `workpaperId` (a.k.a. `documentId`) | Per-form GUID | `GetBinder.result.workpapers[].id`, or WPM rows' `documentId`/`fileId` | KC form GET/POST; `wpm.move`/`set_index` objectId |
 | `locationId` | Per-folder integer | WPM folder GET responses | WPM move/index endpoints |
@@ -58,7 +57,7 @@ CCH uses several distinct IDs that look interchangeable but aren't. Mixing them 
 
 **Naming gotcha (platform-wide)**: WPM, workbench-api, and financialprep-api all use the field name `engagementId` in places where the *value* is actually the Axcess `clientId`. Examples:
 
-- `POST workpapermanagementapi/v1/NewEngagementView/folder` body field `engagementId` carries `99286` (the URL's first int), not `387698` (the URL's second int).
+- `POST workpapermanagementapi/v1/NewEngagementView/folder` body field `engagementId` carries the URL's first int (the clientId), not the URL's second int (the real engagementId).
 - `POST workbench-api/v1/trialbalancereport/createReports` body field `engagementId` carries the clientId; the real engagementId rides in `ReportSettings.periodId`.
 - `POST workbench-api/v1/JournalEntryReport` body field `engagementId` carries clientId; real engagementId in top-level `periodId`.
 
@@ -74,9 +73,8 @@ Auth maps to the two Step-0 legs (SKILL.md):
   financialprep-api via the `ls:*` sentinels from any kc-token origin.
 - **WPM leg — monkeypatch-captured engagement-tab headers** (bearer + ALL-CAPS `IDToken` +
   locale + `traceparent`) are the auth for workbench-api, and the SAME captured bearer is
-  **also accepted by financialprep-api and WPM** (validated twice, 2026-06-05 — this closed
-  the old T8 probe). workbench-api remains unreachable from the KC tab (fetch AND XHR,
-  status 0, any headers — transport-level, BT3).
+  **also accepted by financialprep-api and WPM**. workbench-api remains unreachable from the
+  KC tab (fetch AND XHR, status 0, any headers — transport-level).
 
 There is exactly ONE way to build headers per leg; every module cites this section and none
 repeats a per-module header recipe.
@@ -97,7 +95,7 @@ Full keyset: `kc.accessToken`, `kc.idToken`, `kc.refreshToken`, `kc.pendoJwt`,
 |---|---|---|---|
 | knowledgecoach (KC writes) | `Bearer <kc.accessToken>` | **`IdToken`** (mixed: capital-I, lower-d, capital-T) | `Accept: application/json` |
 | WPM / financialprep-api | `Bearer <kc.accessToken>` | **`IDToken`** (ALL-CAPS) | `USERLocale: en-US`, `Accept-Language: en-US`, `CountryCode: US`, `Accept: application/json` |
-| workbench-api | monkeypatch-captured headers (same shape: Authorization + ALL-CAPS `IDToken` + locale + `traceparent`); the captured WPM bearer is also accepted by financialprep-api (validated 2026-06-05) | | |
+| workbench-api | monkeypatch-captured headers (same shape: Authorization + ALL-CAPS `IDToken` + locale + `traceparent`); the captured WPM bearer is also accepted by financialprep-api | | |
 
 The same `kc.accessToken` + `kc.idToken` pair authenticates WPM, financialprep-api,
 and KC — only the `IDToken`/`IdToken` casing (and, for WPM-style, the locale headers)
@@ -109,23 +107,22 @@ WPM locale headers are NOT optional: omit them and WPM GETs return **200 + empty
 **Expiry: none to handle — ON A VISIBLE TAB.** `kc.refreshToken` is present, so the app
 self-refreshes the access token in place. **Re-read `localStorage` per call** and you
 have a current token — no expiry logic, no rotation tracking. ⚠ **The self-refresh is a
-page TIMER, and Chrome stalls it on hidden/backgrounded tabs** (AX-33 below): on a
-background KC tab `kc.accessToken` can sit in localStorage STALE past expiry — re-reading
-it just re-reads the stale value. If ls-sourced calls start 401ing, don't trust the
+page TIMER, and Chrome stalls it on hidden/backgrounded tabs** (see the tab-visibility note
+below): on a background KC tab `kc.accessToken` can sit in localStorage STALE past expiry —
+re-reading it just re-reads the stale value. If ls-sourced calls start 401ing, don't trust the
 localStorage read: touch the tab (activate it / `chrome_navigate` the KC deep-link) so the
 app re-mints, then take the fresh bearer from a live `chrome_network_recent` capture —
 the wire is the ground truth for freshness, localStorage only tracks it while the tab is
-visible. (SFRC 401k 0100, 2026-07-08.) The wire-captured bearer also works from
+visible. The wire-captured bearer also works from
 **curl-from-Bash entirely outside the browser** — KC and WPM both accept it (pure
-header-bearer auth; `runbooks/transport.md` → curl section, validated Coop Consulting
-2026-07-09). Write it to a session-scratch token FILE and expand at call time — never
-hand-transcribe (a hand-copied JWT 401'd live).
+header-bearer auth; `runbooks/transport.md` → curl section). Write it to a session-scratch
+token FILE and expand at call time — never hand-transcribe (a hand-copied JWT 401s).
 
 Builders self-source these tokens at runtime when you pass the `"ls:<family>"`
 SENTINEL as the `headers` argument (`"ls:wpm"` / `"ls:fp"` / `"ls:kc"` — see
-`http_runner.ls_headers_js_expr`, AX-26). **Prefer the sentinel for every WPM / FP-API /
-KC call** — tokens then never cross the tool channel and no per-session wrapper is needed
-(BT3 burned ~20 calls improvising these). Passing a captured-headers DICT remains
+`http_runner.ls_headers_js_expr`). **Prefer the sentinel for every WPM / FP-API /
+KC call** — tokens then never cross the tool channel and no per-session wrapper is needed.
+Passing a captured-headers DICT remains
 supported and is REQUIRED for workbench-api (see the transport matrix below).
 
 ### `__cch_capture` monkey-patch — fallback / bootstrap only
@@ -147,7 +144,7 @@ mechanism. **Cleanup rule:** a session that stashed a `__cch_capture_dump`-style
 localStorage must delete it when done (a 158KB stale artifact was found left on the KC
 origin).
 
-#### `cap:<family>` sentinel — the engagement-only-tab leg (AX-33)
+#### `cap:<family>` sentinel — the engagement-only-tab leg
 
 The `ls:<family>` sentinels read KC localStorage and are **dead on an engagement-only tab**
 (no `kc.*` keys there). The **`cap:<family>`** sentinel is the counterpart: it self-sources
@@ -166,34 +163,34 @@ into the builders so it isn't re-improvised inline.
 - WPM, workbench-api, financialprep-api all use `IDToken` (all-caps)
 
 These are NOT interchangeable. Wrong case → 401. **Send EXACTLY ONE of the two casings per
-call — sending BOTH `IDToken` AND `IdToken` on the same request → 401** (live-confirmed
-2026-06-19). One alone → 200. The `ls:*` / `cap:*` sentinels already emit a single casing per
+call — sending BOTH `IDToken` AND `IdToken` on the same request → 401**. One alone → 200.
+The `ls:*` / `cap:*` sentinels already emit a single casing per
 family; only a hand-rolled header dict can trip this.
 
-### Transport matrix (live-validated 2026-06-04/05 — the POSITIVE rules, don't rediscover)
+### Transport matrix (the POSITIVE rules, don't rediscover)
 
 | Target API | From KC tab | From engagement tab | Auth source |
 |---|---|---|---|
 | WPM | **XHR ✓** (fetch ✗) | XHR ✓ | KC localStorage (`ls:wpm`) OR captured WPM bearer |
-| financialprep-api | **XHR ✓** (fetch ✗) | XHR ✓ | KC localStorage (`ls:fp`) OR captured WPM bearer (validated 2026-06-05) |
+| financialprep-api | **XHR ✓** (fetch ✗) | XHR ✓ | KC localStorage (`ls:fp`) OR captured WPM bearer |
 | KC API | ✓ | — | KC localStorage (`ls:kc`, IdToken casing) |
-| workbench-api | **✗ dead** (fetch AND XHR, any headers) | **XHR ✓ with monkeypatch-captured headers** (incl. `traceparent`) — the captured WPM bearer is accepted (validated twice, 2026-06-05; closed the T8 probe) | captured dict (WPM leg) ONLY |
+| workbench-api | **✗ dead** (fetch AND XHR, any headers) | **XHR ✓ with monkeypatch-captured headers** (incl. `traceparent`) — the captured WPM bearer is accepted | captured dict (WPM leg) ONLY |
 
 - ALWAYS XHR for cross-origin; `fetch()` fails CORS preflight everywhere it was tested.
 - workbench-api is the odd one out: KC tokens are NOT accepted from the KC tab; the
-  engagement tab + captured headers works (live 200, 2026-06-04 — GET and the SPA's own
-  POSTs). One captured WPM header set serves workbench-api AND financialprep-api AND WPM —
-  capture once, reuse across all three.
+  engagement tab + captured headers works (GET and the SPA's own POSTs). One captured WPM
+  header set serves workbench-api AND financialprep-api AND WPM — capture once, reuse across
+  all three.
 - ⚠ **Refresh-Report hard-reload trap:** report pages kill the monkeypatch on Refresh
   Report (full page reload, like the report-settings save). Do NOT chase re-capture on a
   report page — capture from the engagement view, or reuse the WPM bearer you already
-  captured. This was TT1 attempt 2's terminal wall.
+  captured.
 
 ## Platform-stable operational facts
 
 These have been confirmed live. Do not rediscover them.
 
-### Tab visibility, throttling & token refresh (autonomous work) — AX-33
+### Tab visibility, throttling & token refresh (autonomous work)
 
 The single variable that governs whether a backgrounded KC/engagement tab keeps working is
 **`document.visibilityState`**, NOT window focus:
@@ -244,7 +241,7 @@ Chrome treat the tab as AUDIBLE, exempting it from freeze even backgrounded.
   the SPA's ACTUAL renew call and replicate it exactly (don't guess params). This removes the
   focus/visibility dependency entirely — until then, the visible-tab parking above is the answer.
 
-### In-page GET shows the WORKING COPY, not committed state — AX-33
+### In-page GET shows the WORKING COPY, not committed state
 
 An in-page `chrome_eval`/`javascript_tool` XHR GET of `/api/Workpaper/{eng}/{wp}` returns the
 **uncommitted WORKING COPY**, not committed state: write `NewOrRecurring=New` → the immediate
@@ -255,11 +252,11 @@ unsubmitted change and yields false state-3 positives. True committed state requ
 other forms' pending writes) → reload → GET** (and, as the completion oracle, the
 diagnostics endpoint — see the field model below). A refresh discards any unsubmitted writes, so a
 working-copy "state 3" that was never submitted simply vanishes. And even a correctly submitted
-write can silently vanish — KC drops ~30–50% of write→submit pairs (2026-07-08) — so the re-read
+write can silently vanish — KC drops ~30–50% of write→submit pairs — so the re-read
 is not optional: the mandatory loop is write → ~1.2s → per-wp submit → verify-by-read → retry ≤3×
 (field-conventions.md §5 3a).
 
-### Transport by origin — BRIDGE primary for ALL origins (KC via chrome_api_call) — AX-34
+### Transport by origin — BRIDGE primary for ALL origins (KC via chrome_api_call)
 
 **Route by the TARGET origin, then by VERB.** The chrome-bridge local MCP is the primary transport for
 **every** origin (see `runbooks/transport.md`). `chrome_network_recent(host)` auto-captures the bearer
@@ -271,7 +268,7 @@ off live API calls via webRequest — **no monkeypatch, no provoke** — and the
 verbs (`chrome_eval` in MAIN and ISOLATED worlds, and in-page `fetch`) — so those are N/A on KC. But
 `chrome_api_call` fetches from the extension **service worker**, which is **not subject to the page CSP**
 and is CORS-bypassed for `*.cchaxcess.com`; it drives the full KC pipeline (GET form, GetBinder,
-`UpdateProperty`, spawn, `submit`, refresh, diagnostics) — validated live 2026-06-23, no CSP error, no
+`UpdateProperty`, spawn, `submit`, refresh, diagnostics) — no CSP error, no
 linked tab. Pass the captured KC bearer + `IdToken` in headers. Decide transport by origin then verb:
 KC → `chrome_api_call` (bridge) primary, linked tab fallback; engagement/WPM/workbench/FP → bridge
 primary, linked tab fallback.
@@ -291,9 +288,8 @@ for the row-identity of a specific, currently-VISIBLE row** (e.g. the ag-grid pr
 > Writes and state-verification still go through the API/in-page GET. No contradiction: binder
 > inventory = API; form-field detection = DOM; writes/verify = API.
 
-The engagement binder UI is **master-detail and every folder is lazy-loaded** (validated
-live 2026-06-04 — a 30-folder created wrapper AND a leaf cross-engagement folder both read
-cleanly from one token). When you "stage" a folder by clicking it, the browser fires
+The engagement binder UI is **master-detail and every folder is lazy-loaded**. When you
+"stage" a folder by clicking it, the browser fires
 `GET /v1/NewEngagementView/{clientId}/{locationId}/{engagementId}` and renders the
 result — the unstaged folder's contents were never in the page at all. So:
 
@@ -325,7 +321,7 @@ batch of writes against it.
 Three known silent-200s are just instances of this one rule:
 
 - `UpdateProperty` returns 200 on a nonexistent collectionKey; the field's `state` stays 0
-  (the B13 hand-assembled-key incident). `build_write_payload` now refuses a raw key.
+  `build_write_payload` now refuses a raw key.
 - `set_index` returns 200 but the wrong field stays null — the real display field is `index`,
   not `documentIndex` (table below).
 - `add_forms` returns 200; the truth is in `result[]` (which ECHOES successful adds — see
@@ -341,7 +337,7 @@ Three known silent-200s are just instances of this one rule:
 Reading the wrong field is the classic false-negative: the write applied, you checked the
 field that was never going to change, and "concluded" failure.
 
-### WPM surface — confirmed facts (2026-06-03)
+### WPM surface — confirmed facts
 
 - **Locale headers are load-bearing**: `USERLocale: en-US`, `Accept-Language: en-US,en;q=0.9`, `CountryCode: US` are REQUIRED on every WPM call. Without them GETs return **status 200 + empty array `[]`** for every folder — a silent failure that mimics an empty binder. `scripts.wpm` merges `http_runner.WPM_LOCALE_HEADERS` automatically.
 - **`folder_get` returns a FLAT JSON array** — no `{lineItems}` / `{result}` wrapper.
@@ -351,6 +347,11 @@ field that was never going to change, and "concluded" failure.
 - **Workpaper `documentId` == its `locationId`** (integer string), not a GUID. KC forms use GUID documentIds.
 - **Workpaper PUT** (`/v1/Documents/{clientId}/{documentId}`) returns an EMPTY body on success — verify via follow-up GET.
 - **GetBinder (KC) response is wrapped**: parse at `result.workpapers`, not top-level.
+- **wpId lookup — GetBinder FIRST.** Any time you need a form's (or any workpaper's)
+  `workpaperId`, `GET .../api/binder/GetBinder/{engagementGuid}` from the KC tab (`ls:kc` auth)
+  — `result.workpapers[].id` is the source, carrying every workpaper with name + wpId. **Never
+  walk WPM folders to find a form's workpaper.** Modules cite
+  this, not their own copy.
 
 ### Form lifecycle
 
@@ -367,9 +368,9 @@ field that was never going to change, and "concluded" failure.
 | Toggle program step | `POST knowledgecoach.cchaxcess.com/api/Workpaper/UpdateProgramStep` | `endpoints/kc_toggle_step.json` |
 | Soft-delete KC form | Move to "User to delete" folder via `wpm.soft_delete_form` | `modules/remove-kc-form.md` |
 
-> **KC-form hard delete is NOT supported by this skill.** Kymera 2025 EBP incident (2026-05-28): a `DELETE /v1/KnowledgeCoach/.../deleteform/...` returned 200 but corrupted the binder — `lastUsedTitleGuid` went null and 30+ unrelated workpapers became invisible. Recycle Bin was empty. To remove a form, use the soft-delete pattern in `modules/remove-kc-form.md`.
+> **KC-form hard delete is NOT supported by this skill.** A `DELETE /v1/KnowledgeCoach/.../deleteform/...` returns 200 but corrupts the binder — `lastUsedTitleGuid` goes null and 30+ unrelated workpapers become invisible, with an empty Recycle Bin. To remove a form, use the soft-delete pattern in `modules/remove-kc-form.md`.
 
-### KC form field model (confirmed 2026-05-29, 1535 fields across 10 default NPO forms)
+### KC form field model
 
 A decoded form's `collections[i].objectList[j]` is a ROW; its `renderProperties` are the fields. `scripts.kc.inventory_form` classifies them; `classify_property` owns the rules; `build_write_payload` emits the correct write shape. Prefer these over the untyped `walk_fields`.
 
@@ -377,17 +378,15 @@ A decoded form's `collections[i].objectList[j]` is a ROW; its `renderProperties`
 
 - **`propertyType` (int) is the field-kind discriminator**, refined by `floatieType` + option-list length + a value sentinel:
   `0` = Answer (`select` if floatieType `Radio` / non-empty list / value sentinel `"Choose an item"` (valueKey `defaultanswer`); `multiselect` if `CheckBox` / sentinel `"Choose all that apply."`; else free text) · `1` = text (comment/description) · `2` = label (read-only Question/Name/HTML) · `3` = signoff (performedby/dates on program steps) · `5` = linked (system keys, IDs, cross-form values — read-only). Writable kinds: text, select, multiselect, signoff.
-- **`floatieItemList` is ALWAYS `{isCustomizable, list}`** — never a bare array — and is present on EVERY field, so presence ≠ dropdown. Options live at `.list`; an empty list usually means a **convention-driven prop**, NOT free text — the valueKey is DATA the code carries (see `config/field-conventions.md`), so do NOT treat an empty `floatieItemList` as free-text/unwritable. When the list IS populated, the item's `key` is the `valueKey`. **The valueKey convention is UPPERCASE/compound:** yes/no props take `YES`/`NO` (lowercase `yes` is REJECTED → `resetanswer` — the old "lowercase accepted, NOT a guess like YES" claim is DISPROVEN); yes/no/NA props take the compound `YESNONA-YES` / `YESNONA-NO` / `YESNONA-NA`. Older `legal_dropdown_values` read the object as an array and got nothing — fixed 2026-05-29.
+- **`floatieItemList` is ALWAYS `{isCustomizable, list}`** — never a bare array — and is present on EVERY field, so presence ≠ dropdown. Options live at `.list`; an empty list usually means a **convention-driven prop**, NOT free text — the valueKey is DATA the code carries (see `config/field-conventions.md`), so do NOT treat an empty `floatieItemList` as free-text/unwritable. When the list IS populated, the item's `key` is the `valueKey`. **The valueKey convention is UPPERCASE/compound:** yes/no props take `YES`/`NO` (lowercase `yes` is REJECTED → `resetanswer` — the old "lowercase accepted, NOT a guess like YES" claim is DISPROVEN); yes/no/NA props take the compound `YESNONA-YES` / `YESNONA-NO` / `YESNONA-NA`.
 - **Write payload by kind:** text → `value`=text, `valueKey=""`. select → one `valueKey` from the field's own options. multiselect → `value`+`valueKey` semicolon-joined in ONE POST, full-state replacement (server strips a trailing semicolon). **signoff → the token (initials) goes in `valueKey`, NOT `value`** — a free-text write (valueKey="") is silently ignored (state stays 0).
 - **Choice field with an EMPTY option list** (sentinel-detected select/multiselect, floatieType null, `.list` empty): options load only after a gating selection. Writing free text gets reset-rejected — **skip** it (or resolve options first). `build_write_payload` raises rather than emit free text.
 - **Addable / repeating-table template rows** (object keys like `…-1`, e.g. `Analysis-1`, some `FinancialStatementUsers-N`): **the seeded `-1` row IS writable** — write to it directly. Only ADDITIONAL rows beyond the seeded one need a `build_spawn_payload` add first (and **spawn IS REST** — the spawned new GUID arrives empty, then fill by GUID). Note `inventory_form`'s `addable_grids` detector MISSES seeded-template grids, so do not rely on it to tell you a seeded `-1` row exists — read the raw collections.
 - **Answered = `state==3 && isValueDefault==false`** (for signoff: `state==3 && valueKey!=""`). Fresh forms are `state 0` everywhere. **Writes land in a PENDING working copy — they are NOT committed until `POST /api/Workpaper/submit` (`{binderId, workpaperId:""}`), which is REQUIRED.** A reload/refresh DISCARDS any unsubmitted writes. So always verify AFTER reload (never the immediate post-write GET, which reads the pending working copy and gives false state-3 positives), and **settle ~1.5s** before that post-reload verify. (The old "persists without submit; submit only refreshes counts" note is WRONG.)
 - **Tailoring gating = `objectList[i].visible`, and it's RECURSIVE.** Writing a choice makes the server recompute `visible` on dependent rows AND can populate a previously-empty option list on another choice (e.g. a controls-testing multiselect whose options appear only after audit areas are set). A single "TQs first, then the rest" pass misses the second wave. Fill choices in a **fixed-point loop** (write visible unanswered choices with options → re-read → repeat until none) BEFORE writing text/sign-offs. Treat a `reset*` valueKey as not-answered so a reset checkbox is retried once its options exist.
 - **Silent rejection:** UpdateProperty returns 200 even when rejected; signature is a `valueKey` starting with `reset` — `resetanswer` (single-choice, state 2) or `resetcheckbox` (multi-choice, state 3). `scripts.kc.was_rejected` keys on the `reset` prefix.
-- **KBA-502 is a ROLLUP, not a fill target.** It has exactly **one** fillable field (the `Comment`); everything else is read-through (pt5 linked / not-visible). The **IR/CR/RMM grid lives on the AUD-8xx program** (`.{AREA}.RelevantAssertion`), NOT on KBA-502. Do not try to write risk levels to KBA-502.
+- **KBA-502 OWNS the IR/CR/RMM/approach grid and is the WRITE target.** Write `collectionKey ".{AREA}.RelevantAssertion"` against **KBA-502's wpId**; the AUD-8xx program's grid is the DERIVED view — program-targeted writes land in a working copy the KBA-502-owned recompute discards on refresh. The grid is invisible to the bulk GET (`OverallAuditAreas[].childObjectList: []`) and to `inventory_form` (66/68 columns dropped) — write blind per the registry and verify via the diagnostics oracle. KBA-502's FinancialLevelRisks rows remain mostly pt5-linked (only `Comment` directly writable).
 - **`inventory_form` over-filters grid forms — read raw `result.collections`.** For grid-style forms (KBA-4xx / KBA-5xx, e.g. `.KBA400.Scoping`, KBA-401 `*Findings`/`*TQ`) `inventory_form` drops collections whose cells bind by `columnID` (empty `bindingKey`) and under-reports the fillable surface. Bypass it and read raw `result.collections`, targeting the INPUT collection.
-- **Reliability (measured PRE-FIX — discount it):** the 2026-05-29 injection pass across the 10 default NPO forms reported 551/555 visible-writable fields "stuck," 0 rejections. That run **verified by the immediate post-write GET**, which reads the uncommitted working copy → false state-3 positives; many of those "stuck" fields were never submitted and would have vanished on reload. Treat this stat as unreliable; the corrected oracle is submit → reload → diagnostics endpoint.
-
 ### Data import (dda.cchaxcess.com)
 
 Engagement TB/data import wizard. The **Map** step maps arbitrary file columns to CCH fields, so the import file format is flexible.
@@ -411,18 +410,17 @@ Engagement TB/data import wizard. The **Map** step maps arbitrary file columns t
 | Financial groups | `GET financialprep-api.cchaxcess.com/v1.0/FinancialGroup/{clientId}/{groupingListId}` | `scripts.reports.get_financial_groups` |
 | Grouped TB rows (paginated; full `balances[]` row schema) | `GET financialprep-api.cchaxcess.com/v1.0/financialTrialBalance/{clientId}/{financialListId}/trialbalance/{periodId}` | `endpoints/fp_trialbalance.json`; `scripts.groups.get_trialbalance_grouped_all` |
 
-**▶ FP trialbalance sign + key gotchas (2026-06-05).** The FP-API serves balances
+**▶ FP trialbalance sign + key gotchas.** The FP-API serves balances
 **credits-positive** — that is API-internal convention, NOT the TB import/export convention
 (debits positive; see `modules/import-tb-format.md`). Flip signs when building import files
 from API rows. And the subgroup key on a `balances[]` row is **`account.financialSubGroup`** —
-`account.subGroup` exists but is **silently null** (the NIN package bug). Full row schema:
+`account.subGroup` exists but is **silently null**. Full row schema:
 `endpoints/fp_trialbalance.json`.
 
-**▶ Two grouping-list endpoints — don't confuse them (AX-04).** `financialgrouptemplate/...`
+**▶ Two grouping-list endpoints — don't confuse them.** `financialgrouptemplate/...`
 feeds the report-creation picker (`reports.get_grouping_lists`). `financialList/{clientId}` is
 the authoritative inventory of lists that actually exist on the engagement
-(`groups.list_financial_lists`). To answer "does grouping list X exist?" use **`financialList`** —
-querying `financialgrouptemplate` led a session to wrongly conclude the Natural list didn't exist.
+(`groups.list_financial_lists`). To answer "does grouping list X exist?" use **`financialList`**.
 
 **JE type IDs are positional, not alphabetical:** `AJE=1, TJE=2, PAJE=3, RJE=4`. See `references/config/je_types.json`.
 
@@ -430,11 +428,11 @@ querying `financialgrouptemplate` led a session to wrongly conclude the Natural 
 
 **Reports land in Unfiled Reports.** Filing into a binder folder requires Move + Set-Index via WPM. The TB create's `reportIndex` parameter stamps the workpaper's index attribute but does NOT auto-file.
 
-**Report objectId for Move + Set-Index must be `tbreports/{integer_id}`, NOT `reports/{guid}`.** The integer id is the `id` field in the create response, or `documentId` in the WPM unfiled listing. Using `reports/{guid}` returns 200 on Move but is a silent no-op — the report stays in Unfiled. Confirmed 2026-05-28 on Kymera EBP.
+**Report objectId for Move + Set-Index must be `tbreports/{integer_id}`, NOT `reports/{guid}`.** The integer id is the `id` field in the create response, or `documentId` in the WPM unfiled listing. Using `reports/{guid}` returns 200 on Move but is a silent no-op — the report stays in Unfiled.
 
 **Token-triggered auth: install monkeypatch, then click "Trial Balance Report" button.** The create-report dialog triggers `GET /checktbreportlimit`, `GET /reporttypesandsettings`, `GET /tbreports/{clientId}`, and `GET /JournalEntryReport/{clientId}` with fresh tokens — all usable for subsequent XHR replays against workbench-api, WPM, and financialprep-api. Navigating to `/reports/{engId}/trialbalance/financial` + clicking the dialog button is the fastest token-refresh path for report work. Full page reloads (URL changes) wipe the monkeypatch.
 
-**Flat folder list via `/v1/NewEngagementView/folders/{clientId}`.** Returns the full folder skeleton compactly (~4KB for Kymera EBP). **The body is WRAPPED: `{engagementId, root: [...]}` — the folder array is under `root`** (rows carry `locationId`, `locationGuid`, `index`, `name`, `parentLocationId`, `children`; live-verified 2026-07-07 — the earlier "compact array" note was written from regex-on-raw-text, which masked the wrapper). The regex shortcut for locationIds still works on raw responseText and remains useful on the linked-tab transport, where `JSON.parse()` of the huge root-folder (`folderId=0`) CONTENTS endpoint times out CDP's 45s limit. Pattern: `"index"\s*:\s*"1100"[^{}]{0,400}"locationId"\s*:\s*"?(\d+)"?`.
+**Flat folder list via `/v1/NewEngagementView/folders/{clientId}`.** Returns the full folder skeleton compactly (~4KB). **The body is WRAPPED: `{engagementId, root: [...]}` — the folder array is under `root`** (rows carry `locationId`, `locationGuid`, `index`, `name`, `parentLocationId`, `children`). The regex shortcut for locationIds still works on raw responseText and remains useful on the linked-tab transport, where `JSON.parse()` of the huge root-folder (`folderId=0`) CONTENTS endpoint times out CDP's 45s limit. Pattern: `"index"\s*:\s*"1100"[^{}]{0,400}"locationId"\s*:\s*"?(\d+)"?`.
 
 ### Fund TB Setup (governmental / NFP only)
 
@@ -459,7 +457,7 @@ querying `financialgrouptemplate` led a session to wrongly conclude the Natural 
 
 **Body-bearing writes need `Content-Type: application/json`.** Captured headers pulled from a recent GET don't carry Content-Type; replaying through `XHR.setRequestHeader` without it returns 415. `build_xhr_call` AND `build_fetch_call` auto-inject Content-Type when a body is present and the header isn't already set. **The gap:** `build_batch_xhr` — the path EVERY KC form write goes through via `update_properties_sequential` — did NOT inject it, so every KC write returned **415** (now fixed). Only the single-call builders had it before; the batch builder was the silent hole. Relevant whenever hand-rolling XHR outside the fixed helpers.
 
-**The KC tab crashes on many sequential XHRs (AX-10).** Looping N per-call XHRs through the
+**The KC tab crashes on many sequential XHRs.** Looping N per-call XHRs through the
 `knowledgecoach.cchaxcess.com` tab (e.g. one PATCH per account assignment) reliably hangs it —
 `CDP Runtime.evaluate timed out after 45000ms`, forcing a reload. For any multi-write operation,
 build ONE in-page JS call that does the whole batch internally (e.g. `build_bulk_assign_js`,
@@ -468,10 +466,10 @@ group assignment must go through the batched helper, not a Python loop.
 
 ### Ordering rules (do not violate)
 
-1. **Set-Index only for genuinely NEW (null-index) forms.** Move PRESERVES the index (locationId stable — AX-14 confirmed live); it does NOT clear anything. A Set-Index after Move is needed only when the form arrived with a null index (e.g. just added), never to "restore" an index Move supposedly wiped.
+1. **Set-Index only for genuinely NEW (null-index) forms.** Move PRESERVES the index (locationId stable); it does NOT clear anything. A Set-Index after Move is needed only when the form arrived with a null index (e.g. just added), never to "restore" an index Move supposedly wiped.
 2. **PUT for Set-Index, not POST.** POST returns 200 but is a silent no-op.
 3. **Sequential writes to one form, not parallel.** Concurrent UpdateProperty POSTs to the same form drop writes (server-side race).
-4. **Submit after batch writes — PER-WORKPAPER, and submit COMMITS (persistence), not just counts.** Writes sit in a pending working copy; `POST /api/Workpaper/submit` `{binderId, workpaperId:"<wpId>"}` is what actually persists them, and a reload discards anything unsubmitted. An EMPTY workpaperId ("submit all pending in binder") silently DISCARDS pending writes on other forms — never use it (2026-07-08). Even a scoped submit silently drops ~30–50% of writes, so always follow with verify-by-read + retry (field-conventions.md §5 3a). (Submit also refreshes the engagement-view diagnostic/missing-form counts, but that is secondary — the primary job is persistence.)
+4. **Submit after batch writes — PER-WORKPAPER, and submit COMMITS (persistence), not just counts.** Writes sit in a pending working copy; `POST /api/Workpaper/submit` `{binderId, workpaperId:"<wpId>"}` is what actually persists them, and a reload discards anything unsubmitted. An EMPTY workpaperId ("submit all pending in binder") silently DISCARDS pending writes on other forms — never use it. Even a scoped submit silently drops ~30–50% of writes, so always follow with verify-by-read + retry (field-conventions.md §5 3a). (Submit also refreshes the engagement-view diagnostic/missing-form counts, but that is secondary — the primary job is persistence.)
 5. **Answer TQs before dependent descriptions.** Writing `*TQ = No` after populating that section's descriptions resets the descriptions to state=2. See "TQ-cascade" below.
 
 ### Pseudo-folder IDs (WPM)
@@ -585,7 +583,7 @@ When a leadsheet is moved to a parent folder containing a sub-folder whose index
 Engagement view: https://engagement.cchaxcess.com/en-US/engagement/{clientId}/engagementview/{engagementId}
 Reports:         https://engagement.cchaxcess.com/en-US/engagement/{clientId}/reports/{engagementId}/{reportType}
 TB report:       https://engagement.cchaxcess.com/en-US/engagement/{clientId}/tbreports/{reportGuid}/period/{engagementId}/subsidiaryParentId/0
-                 (individual TB reports ARE deep-linkable — by GUID, never the integer id; folder depth irrelevant. Live 2026-06-04.)
+                 (individual TB reports ARE deep-linkable — by GUID, never the integer id; folder depth irrelevant.)
 System leadsheet: https://engagement.cchaxcess.com/en-US/engagement/{clientId}/reports/{engagementId}/leadsheets/{financialGroupId}
 Recycle Bin:     https://engagement.cchaxcess.com/en-US/engagement/{clientId}/wpRecycleBin
 KC form:         https://knowledgecoach.cchaxcess.com/binder/{engagementGuid}/workpaper/{workpaperId}
@@ -603,7 +601,7 @@ The `code` is single-use. Never replay a callback URL. To navigate KC programmat
 
 ## Relationship to the published Wolters Kluwer "Audit Engagement API"
 
-Wolters Kluwer publishes a developer portal at `developers.cchaxcess.com` that lists an **Audit Engagement API v1**. It is **NOT the same surface this skill uses.** Verified 2026-05-24:
+Wolters Kluwer publishes a developer portal at `developers.cchaxcess.com` that lists an **Audit Engagement API v1**. It is **NOT the same surface this skill uses.**
 
 | | This skill captures | WK publishes |
 |---|---|---|
@@ -649,7 +647,7 @@ Two annotation surfaces, two transports (matrix above): **financialprep-api take
 headers from the engagement tab only**. All calls go out as XHR. **Every write requires a
 page refresh to appear in the UI.** No triple-fire (single call).
 
-**The mirror is ONE-DIRECTIONAL (live-confirmed 2026-06-04):** FP-API bubbles/tickmarks
+**The mirror is ONE-DIRECTIONAL:** FP-API bubbles/tickmarks
 (written on the system-lead surface) render read-only on TB reports (`cpComments`/
 `cpTickMarks`); workbench Remarks-column values (REF, Notes) appear NOWHERE but the TB
 report. Two parallel protocols, routed by which surface the user is on:
@@ -680,7 +678,7 @@ Three native annotation types: top-level comment box, inline account comments, t
 ### workbench-api.cchaxcess.com — TB report REF/Notes (Remarks_1/Remarks_2)
 
 Remarks-column annotations on TB reports. Separate API; Remarks-column values live on the
-TB report ONLY (one-directional mirror — see above). Firm standard (locked 2026-07-09) is
+TB report ONLY (one-directional mirror — see above). Firm standard is
 TWO Remarks columns per TB-report leadsheet: Remarks_1 named "REF" (cross-refs/index/imm
 tags), Remarks_2 named "Notes" (free notes). **Step-0 preflight is mandatory**: the report
 must HAVE the Remarks column(s) it needs (`tbreportedit` GET → `reportFormat.columns`; add
@@ -695,7 +693,7 @@ Scripts: `scripts.leadsheet.tbreport_*`, `scripts.reports.add_remarks_column`; m
 | Create/edit REF or Notes | POST | `/v1/trialbalancereportcomment/{clientId}/{reportId}` | `endpoints/wb_tbreportcomment.json` |
 | Delete REF or Notes | DELETE | `/v1/trialbalancereportcomment/{clientId}/{reportId}/{reportCommentReferenceId}/{columnId}` | `endpoints/wb_tbreportcomment.json` |
 
-- `columnId` is positional and tied to the column's `Remarks_{N}` id — `Remarks_1` → 1, `Remarks_2` → 2. RENAME-PROOF (heading text irrelevant; live-captured 2026-06-04).
+- `columnId` is positional and tied to the column's `Remarks_{N}` id — `Remarks_1` → 1, `Remarks_2` → 2. RENAME-PROOF (heading text irrelevant).
 - Row identity from the ag-grid row node — no API call (`scripts.leadsheet.tbreport_row_probe_js`). `referenceType` is BY ROW LEVEL: Fund row → `Fund` (+`referenceGuid` REQUIRED); group-total row → `FinancialGroup`; subgroup row → `FinancialSubGroup` (both omit `referenceGuid`).
 - POST returns `{"reportCommentReferenceId": <int>}` — note the field name differs from FP-API's `commentReferenceId`.
 

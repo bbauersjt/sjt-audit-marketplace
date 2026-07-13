@@ -17,7 +17,7 @@ Every distinct thing the engine must know to answer the planning + concluding fo
 ## CORE — every engagement, every type
 
 ### 1. Engagement profile cluster — [D] (firm / engagement-type)
-new vs recurring · GAGAS (government: Yes) · Single Audit (if federal awards) · integrated audit (No) · test controls operating effectiveness (No) · rely on prior-year control evidence (No) · KAM (No) · EQ/concurring review (per policy) · nonattest = FS prep (Yes) · SAS-146/SQMS early-adopt (No) · interim substantive · CAATs · access granted to outside parties (federal: often Yes) · multiple opinion units/components.
+new vs recurring · GAGAS (government: Yes) · Single Audit (if federal awards) · integrated audit (No) · **test controls operating effectiveness — [X]→AUD-100** (read RA's live answer; No/substantive only if RA is silent — do not silently auto-fill) · rely on prior-year control evidence (No) · KAM (No) · EQ/concurring review (per policy) · nonattest = FS prep (Yes) · SAS-146/SQMS early-adopt (No) · interim substantive · CAATs · access granted to outside parties (federal: often Yes) · multiple opinion units/components.
 
 ### 2. Entity & client facts — [L]
 legal name · location · contact block · entity type/legal form · reporting framework · FYE/FS date · # employees · reporting-entity composition (component units in/out) · funds / opinion units · accounting & IT system · funding sources / federal awards present.

@@ -14,8 +14,6 @@ calls:
   - scripts.wpm.folder_get      # read the target's CURRENT display name
   - scripts.wpm_replace.build_replace_version_js
 status: validated
-validated_on:
-  - "Coop / Axcess Blind Test 03 (client 100930, eng 393137, documentId 4097135) 2026-06-19 — 2 fail + 1 success"
 ---
 # Module — Replace Workpaper (in-place new version)
 
@@ -66,7 +64,7 @@ Re-`folder_get`; confirm the latestVersionNumber incremented. (Success body is e
 - **CORS** → use in-page XHR (not fetch) for the cross-origin engagement→WPM PUT.
 
 ## No-hard-delete relationship
-Not a delete (fires no DELETE call — not the Kymera hazard), but destructive-in-spirit. Allowed, but
+Not a delete (fires no DELETE call), but destructive-in-spirit. Allowed, but
 ONLY behind the consent gate above.
 
 <!-- END -->

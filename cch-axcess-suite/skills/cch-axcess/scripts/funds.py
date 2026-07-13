@@ -219,11 +219,8 @@ def unassign_account(
 
 
 # --- DELETE (single-row, dependency-aware) ---------------------------------
-# Restored 2026-06-03: these functions were referenced by manage-funds.md and
-# the endpoint specs (validated live 2026-05-25, clientId 90773) but were
-# missing from this file (s3 handoff P1). Fund-accounting DELETEs are the ONE
-# sanctioned hard-delete surface in this skill — see the HARD-DELETE POLICY in
-# wpm.py; do not extend the pattern elsewhere.
+# Fund-accounting DELETEs are the ONE sanctioned hard-delete surface in this
+# skill — see the HARD-DELETE POLICY in wpm.py; do not extend the pattern elsewhere.
 #
 # Delete order when draining everything: Funds first, then FundSubTypes, then
 # FundTypes — dependents block parents (400 + {messages:[...]}).
@@ -394,7 +391,7 @@ def split_assigned(get_body) -> tuple[list[dict], list[dict]]:
 
 
 def check_unfunded_accounts(get_body) -> dict:
-    """Unfunded-accounts guard (AX-33). On a fund-accounting engagement, an account
+    """Unfunded-accounts guard. On a fund-accounting engagement, an account
     assigned to NO fund is **silently dropped** from every fund-based statement/report —
     Axcess raises no error, the account just vanishes from the presentation. After fund
     setup / assignment, run this on the fundaccountmap GET and surface any unassigned
@@ -415,13 +412,12 @@ def check_unfunded_accounts(get_body) -> dict:
     return {"ok": True, "unfunded": [], "reason": "every account is assigned to a fund"}
 
 
-# --- AX-26 preflight: placeholder-TB halt ---------------------------------------
+# --- preflight: placeholder-TB halt ---------------------------------------------
 def preflight_account_map(accounts: list[dict]) -> dict:
     """Halt-check before ANY account-assignment step (funds OR groups).
 
-    BT3 incident: B2/B3 ran fund/group assignments against a 1-dummy-account map
-    ("0 Delete") without warning. Rule: if the map looks like a placeholder TB,
-    STOP and prompt the user to import the real TB first.
+    Rule: if the map looks like a placeholder TB, STOP and prompt the user to
+    import the real TB first.
 
     Returns {"ok": bool, "reason": str, "account_count": int}.
     Callers MUST prompt the user (do not proceed) when ok=False.
@@ -438,19 +434,19 @@ def preflight_account_map(accounts: list[dict]) -> dict:
         return {"ok": False, "account_count": n,
                 "reason": f"Account map has only {n} account(s) and at least one looks like a placeholder "
                           "('Delete'/number '0'). This is a pre-import dummy TB — prompt the user: "
-                          "import the real TB before running assignments (BT3 incident rule)."}
+                          "import the real TB before running assignments."}
     return {"ok": True, "account_count": n, "reason": "account map looks real"}
 
 
 def check_fund_references(account_rows, defined_funds, fund_id_key="fundId", fund_range=None):
-    """Referential-integrity preflight for fund assignment (AX-31).
+    """Referential-integrity preflight for fund assignment.
 
     Halts before assigning accounts to funds when an account references a fund that is
     NOT in the engagement's defined Fund hierarchy (an orphan / out-of-range fund — e.g.
     fund 999 when only 100-500 are defined). The whole-list Fund PUT and the account-fund
     assignment would otherwise accept it silently and mis-map the account (no native
-    error). This is the AX-31 gap fix: preflight_account_map catches an EMPTY/placeholder
-    map; this catches a real map that points accounts at undefined funds.
+    error). preflight_account_map catches an EMPTY/placeholder map; this catches a
+    real map that points accounts at undefined funds.
 
     account_rows: account-fund map rows; each carries a fund id under `fund_id_key`, or
         nested under `fund` ({'id'|'fundId'}). Rows with NO fund id are Unassigned and

@@ -43,7 +43,7 @@ Root: any subsequent events? **No** → procedures still documented (discuss wit
 ## Cross-references for specific areas
 
 ### Substantive-only justification → `approach-decision.md`
-The reasoning model, the two-question test, the justification pattern, and the cash model live in `approach-decision.md`. Key rule: the justification states two separate points — substantive adequacy AND why analytics do not add — never conflated.
+The reasoning model, the two-question test, the justification pattern, and the cash model live in `approach-decision.md`. Key rule: the justification expresses the **coverage** — that the pool of procedures already addresses every way the area could be materially misstated, leaving no reasonable likelihood of a remaining material misstatement — **not the tool.** It is never framed as "why analytics do not add"; cash is justified because the substantive work covers every way cash could go wrong, not because analytics add little.
 
 ### Related party → `section-library.md` (Related Party Transactions)
 Related parties usually exist; not a simple default. The branches — RPTs identified and where documented · arms-length assertion (and whether tested/substantiated) · previously-unidentified RPTs noted during the audit · disclosure adequacy — and the distilled answer are captured in `section-library.md` under Related Party Transactions.

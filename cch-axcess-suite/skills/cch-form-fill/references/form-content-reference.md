@@ -2,7 +2,7 @@
 
 _The resident, always-on layer (~3–4K tokens). Load this for the whole engagement; it is what lets the engine, while grinding ~20 forms / hundreds of steps, recognize "this belongs on another form — and which one."_
 
-Built 2026-06-25 from a live capture of all 4 standard binders (NPO / Govt-Single-Audit / Commercial / EBP), 98 distinct forms.
+Covers all 4 standard binders (NPO / Govt-Single-Audit / Commercial / EBP), 98 distinct forms.
 
 ---
 
@@ -30,7 +30,7 @@ Default to an inline answer only when no owner matches.
 ```
 
 ## 1. Disposition codes
-**Write precondition:** only apply this cascade to WRITE fields when `SKILL.md` Operating model steps 1–3 are complete for THIS engagement (entity type determined, binder read, gather/confirm batch surfaced) — or a valid `engagements/<client>/form-fill-context.md` gather artifact exists for this engagement (fleet mode; see `SKILL.md`). If you arrived here from a lookup or are otherwise uninitialized, stop and run `SKILL.md` step 1 first (or, inside a fleet section bot, request the artifact from `0200-planning-risk` and mark the fill pending) — never fill from a lookup-only state.
+**Write precondition:** only apply this cascade to WRITE fields when `SKILL.md` Operating model steps 1–3 are complete for THIS engagement (entity type determined, binder read, gather/confirm batch surfaced) — or a valid `engagements/<client>/form-fill-context.md` gather artifact exists for this engagement (see `SKILL.md`). If you arrived here from a lookup or are otherwise uninitialized, stop and run `SKILL.md` step 1 first — never fill from a lookup-only state.
 
 **Answer cascade — strict order, take the first rung that hits. ~75% of this job is generic answers to boilerplate, so default to FILLING:**
 1. **[X] cross-reference** — topic owned by another form (§2) → reference it.
@@ -86,7 +86,7 @@ When a step's topic matches a row here and you are NOT on the owning form, cross
 | **EBP — plan tax status** | "tax status", "determination letter", "Form 5500", "qualification" | **AUD-810** | |
 | **EBP — §103(a)(3)(C) limited scope** | "limited scope", "certification", "103(a)(3)(C)", "certified investments" | **COR-201A** (eng letter) + **AUD-802B** (certified investments) | |
 
-## 2a. False-positive guard — keyword ≠ cross-reference (validated 2026-06-25 cold test)
+## 2a. False-positive guard — keyword ≠ cross-reference
 
 A topic-map (§2) cross-ref fires ONLY when the step's **section-key/context** matches the topic's domain AND this form is **not itself the topic's owner**. An explicit in-text form-ID (`r`) is always reliable — emit it. Do NOT route on an incidental keyword:
 
@@ -116,14 +116,12 @@ CCH reuses AUD/AID/COR/KBA numbers across entity titles. **Never assume a number
 | Benefit payments | — | — | — | AUD-809 |
 | Investments | AUD-802 | AUD-802 | AUD-802A (802B = derivatives/hedging) | AUD-802A non-certified/ERISA / AUD-802B certified |
 
-*Verified/corrected 2026-07-07 against the live KC title library (GetWorkpaperListForAddForms:
-GOV.2025.1, NFP.2026.1, COM.2025.1, EBP.2025.1) — the earlier rows carried six wrong/unresolved
-cells (JE Commercial+EBP, Govt equity, EBP+Commercial FV, Commitments Govt/NPO/EBP). Numbers
-shift on title re-versions: reconcile with `cch-risk-assessment/scoping/area-map-by-title.md`
-(same live verification) and re-pull when editions change.*
+*Numbers shift on title re-versions: reconcile with `cch-risk-assessment/scoping/area-map-by-title.md`
+and re-pull when editions change. Resolve against the live KC title library
+(GetWorkpaperListForAddForms — GOV.2025.1, NFP.2026.1, COM.2025.1, EBP.2025.1).*
 
 **Collision watch — the wrong-pull traps (resolve by entity title every time):**
-- **AUD-813** = Journal Entries on Govt/NPO concluding, but = related-party / party-in-interest on **EBP**.
+- **AUD-813** = Journal Entries on Govt concluding (NPO JE is AUD-816), but = related-party / party-in-interest on **EBP**.
 - **AUD-814** = Related Party on Govt, but = Net Assets on **NPO** (and AUD-814A = participant data on EBP).
 - **AUD-817** = related party on NPO, = **VIE on Commercial**, = commitments & contingencies on **EBP**.
 - **AUD-810** = income taxes on Commercial, but = plan tax status on **EBP**.
@@ -132,6 +130,15 @@ shift on title re-versions: reconcile with `cch-risk-assessment/scoping/area-map
 - **AUD-803** = ASC-606 revenue on Commercial, but = contributions gate on **EBP**.
 
 Cells marked "—", "n/a", "(folded; confirm)" are not separately captured for that title — the program is folded elsewhere or does not apply; confirm via `GetBinder` before referencing.
+
+**Construction (CNS) — read the Commercial column with a numbering shift.** CNS has no
+column of its own above because it tracks Commercial through **Fair Value (AUD-816)** — related
+party (815), JE (814), investments (802A), income tax (810), equity (812), etc. are the Commercial
+numbers. **From AUD-817 the suffixes shift +1:** AUD-817 on CNS is **Uncompleted/Completed
+Contracts** (the CNS signature area, not VIE), VIE moves to 818, and share-based
+payments/commitments/estimates/concentrations/business-combinations each land one number above their
+Commercial suffix. Full map + the contract-accounting delta in `type-cns.md`; source of truth
+`cch-risk-assessment/scoping/area-map-by-title.md`. Resolve every CNS form via `GetBinder`.
 
 ## 3. Backbone auto-references — every AUD-8xx substantive program
 

@@ -4,7 +4,7 @@
 **dataBindingKey:** `INVEST`
 **Default-applies-to:** all six audit types (ALG, ASB, CNS, EBP, HOA, NPO).
 
-> **Captured live 2026-05-21 from APNM 2025 NPO.** 115 library steps, 39 tailoring questions, 11 audit objectives. Far richer than `cash.md` — this program covers debt/equity securities, alt investments (equity method, joint ventures, derivatives, asset-backed), digital/crypto assets, programmatic investments, investment pools, NPO-specific contributed investments and restricted endowments.
+> 115 library steps, 39 tailoring questions, 11 audit objectives. Far richer than `cash.md` — this program covers debt/equity securities, alt investments (equity method, joint ventures, derivatives, asset-backed), digital/crypto assets, programmatic investments, investment pools, NPO-specific contributed investments and restricted endowments.
 
 ## How a program ties together
 
@@ -165,24 +165,24 @@ Top-level visible (always shown). Gated questions (visible: false) appear when a
 
 ## Default Step Selection (firm defaults — TBD)
 
-> **Not yet locked.** APNM 2025's AUD-802 is unpopulated. Firm default for NPO investments needs a working session against an actively-tailored engagement to capture which subset the firm treats as universally-applied. Pending capture.
+> **Not yet locked.** Firm default for NPO investments needs a working session against an actively-tailored engagement to capture which subset the firm treats as universally-applied. Pending capture.
 
-**Starting baseline candidates for NPO with marketable securities held by third-party custodian** (e.g., APNM's RBC accounts + ACF beneficial interest):
+**Starting baseline candidates for NPO with marketable securities held by third-party custodian:**
 
 | Idx | Step | Why |
 |---|---|---|
 | 0 | Debt and Equity Investments – Detailed Analysis | Core analytical detail of investment activity |
 | 1 | Arithmetical Accuracy | Cross-check totals from broker stmts |
 | 2 | Opening Balances | Roll-forward tie-out |
-| 3 | Reconciliations of Stmts/Data Feeds from Custodians | RBC stmts tie to GL |
-| 6 | Investments Held by Third Parties | Confirmations from RBC + ACF |
+| 3 | Reconciliations of Stmts/Data Feeds from Custodians | Custodian stmts tie to GL |
+| 6 | Investments Held by Third Parties | Confirmations from custodians |
 | 12 | Bank, Broker, or Custodian Reports | Substantive reliance on broker statements |
 | 15 | Realized and Unrealized Gains/Losses | Income statement tie-in |
 | 16 | Investment Income | Dividends + interest tie-in |
 | 17 | Classification of Securities | Net asset class allocation |
 | 86 | Contributed Investments - Donor Correspondence | If donated securities present |
 | 87 | Contributed Investments - Minutes | Board-level documentation |
-| 91/92 | Restricted Endowments | If Q30 = Yes (verify ACF account treatment) |
+| 91/92 | Restricted Endowments | If Q30 = Yes (verify endowment account treatment) |
 | 109 | Fraud Awareness | Universal |
 | 111 | Agree to Support | Tie to FS |
 | 112 | Information To Be Used As Audit Evidence | AU-C 500 evaluation |
@@ -193,7 +193,7 @@ Plus FV-side coverage from AUD-818 if Q35 (FairValueRules) = Yes.
 
 ## Audit Approach (PlannedAuditApproach)
 
-Same 3-checkbox model as Cash (`COMBINED` / `ANALYTICAL` / `INDEPTH`). For RBC-held marketable securities under NPO with CR=MAX: `INDEPTH` on all applicable assertions, plus `ANALYTICAL` if Q38=Yes and step 114 is added.
+Same 3-checkbox model as Cash (`COMBINED` / `ANALYTICAL` / `INDEPTH`). For custodian-held marketable securities under NPO with CR=MAX: `INDEPTH` on all applicable assertions, plus `ANALYTICAL` if Q38=Yes and step 114 is added.
 
 ## Platform mechanics
 
@@ -206,9 +206,9 @@ the values, and `cch-axcess` executes. Same pattern as `cash.md`, swap `.CASH.` 
 
 ## Title-variant: EBP — AUD-802A Audit Program Investments (Non-Certified / ERISA Plan)
 
-> **Captured live 2026-05-21 from Kymera Physicians 401k Plan (EBP title `1b32bc1a-e119-4cc9-91fe-b2cb22f4e966`).** Same dataBindingKey `INVEST` as NFP, but the EBP variant of this program is materially different. Treat as a separate step library. Within CCH the form is labeled **AUD-802A** (vs NFP's AUD-802), distinguishing it from **AUD-802B** which covers limited-scope / certified plans.
+> Same dataBindingKey `INVEST` as NFP, but the EBP variant of this program is materially different. Treat as a separate step library. Within CCH the form is labeled **AUD-802A** (vs NFP's AUD-802), distinguishing it from **AUD-802B** which covers limited-scope / certified plans.
 
-**EBP also has a related form, AUD-802B Audit Program Investments (Certified)**, with dataBindingKey `LIMITED`. AUD-802B covers ERISA Section 103(a)(3)(C) limited-scope audits where the trustee provides a certified investment statement. Capture deferred — most Kymera-style 401k engagements use AUD-802B in practice. Add when an active limited-scope EBP engagement is opened.
+**EBP also has a related form, AUD-802B Audit Program Investments (Certified)**, with dataBindingKey `LIMITED`. AUD-802B covers ERISA Section 103(a)(3)(C) limited-scope audits where the trustee provides a certified investment statement. Capture deferred — most 401k engagements use AUD-802B in practice. Add when an active limited-scope EBP engagement is opened.
 
 ### EBP form anatomy
 
@@ -224,7 +224,7 @@ Same 17-collection schema as NFP. Counts differ:
 
 ### EBP Primary Audit Objectives (8)
 
-Captured 2026-05-21; values per `.INVEST.AuditObjective` rows 0–7. Distinct from NFP's 11 — EBP omits the net-asset-class reclassification objectives and the donor-restriction-compliance objectives, adds plan-document compliance.
+Values per `.INVEST.AuditObjective` rows 0–7. Distinct from NFP's 11 — EBP omits the net-asset-class reclassification objectives and the donor-restriction-compliance objectives, adds plan-document compliance.
 
 ### EBP Tailoring Questions (17)
 
@@ -311,10 +311,10 @@ When the plan is audited under ERISA 103(a)(3)(C) (the former "limited scope" ex
 
 ## TODO (deferred capture)
 
-- [ ] **NFP**: Apply firm-default step set against APNM, confirm which steps are universally needed for NPO investments, lock the table above.
+- [ ] **NFP**: Apply firm-default step set against a live NPO engagement, confirm which steps are universally needed for NPO investments, lock the table above.
 - [ ] **NFP**: Per-step typical workpaper references (analog of Cash 1000-series → Investments are in 1100-series workpaper section).
 - [ ] **EBP**: Capture AUD-802B (LIMITED — Certified) on a real limited-scope engagement.
-- [ ] **EBP**: Lock firm-default step set after tailoring against Kymera or another active 401k engagement.
+- [ ] **EBP**: Lock firm-default step set after tailoring against an active 401k engagement.
 - [ ] **ASB**: Capture commercial-title variant of AUD-802 (separate session).
 - [ ] **ALG**: Capture governmental-title variant of AUD-802 (separate session).
 - [ ] Test sub-step inclusion edge cases (parent without children, child without parent).

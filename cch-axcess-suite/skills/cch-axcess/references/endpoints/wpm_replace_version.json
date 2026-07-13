@@ -21,6 +21,5 @@
     "extension_note": "Display name carries no extension; the file does. Success matched base 'blank-wp-2001 1' to display 'blank-wp-2001 1' with the file as '.xlsx' — so match is on base name; keep the file's real extension."
   },
   "prereq": "Read the current display name from WPM metadata first (wpm.folder_get on the workpaper's folder -> row.name for the documentId). Build the upload File with that exact base name.",
-  "no_hard_delete": "This is an OVERWRITE (in-place new version), NOT a delete — fires no DELETE call (not the Kymera hazard). It is destructive-in-spirit (prior content survives only in CCH version history). file-io.md's DEFAULT remains soft-delete->evict->claim; offer this native path explicitly when the user wants a true in-place version.",
-  "validated_on": "2026-06-19 Coop / Axcess Blind Test 03 (client 100930, eng 393137, documentId 4097135) — 2 fail states + 1 success captured live."
+  "no_hard_delete": "This is an OVERWRITE (in-place new version), NOT a delete — fires no DELETE call. It is destructive-in-spirit (prior content survives only in CCH version history). file-io.md's DEFAULT remains soft-delete->evict->claim; offer this native path explicitly when the user wants a true in-place version."
 }

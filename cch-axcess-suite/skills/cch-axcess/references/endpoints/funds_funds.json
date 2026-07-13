@@ -17,7 +17,7 @@
       "method": "DELETE",
       "path": "/v1/Fund/{clientId}/{fundId}",
       "script_function": "scripts.funds.delete_fund(client_id, fund_id, headers)",
-      "notes": "No eligibility pre-flight - assigned accounts cascade to Unassigned. Validated live 2026-05-25."
+      "notes": "No eligibility pre-flight - assigned accounts cascade to Unassigned."
     }
   },
   "headers_required": [

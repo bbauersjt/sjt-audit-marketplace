@@ -46,10 +46,6 @@ ASB→Commercial, HOA→Commercial, CNS→Construction, EBP→Employee Benefit P
 
 ## Status
 
-Last verified against cch-axcess AX-37 — 2026-07-07.
-
-Rebuilt 2026-05-30 around the parse-live cascade; SKILL.md re-gated 2026-06 to the axcess Step-0 dispatcher pattern.
-
 | Component | Status |
 |---|---|
 | SKILL.md | Gated dispatcher (Step 0: load cch-axcess · intake · materiality · significance) + cascade spine |
@@ -58,29 +54,29 @@ Rebuilt 2026-05-30 around the parse-live cascade; SKILL.md re-gated 2026-06 to t
 | scoping/area-map-by-title.md | Per-title program map (catalog-derived) |
 | references/cascade/aud-100.md | Methodology solid; live option lists per engagement |
 | references/cascade/kba-400.md | The six scoping options confirmed live |
-| references/cascade/kba-502.md | **Writable surface verified — IR/CR/RMM/approach write to the AUD-8xx program; KBA-502 read-through** |
+| references/cascade/kba-502.md | **KBA-502 IS the IR/CR/RMM/approach write target; program grids derived** |
 | references/risk-framework.md | Shared-collection reframe; KBA-301/503 added |
-| references/cch-handoff.md | Cascade-ordered handoff examples; names the AUD-8xx program (not KBA-502) |
+| references/cch-handoff.md | Cascade-ordered handoff examples; names KBA-502 for IR/CR/RMM writes (programs derived) |
 | defaults/{6}.md | IR starting points; title mapping noted |
 | programs/cash.md + _conventions.md | Template + universal conventions (mechanics deferred to cch-axcess) |
 | programs/{other areas} | Stubs — incremental, captured one at a time |
 
 ## Open items
 
-**Verified 2026-05-30 (live NFP capture):**
-1. ✓ **KBA-502 writable surface** — KBA-502 has no per-assertion grid; IR/CR/RMM/approach write to the **AUD-8xx program**. KBA-502 is a read-through summary (FS-level risks only).
+1. ✓ **KBA-502 writable surface.** KBA-502 OWNS the per-assertion IR/CR/RMM/approach
+   grid and is the WRITE target (collectionKey `.{AREA}.RelevantAssertion` against **KBA-502's wpId**); the
+   AUD-8xx program grid is DERIVED/read-through — program-targeted writes land in a working copy the
+   KBA-502-owned recompute discards on refresh. The bulk GET doesn't embed the RelevantAssertion child rows
+   (`childObjectList: []`) and `inventory_form` over-filters the form.
 2. ✓ **KBA-400's six scoping options** — per-area scoping row + relevant assertions selection (mechanics in cch-axcess).
+4. ✓ **Durable write pattern** — per-area writes → per-workpaper submit (KBA-502's wpId) → refresh before
+   the next area, from a parked non-target tab; verify via refresh → GetWorkpaperDiagnostics (never the
+   in-session echo). propertyType-5
+   (`…/ProgramSteps`, `…/plannedauditapproach`) stays linked/never-write; its "Unaddressed" diagnostics
+   resolve via program step-linkage/sign-off at section fan-out.
 
 **Still open:**
 3. **Firm-tunable significance parameters** — performance-materiality %, clearly-trivial %, the house always-significant list.
-4. **Program-form `RelevantAssertion` re-confirm** — read a live AUD-8xx once added (via cch-axcess) to lock the property keys + N/A behavior.
-5. **Write-path validation** — confirm the cascade write loop drives KBA-400 cleanly end to end.
-
-## Provenance
-
-- Risk model + 6 assertions + RMM matrix + cash program: APNM 2025 NFP (KBA-502 + AUD-801), 2026-05-20.
-- Per-title area/program map: `cch-axcess` rich form catalog, 2026-05-30.
-- IR defaults: six PPC PCAS Inherent Risk workbooks (vintage 2024).
 
 ## Sibling skills
 

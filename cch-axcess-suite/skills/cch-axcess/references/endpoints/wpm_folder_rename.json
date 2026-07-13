@@ -19,6 +19,5 @@
     "PUT/PATCH on /v1/NewEngagementView/folder/{locationId} return 405; PUT /v1/Documents/{clientId}/{locId} returns 500 (folders are not Documents).",
     "folderName must NOT embed the index prefix — the binder UI renders folderIndex and folderName separately ('01 | 01 Front of File' double-index bug)."
   ],
-  "captured": "2026-06-03 — Properties-dialog monkeypatch, Coop playground binder; 24 folders batch-renamed at 200 from KC tab",
   "script": "scripts.wpm.rename_folder"
 }

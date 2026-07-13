@@ -34,7 +34,7 @@ Participant data testing (AUD-814A-D by plan type) · benefit payments (AUD-809)
 Under a §103(a)(3)(C) (ERISA limited-scope) election, certified investment information is **not audited** (certified by a qualified bank/insurer) → AUD-802B, certified-investments path, and the ERISA-§103(a)(3)(C) opinion (RPT-097x series) + COR-803C certification + COR-901A rep letter + COR-201A engagement letter. Full-scope → AUD-802A and standard opinion. This election reshapes the investment approach and the report — capture it in the plan profile.
 
 ### 7. AID-201 — don't add it unless AUD-100 demands it; and there's NO clean N/A shortcut inside
-Two lessons from the first EBP run (SFRC 401k 0100, 2026-07-08; refined by the read-only diagnosis pass):
+Two lessons on AID-201:
 
 **(a) The right N/A answer is to NOT ADD the form.** AID-201 is add-gated by AUD-100's
 `OtherServices` tailoring question. On a no-nonattest engagement, KC's design is that the form is

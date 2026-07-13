@@ -144,7 +144,7 @@ def create_financial_list(client_id: int, number: str, name: str, headers: dict)
     """JS for: POST /v1.0/financialList
 
     Creates a new grouping list. The server returns the new id directly in the
-    response body as {"id": <int>} (no re-GET needed; confirmed 2026-05-31).
+    response body as {"id": <int>} (no re-GET needed).
     Body uses `number` for the index field, not `index`.
 
     ⚠️ `number` must be DIGITS ONLY — non-numeric (e.g. 'ZZ') -> 400
@@ -165,8 +165,7 @@ def create_financial_group(client_id: int, financial_list_id: int, index: str, n
     Creates a new group inside a financialList. Use list_group_account_types
     or config/group_account_types.json to resolve type+classification IDs.
 
-    ANCHOR RULE (corrected & live-captured 2026-05-30 — the old "financialGroupId:0
-    always" was WRONG):
+    ANCHOR RULE:
       `financialGroupId` on this POST is an INSERT-AFTER ANCHOR, not a flag.
         - anchor_group_id = 0  -> ONLY valid for the first group into an EMPTY list.
         - anchor_group_id > 0  -> the PRECEDING group's financialGroupId; the new
@@ -208,9 +207,9 @@ def update_financial_group(client_id: int, financial_list_id: int, financial_gro
                            anchor_group_id: int, headers: dict, position: int = 1) -> str:
     """JS for: PUT /v1.0/FinancialGroup — edit (rename / reclassify / re-index) an EXISTING group.
 
-    CORRECTED & LIVE-VERIFIED 2026-05-31: editing a group is a **PUT**, NOT a POST.
-    (A POST with a non-zero financialGroupId does NOT update — it CREATES a
-    duplicate group anchored after that id; the old implementation was wrong.)
+    Editing a group is a **PUT**, NOT a POST. (A POST with a non-zero
+    financialGroupId does NOT update — it CREATES a duplicate group anchored
+    after that id.)
 
     The PUT requires, beyond the edited fields:
       - the full account-type trio: `accountType` STRING (resolved here from
@@ -268,9 +267,7 @@ def assign_account_to_group(client_id: int, account_row: dict, target_group: dic
     the group. If you need to build the body from minimal inputs, use
     build_patch_body() below.
 
-    VERIFIED 2026-05-30: this PATCH WORKS and sticks on replay. The earlier
-    "silent no-op" warning was a FALSE ALARM caused by a read-back bug — the
-    new group reads back at `row.account.group`, NOT top-level `row.group`.
+    The new group reads back at `row.account.group`, NOT top-level `row.group`.
     To verify an assignment, re-GET the grouped TB and check
     `row.account.group.financialGroupId`.
 
@@ -292,11 +289,10 @@ def build_patch_body(account_id: int, client_id: int, financial_list_id: int, pe
                      account_name: str, account_number: str, target_group: dict) -> dict:
     """Assemble the PATCH body for assign_account_to_group.
 
-    AX-26: `target_group` MUST be the FULL group row from a FRESH
+    `target_group` MUST be the FULL group row from a FRESH
     list_financial_groups GET (window.__groups) — including the UUID `id` and
     `engagementFinancialGroupMapId`. The endpoint 400s "Financial Group does
-    not exist" without them (BT3 B3), and group UUIDs CHURN on TB import
-    (BT3 incident: 35/42 then 7 stale-UUID failures) — never cache group
+    not exist" without them, and group UUIDs CHURN on TB import — never cache group
     objects across a TB import; re-GET immediately before any bulk assignment.
     """
     required = {"id", "engagementFinancialGroupMapId"}
@@ -372,7 +368,7 @@ def _inline_xhr_js(headers: dict) -> str:
     Mirrors http_runner.build_xhr_call (XHR for cross-origin; auto Content-Type
     on body writes) but reusable inside an async loop. `headers` may be a dict
     (baked as a literal) OR an "ls:<family>" sentinel for runtime localStorage
-    self-sourcing (AX-26 — kills the per-session with_ls_auth_async improvisation).
+    self-sourcing.
     """
     from . import http_runner as _hr
     return (
@@ -484,7 +480,7 @@ _ACCOUNT_TYPE_ID_TO_NAME = {
 def _group_put_type_fields(group: dict) -> dict:
     """Derive the account-type trio the reorder PUT requires from a group row.
 
-    CRITICAL (live-captured 2026-05-31): the reorder PUT — UNLIKE the create
+    CRITICAL: the reorder PUT — UNLIKE the create
     POST — requires ALL THREE of `accountType` (the type STRING, e.g. 'Asset'),
     `accountTypeId`, and `accountTypeClassificationId`. Omitting any -> 400
     ("Invalid account type." / "Invalid account type classification.").
@@ -554,7 +550,7 @@ def build_reorder_groups_js(client_id: int, financial_list_id: int,
         (default), they are sorted ascending by `index` here; otherwise the given
         order is taken as the desired order.
 
-    Algorithm (validated 2026-05-30/31, 29 moves -> clean 1000->7000):
+    Algorithm:
         For i = 1..n-1, PUT move[i] with positionId=1 (after) and
         positionFinancialGroupId = move[i-1].financialGroupId. Chaining each
         group after its predecessor floats element 0 to the top and lands the
@@ -597,8 +593,8 @@ def build_reorder_groups_js(client_id: int, financial_list_id: int,
 
 
 # --- SUBGROUPS (financialsubgroup) ----------------------------------------
-# TB SUB-GROUP column — a child level under a financialGroup. New capability
-# captured 2026-05-30. There is NO GET /v1.0/financialsubgroup/{cid}/{listId}
+# TB SUB-GROUP column — a child level under a financialGroup.
+# There is NO GET /v1.0/financialsubgroup/{cid}/{listId}
 # (404) — read subgroup membership from the grouped TB at
 # `row.account.financialSubGroup`. UI path: Account Groupings -> Financial tab
 # -> select core group -> Actions -> Add (KB #000229923).
@@ -642,7 +638,7 @@ def assign_account_to_subgroup(client_id: int, account_id: int, financial_list_i
     `row.account.financialSubGroup` on the grouped TB. `financialListId` is
     required (same guardrail as the group PATCH).
 
-    ⚠️ PRECONDITION (live-captured 2026-05-31): the account MUST already be in
+    ⚠️ PRECONDITION: the account MUST already be in
     the subgroup's PARENT group first. Assigning a subgroup to an account whose
     group != the subgroup's parent -> 400 "Invalid financial sub-group." So the
     flow is: assign_account_to_group(parent) -> then assign_account_to_subgroup().

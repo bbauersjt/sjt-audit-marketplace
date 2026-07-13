@@ -58,7 +58,7 @@ flags steps the firm/title considers mandatory when applicable.
 | 3 | Control Testing | questions about controls testing |
 | 4 | FS-Level Risks | Management Override + engagement-specific |
 | 5 | Identified Risks | engagement-added significant risks |
-| 6 | **Per-Assertion Grid** | the working grid (6 assertions) — IR/CR/RMM/approach write target |
+| 6 | **Per-Assertion Grid** | DERIVED view (6 assertions) — reads through the IR/CR/RMM/approach set on KBA-502 (the write target); never write it here |
 | 7 | Substantive Analytical Info | free-text + WP refs |
 | 8 | Tailoring Questions | the Y/N drivers |
 | 9 | **Step Library** | all steps; in-program vs library |
@@ -149,7 +149,7 @@ also mark Analytical.
 > The approach valueKey codes and the write/confirm mechanics are in `cch-axcess`. Set `selected = Yes`
 > before IR or it resets on submit — `cch-axcess` enforces the write order.
 
-## Default Step Selection (firm defaults — locked 2026-05-20)
+## Default Step Selection (firm defaults)
 
 The 8 visible steps below are the **firm-standard default Cash step set** across all 6 audit types,
 providing assertion coverage for EO, RO, CO, AV, CU, UC without analytical procedures.
@@ -168,27 +168,13 @@ providing assertion coverage for EO, RO, CO, AV, CU, UC without analytical proce
 | 3 | Open or Closed Accounts | — | — | — | — | — | — (add when accounts opened/closed materially) |
 | 4/11/12 | Confirmation steps | — | — | — | — | — | — (add when Q4 = Yes or fraud risk elevated) |
 
-## Typical Responses (firm defaults — locked 2026-05-20 from APNM)
+## Typical Responses (owned by `cch-form-fill`)
 
-Per-step Workpaper Reference / Comments text the firm drops into each visible step. **Note:** the per-step
-RESPONSE text is `cch-form-fill`'s to own/write; this table is the firm-default starting point captured here
-because it was locked alongside the program. **Rule:** keep 1000-series indexes and typed text; leave blank
-when the response is a specific WP reference (e.g., `1002`) that varies per engagement.
-
-| Step | Typical Response (default) | Notes |
-|---|---|---|
-| 1 Account Summary | `1000` | Cash leadsheet section root |
-| 6 Subsequent Bank Statements | (blank — engagement-specific WP ref) | e.g. 1002 |
-| 7 Bank Reconciliations | (blank — engagement-specific WP ref) | Each rec gets its own AID-803 |
-| 13 Restrictions on Cash | `Inquired of management, no restrictions noted. Noted no evidence of unrecorded restrictions.` | Override if restrictions exist |
-| 14 Fraud Awareness | `1000 series` | Reference anywhere in the cash workpaper section |
-| 16 Agree to Support | `FS` | Tied to Financial Statements |
-| 17 Disclosures Testing | `FS` | Tied to FS disclosures |
-| 18 Info as Audit Evidence | (blank) | Engagement-specific evaluation notes |
-
-**Workpaper reference convention:** `1000` = cash leadsheet root; `1000 series` = anywhere in 1000-1099;
-`FS` = tied to financial statements; `AID-803` = the bank reconciliation aid; specific numbers (`1002`,
-`1010`) are per-engagement and **NOT** defaulted.
+Per-step Workpaper Reference / Comments text is **`cch-form-fill`'s to own** — to avoid the two drifting,
+the single home for Cash response defaults lives there, in `cch-form-fill/references/section-library.md`
+(the 1000-series / `FS` / `AID-803` reference conventions, the "Restrictions on Cash — no restrictions
+noted" default, and which steps leave a blank engagement-specific WP ref). Pull the response text from that
+file. This program MD owns only the step **selection** above; it does not carry the response table.
 
 ## Platform mechanics
 
@@ -198,11 +184,6 @@ sign-off), and the submit-and-verify cycle — are in `cch-axcess` (`references/
 property writes, `references/modules/populate-program.md` for the full step build-out, `references/modules/
 toggle-program-step.md` for steps-in/out only, and `references/config/field-conventions.md`). This file does
 not restate them; the HANDOFF names AUD-801 and the values, and `cch-axcess` executes.
-
-## Validation log
-
-- 2026-05-20 — AUD-801 layout captured from APNM 2025 NPO engagement. All 20 program steps inventoried.
-- 2026-05-20 — IR set on all 6 CASH assertions; RMM taken from CCH's recommended value.
 
 ## TODO
 

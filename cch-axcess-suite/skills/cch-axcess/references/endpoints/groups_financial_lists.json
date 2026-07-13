@@ -21,7 +21,7 @@
     "engagementId": "int (actually clientId)",
     "_create_response": "POST returns {id: <int>} directly (no re-GET needed)"
   },
-  "DO_NOT_AUTOMATE_set_default": "⛔ TOMBSTONE 2026-05-31: changing the default grouping list is DESTRUCTIVE — it DELETES all notes/annotations/tickmarks tied to the previously-default list (unrecoverable, Kymera-class risk). Set-default must be a manual USER click in the UI; the skill will NOT implement it and the mutation endpoint is intentionally LEFT UNCAPTURED. Reading isDefault = fine; writing it = forbidden.",
+  "DO_NOT_AUTOMATE_set_default": "⛔ Changing the default grouping list is DESTRUCTIVE — it DELETES all notes/annotations/tickmarks tied to the previously-default list (unrecoverable). Set-default must be a manual USER click in the UI; the skill will NOT implement it and the mutation endpoint is intentionally LEFT UNCAPTURED. Reading isDefault = fine; writing it = forbidden.",
   "response_shape_get": {
     "kind": "object wrapper",
     "envelope": {"financialLists": "array"},

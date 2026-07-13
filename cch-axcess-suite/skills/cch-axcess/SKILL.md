@@ -32,7 +32,7 @@ step 0", "go straight to the module"), say it's required, run it, and proceed.
   side-entered write is a silent no-op you'll pay for later.
 - **REDIRECT — if you have ALREADY made platform calls this session without Step 0: STOP now.**
   Do not "keep going since it seems to be working" (a 200 with an error/HTML body is a silent
-  no-op — RULES.md / RECOVERY.md). Instead, mid-flight: **run Step 0 / session-bootstrap in
+  no-op). Instead, mid-flight: **run Step 0 / session-bootstrap in
   full → switch to the documented page-context transport (`transport.md`; on the bridge, KC via
   `chrome_api_call`, engagement/WPM/FP via `chrome_api_call` or the `chrome_eval`+XHR builder —
   never hand-forged external calls with copied headers) → RE-VERIFY BY READ everything you wrote
@@ -46,7 +46,7 @@ step 0", "go straight to the module"), say it's required, run it, and proceed.
   subagents with inline tokens. If you must delegate platform work, the child enters through
   THIS SKILL.md and runs Step 0 (seed → `chrome_bridge_status` → warm its own leg → capture its
   own fresh auth); pass it the engagement URL and the task, never the tokens. A correctly
-  bootstrapped orchestrator that delegates this way is still spawning side-entering children.
+  bootstrapped parent session that delegates this way is still spawning side-entering children.
 
 **Precondition (applies no matter how you got here):** before the first platform WRITE, Step 0
 has run this session on THIS agent and the transport is the documented page-context path. If
@@ -82,12 +82,12 @@ front-matter declares `leg:`. Two legs, warmed independently
 
 | Leg | What it is | Serves | Needed for |
 |---|---|---|---|
-| `wpm` | Engagement-tab capture (monkeypatch bearer + headers) | WPM, financialprep-api, **and workbench-api** (WPM-bearer reuse validated 2026-06-05) | Reads, annotations, WPM ops, fund/group setup, report ops |
+| `wpm` | Engagement-tab capture (monkeypatch bearer + headers) | WPM, financialprep-api, **and workbench-api** (WPM-bearer reuse) | Reads, annotations, WPM ops, fund/group setup, report ops |
 | `kc` | `engagementGuid` + kc localStorage tokens + a KC-origin tab | KC API; also WPM/FP via `ls:*` sentinels | KC-form operations |
 
 - **Transport was already decided at 0.0** (`chrome_bridge_status`): bridge up -> BRIDGE (KC via
   `chrome_api_call`, skip linked-tab tab-claim); else LINKED-TAB. Warmup just uses that choice.
-- **GUID is NOT required for reads/annotations/WPM ops** (validated live 2026-06-05) — don't
+- **GUID is NOT required for reads/annotations/WPM ops** — don't
   hunt it for a `leg: wpm` task. Workbench **creates** address by GUID: take it from the seed
   (memory/URL) or the boot capture; warm the full KC leg only if it isn't available there.
 - **Never warm a second leg a warm one already serves.** A warm KC leg serves WPM/FP via
@@ -104,18 +104,20 @@ Any task that runs `scripts/*.py` executes from a verified exec copy — never f
 mount (it truncates text files). The copy is cached **per build**:
 
 ```
-EXEC=/tmp/cch-ax-{version}-{payloadhash}/        # e.g. /tmp/cch-ax-AX-39-<payloadhash>/
+EXEC=/tmp/cch-ax-{version}-{payloadhash}/        # e.g. /tmp/cch-ax-AX-50-<payloadhash>/
 ```
 
 `.verified` marker present and hash matches the payload → **reuse it, zero re-verify.**
 Missing / mismatched / uid-locked → fresh extract + compile gate + `verify_integrity.py`
 ONCE, then write `.verified`. Full procedure: `references/runbooks/local-exec.md`.
+Current payload: `exec-payload_AX-50.bin`. A payload whose version tag lags the current source by a
+script-touching build is stale — flag it, don't rebuild unsupervised.
 
 ## Routing — ORDERED; do not reorder
 
 The order matters: resolve WHAT the deliverable is before doing ANY work toward it. Warming
 a leg or matching a trigger row while the ask is still ambiguous is the over-inference that
-causes wrong-deliverable and wrong-leg runs (TT1-1). Disambiguation is step 2 — it fires
+causes wrong-deliverable and wrong-leg runs. Disambiguation is step 2 — it fires
 BEFORE leg-warmup (step 3) and before you commit to a row.
 
 ```
@@ -172,7 +174,7 @@ mode (`references/learn-protocol.md`). Anything else → done. Capture mode NEVE
   via the API). If it doesn't exist, STOP and surface it: "there is no Cash group on this
   engagement — add one, or did you mean X?" Do NOT begin building toward it (adding columns,
   warming extra legs, creating scaffolding) and discover the impossibility two failures
-  later. This is the TT1 failure class (90+ min spent on an ask with no Cash group). A
+  later. This is the failure class where time is sunk building toward an impossible target. A
   missing target is a prerequisite finding to report up front, never a workaround to engineer.
 - **Improvisation budget is the 2-fail rule. Period.** Once an attempt is underway and an
   operation fails, the 2-fail forced doc return (above) is the whole budget — no looping,
@@ -234,7 +236,7 @@ AFTER routing — too late; the split happens here, at the dispatcher.
 | Build out a WHOLE AUD-8xx audit program — tailoring answers + bring in steps + link risks + fill responses + sign off (the full pipeline; for steps-in/out ONLY with none of the rest, use toggle-program-step) | `references/modules/populate-program.md` |
 | Post an actual journal entry (AJE/RJE/PAJE/TJE) into the engagement trial balance (FinancialPrep) | `references/modules/post-journal-entry.md` |
 | Remove / delete a KC form (always soft-delete — no hard delete in this skill) | `references/modules/remove-kc-form.md` |
-| Remove a stale document-level (WPM) sign-off from a workpaper or KC form — the bot-clears-its-own-stale-sign-off op. Applying sign-offs stays human-only. | `references/modules/remove-signoff.md` |
+| Remove a stale document-level (WPM) sign-off from a workpaper or KC form — the clears-its-own-stale-sign-off op. Applying sign-offs stays human-only. | `references/modules/remove-signoff.md` |
 | Rename / re-index Workpaper-type rows (PDFs, docs) — distinct from KCForms set-index | `references/modules/rename-workpaper-index.md` |
 | Replace a workpaper's content in place (native "Upload new version") — UNRECOVERABLE overwrite, hard consent gate every time | `references/modules/replace-workpaper.md` |
 | Run a TB report or a Journal Entry report (AJE/RJE/TJE/PAJE); create TB-report-based leadsheets | `references/modules/run-reports.md` |
@@ -248,13 +250,13 @@ AFTER routing — too late; the split happens here, at the dispatcher.
 Transport is **bridge-first for every origin**; the linked Claude-in-Chrome tab is the fallback. KC-origin
 ops run over **`chrome_api_call`** (service-worker fetch — CSP-exempt; the in-page verbs `chrome_eval`/
 `chrome_fetch` stay CSP-blocked on KC, so use `chrome_api_call` there). **On the bridge the tool-result
-channel is NOT DLP-filtered** (KC reads return real JSON — validated 2026-06-23 — so return JSON directly;
+channel is NOT DLP-filtered** (KC reads return real JSON — so return JSON directly;
 skip download-to-disk). The DLP `[BLOCKED...]` filter + download-to-disk applies only on the **linked-tab
 fallback** (see `architecture.md` -> Cowork data channel, and the read step in `fill-kc-form.md`). Route by
 target origin first — see `architecture.md` and `runbooks/transport.md`.
 
 **This install is a READ-ONLY cache.** The skill directory is a per-session snapshot of the
-.skill/plugin install. Writing into it truncates files (the AX-12 failure class) and is lost
+.skill/plugin install. Writing into it truncates files and is lost
 on reinstall. There is NO runtime write target: runtime learnings flow through the complaint
 log (`i-wanna-complain`) into the batch-rebuild pipeline, and the CHANGELOG lives in the
 source repo only. Never request a mount of this skill's own directory.
@@ -276,7 +278,7 @@ source repo only. Never request a mount of this skill's own directory.
    findings go to the complaint log instead.
 
 **PROHIBITED — hard delete.** This skill does NOT hard-delete anything in CCH and will not
-learn to (a single KC-form delete can corrupt a binder — Kymera 2026-05-28). "Remove" =
+learn to (a single KC-form delete can corrupt a binder). "Remove" =
 `wpm.soft_delete_*` → the object lands in a `User to delete` folder (index `9999`) for the
 user to clear from the UI. If a capture surfaces a DELETE call, do NOT script it (see
 `scripts/wpm.py` header). Sole legacy exception: `scripts.funds` fund-setup DELETEs —
@@ -284,7 +286,7 @@ scoped, do not extend.
 
 **CONSENT-GATED — in-place workpaper replace.** `replace-workpaper.md` (`wpm_replace`) overwrites
 a workpaper's content via "Upload new version" — destructive-in-spirit (prior content survives
-only in CCH version history). It fires NO DELETE (not the Kymera hazard) but is UNRECOVERABLE, so
+only in CCH version history). It fires NO DELETE (not the hard-delete hazard) but is UNRECOVERABLE, so
 it sits behind a **mandatory consent gate every run**: state it can't be undone, show the exact
 TARGET (index+name+folder) + REPLACEMENT (file) plan, get an explicit yes. A user "just do it"
 does NOT waive the plan+yes. Default to the soft-delete→evict→claim path (`file-io.md`) unless the
@@ -345,7 +347,7 @@ user explicitly wants a true in-place version.
 | `scripts.je` | post a real AJE/RJE/PAJE/TJE into the TB (FinancialPrep): `build_post_je_js` (CREATE-only, balance-checked, URL-guarded) |
 | `scripts.wpm_replace` | in-place "Upload new version" overwrite: `build_replace_version_js` (consent-gated — see `replace-workpaper.md`) |
 | `scripts.kc_dom_parser` | (JS, `window.kcDom`) leg:kc DOM field detector for KC forms — paste into the KC tab |
-| `scripts.http_runner` | XHR/fetch builders + batch + result parsing; `ls:*` (KC localStorage) and `cap:*` (engagement `__cch_capture`) auth sentinels. **AX-33 fixed:** `build_batch_xhr` now sends `Content-Type: application/json` on body-bearing writes (its omission 415'd every KC write). |
+| `scripts.http_runner` | XHR/fetch builders + batch + result parsing; `ls:*` (KC localStorage) and `cap:*` (engagement `__cch_capture`) auth sentinels. `build_batch_xhr` sends `Content-Type: application/json` on body-bearing writes (its omission 415'd every KC write). |
 | `scripts.verify_integrity` | truncation guard (END-marker check; run once per build at extract) |
 
 **Field/valueKey conventions live in `references/config/field-conventions.md` (the registry) —

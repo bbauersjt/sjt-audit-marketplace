@@ -48,7 +48,7 @@
     "abbrev": "string — short label, e.g. 'UNADJ', 'AJE', 'FINAL', 'RM1'",
     "variance": "null in all captured columns; presumed to populate for variance-type columns",
     "order": "int — 1-based column position",
-    "periodId": "int — engagement period id (e.g. 381325 = current year, 381324 = prior year)",
+    "periodId": "int — engagement period id (e.g. current-year id, prior-year id)",
     "periodEndDate": "string — 'YYYY-MM-DD'",
     "isDeleted": "bool — false for active columns; removed columns appear to be filtered out client-side before POST, not sent as isDeleted=true",
     "engagementId": "int — ONLY present on columns where type='Remarks' (other types omit this field)"
@@ -64,11 +64,5 @@
     "Removing a column from the UI selection does NOT appear in the body as isDeleted=true — the column is simply omitted from the columns array."
   ],
   "verification": "GET /v1/trialbalancereport/tbreports/{clientId} — new reportGuid + reportName should appear in the response array.",
-  "validated_on": [
-    "APNM 2025, client 97509, engagement 381325, 2026-05-24 — original Investments slice (groups=[755937], AccountDetail)",
-    "APNM 2025, 2026-05-24 — Full TB all-groups (SummaryByGroup)",
-    "APNM 2025, 2026-05-24 — All flags ON (IncludeNetIncome, HideUnusedGroupsAndSubgroups, IncludeSumOfAccountGroups) + SummaryBySubGroup",
-    "APNM 2025, 2026-05-24 — Custom columns (Unadjusted prior + current, Aje, Final current + prior, Remarks)"
-  ],
   "script_function": "scripts.reports.create_tb_report(client_id, engagement_id, engagement_guid, report_name, headers, **opts)"
 }

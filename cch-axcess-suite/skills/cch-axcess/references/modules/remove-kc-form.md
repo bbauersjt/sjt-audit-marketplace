@@ -18,10 +18,7 @@ status: validated
 ---
 # Module — Soft-Delete KC Form from Binder
 
-> **wpId lookup — GetBinder FIRST.** Any time you need a form's workpaperId (or
-> any binder workpaper's id): `GET https://knowledgecoach.cchaxcess.com/api/binder/GetBinder/{engagementGuid}`
-> from the KC tab (`ls:kc` auth) — `result.workpapers[]` carries every workpaper with
-> name + wpId. Never walk WPM folders for a form lookup.
+> **wpId lookup — GetBinder FIRST.** See `architecture.md` → "WPM surface — confirmed facts".
 
 **Triggers:** "delete this form from the binder", "remove [form] from this engagement", "drop the form we just added", "clean up unfiled forms", "remove KC form", "scrub the binder of unwanted forms".
 
@@ -105,6 +102,6 @@ Tell the user the forms are staged in `9999 User to delete` for them to review a
 
 ## Why no hard delete
 
-Hard-deleting a KC form corrupts the binder and is unrecoverable, so this skill does not implement it — soft-delete is the only path (Kymera incident — see `architecture.md` → KC-form hard delete, and the policy block atop `scripts/wpm.py`).
+Hard-deleting a KC form corrupts the binder and is unrecoverable, so this skill does not implement it — soft-delete is the only path (see `architecture.md` → KC-form hard delete, and the policy block atop `scripts/wpm.py`).
 
 <!-- END -->

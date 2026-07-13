@@ -5,8 +5,6 @@ description: The risk-assessment brain for CCH Axcess (Knowledge Coach) audits. 
 
 # CCH Risk Assessment — Dispatcher (the judgment engine for the planning cascade)
 
-> Last verified against cch-axcess AX-37 — 2026-07-07.
-
 This skill decides **what goes in** the CCH planning forms. The sibling skill **`cch-axcess`** reads the
 live forms and writes the answers back. This skill never clicks, parses field IDs, names endpoints, or
 POSTs — when a task needs the platform, build a HANDOFF block (`references/cch-handoff.md`) and
@@ -37,7 +35,9 @@ the judgment, `cch-axcess` executes every read and write. Load `cch-axcess` and 
 none), and the current-year TB. If the TB is ungrouped, derive transaction-class balances first.
 
 **0.3 Materiality.** Get tolerable / performance materiality (KBA-301) from the user or project notes.
-Significance is tested against this threshold — you cannot scope without it.
+Significance is tested against this threshold — you cannot scope without it. If materiality is being **set**
+this year (first-year / re-set), that's a KBA-301 **write**, not a read — follow `references/intake.md`'s
+KBA-301 method (benchmark → PM → TM → PAJE) and HANDOFF it (`references/cch-handoff.md`).
 
 **0.4 Significance.** Per `scoping/significance.md`, flag each account / class of transactions /
 disclosure significant or not (quantitative vs tolerable + the always-significant qualitative list).
@@ -51,6 +51,8 @@ KBA-502 IR before KBA-400 has set the assertions `selected`.
 
 ```
 Step 0 done (axcess loaded · intake · materiality · significance)
+  ├─ KBA-301  materiality WRITE — ONLY first-year / re-set     → references/intake.md (KBA-301 method)
+  │     benchmark → PM → TM → PAJE; HANDOFF fill-kc-form.md. Already set this year = read (Step 0.3), no write.
   ├─ AUD-100  tailoring → areas + controls-testing decision   → references/cascade/aud-100.md
   │     (area-selection defaults: scripts/tiers.py <TYPE>; areas/binding-keys: scripts/areas.py <TYPE>)
   ├─ KBA-400  scoping + per-area relevant-assertion selection  → references/cascade/kba-400.md
@@ -128,12 +130,14 @@ AUD-8xx  Audit Programs                            programs/{area}.md
 
 ## Where IR/CR/RMM is written (so the HANDOFF names the right form)
 
-The editable per-assertion **IR / CR / RMM / planned-approach grid lives on each AUD-8xx program
-workpaper** (the area's `RelevantAssertion` collection). **KBA-502 is a read-through summary** — it has no
-per-assertion grid of its own; it rolls those values up and owns only the FS-level risks. So a HANDOFF
-that sets IR/CR names the **AUD-8xx program** as the form, NOT KBA-502. Relevant assertions are *selected*
-upstream on KBA-400. CR stays MAX until controls are tested. (`cch-axcess` resolves the exact writable
-surface and the field mechanics — see `references/cascade/kba-502.md` and `references/cch-handoff.md`.)
+**KBA-502 owns the per-assertion IR / CR / RMM / planned-approach grid and is the WRITE target**
+(collectionKey `.{AREA}.RelevantAssertion`, posted against KBA-502's wpId). The AUD-8xx program's grid is
+the **derived / read-through view** — writing IR there lands in a working copy the KBA-502-owned recompute
+discards on refresh. So a HANDOFF that sets IR/CR names **KBA-502** as the form, NOT the program. On the programs you only
+link steps → assertions/risks + sign off, which feeds back to clear KBA-502's "Relevant Assertion
+Unaddressed". Relevant assertions are *selected* upstream on KBA-400. CR stays MAX until controls are
+tested. (`cch-axcess` resolves the exact writable surface and the field mechanics — see
+`references/cascade/kba-502.md` and `references/cch-handoff.md`.)
 
 ## Area selection — which AUD-100 boxes to check (`scripts/tiers.py`)
 
@@ -181,9 +185,9 @@ until controls are tested. (`cch-axcess` carries the exact valueKey codes — do
 (Accuracy/Valuation/Allocation), CU (Cutoff), UC (Understandability/Classification/Presentation/Disclosure).
 
 Full model + the IR×CR→RMM matrix + significant-risk criteria live in `references/risk-framework.md`.
-**RMM is derived by CCH server-side** — read its recommended value back via `cch-axcess`; do not compute it
-yourself. A **significant risk** is flagged separately (not a 5th level) and lives on the area's Identified
-Risks table.
+**RMM:** with CR=MAX (the substantive default), RMM=IR deterministically — set it explicitly; if CR < MAX,
+read CCH's recommended value back via `cch-axcess`, don't compute it yourself. A **significant risk** is
+flagged separately (not a 5th level) and lives on the area's Identified Risks table.
 
 ## End-to-end workflow (new engagement, bare binder → recommended programs)
 
@@ -193,18 +197,29 @@ Risks table.
    decision. Use `scripts/tiers.py <TYPE>` for area-selection defaults. HANDOFF to `cch-axcess`.
 3. **KBA-400** — per `references/cascade/kba-400.md` + `scoping/area-map-by-title.md`, make the scoping
    selections, confirm CCH's recommended forms/programs, select relevant assertions per significant area. HANDOFF.
-4. **KBA-502** — per `references/cascade/kba-502.md`, set IR (start from `defaults/{CODE}.md`, adjust per
-   engagement facts, document the basis for KBA-503), leave CR=MAX unless controls tested, take RMM from
-   CCH's computed value, check the planned approach. HANDOFF (write target = the AUD-8xx program). HANDOFF.
+4. **KBA-502** — per `references/cascade/kba-502.md`, set IR (apply `defaults/{CODE}.md` as-is — never
+   MAX, never elevated; document the basis on KBA-503), set CR=MAX explicitly unless controls tested,
+   RMM=IR when CR=MAX, check the planned approach. HANDOFF (write target = **KBA-502's wpId**; the
+   program grids are derived).
 5. **Programs** — per `programs/{area}.md` + `_conventions.md`, set each program's top Y/N tailoring,
-   select steps, link each step to assertions + RMM rows. HANDOFF (`add-audit-programs.md` /
+   select steps, link each step to assertions + RMM rows. Pull the program's tailoring-question set with
+   `scripts/program.py --area <AREA> --type <TYPE>` (once per significant area — don't read the MD for it),
+   answer each from your sources or flag for the user, then HANDOFF (`add-audit-programs.md` /
    `toggle-program-step.md` / `populate-program.md` in `cch-axcess`).
+6. **Completion gate — clear the diagnostics, don't hand off dirty.** The cascade is not done at the last
+   HANDOFF; it's done when the platform's own oracle says so. Via `cch-axcess` (refresh → the diagnostics
+   endpoint, never the stale form `diagnosticCount`), confirm AUD-100 / KBA-301 / KBA-400 / KBA-502 / KBA-503
+   and every added AUD-8xx program carry **no unexplained "Question Unanswered" diagnostics for unset
+   IR / RMM / approach on a scoped area**. Those are a defect at this step — an assertion selected on KBA-400
+   with no IR set on its program is an incomplete cascade, not a fan-out residual. Clear each, or enumerate
+   the residual and attribute it to a named downstream owner (a program step genuinely filled during
+   fan-out). A cascade handed off with unset-IR diagnostics still open is not complete.
 
 ## How this skill talks to `cch-axcess`
 
-Structured HANDOFF block — full pattern and per-stage examples in `references/cch-handoff.md`. Name the
-**AUD-8xx program** as the form for IR/CR/RMM/approach writes (KBA-502 is read-through). Hand off in funnel
-order — AUD-100 → KBA-400 → KBA-502 → programs.
+Structured HANDOFF block — full pattern and per-stage examples in `references/cch-handoff.md`. Name
+**KBA-502** as the form for IR/CR/RMM/approach writes (the AUD-8xx program grids are derived). Hand off in
+funnel order — AUD-100 → KBA-400 → KBA-502 → programs.
 
 ## File map
 
@@ -215,9 +230,11 @@ order — AUD-100 → KBA-400 → KBA-502 → programs.
 | Per-title scoped areas + recommended programs | `scoping/area-map-by-title.md` |
 | Which areas exist for a title (binding key, AUD #) | `scripts/areas.py <TYPE>` |
 | Which area boxes to check (4-tier selection) | `scripts/tiers.py <TYPE>` |
+| A program's Y/N tailoring questions to answer (once per significant area) | `scripts/program.py --area <AREA> [--type <TYPE>]` (`--list` for counts) |
+| Expand one cascade selection to the downstream nodes it forces | `scripts/tree.py --from <FORM:KEY> [--type <TYPE>]` (`--roots` lists tree starts) |
 | Answer AUD-100 (areas + controls decision) | `references/cascade/aud-100.md` |
 | Drive KBA-400 scoping + assertion relevance | `references/cascade/kba-400.md` |
-| Set IR/CR/RMM + approach (writes to the AUD-8xx program) | `references/cascade/kba-502.md` |
+| Set IR/CR/RMM + approach (writes to KBA-502; programs derived) | `references/cascade/kba-502.md` |
 | The 4-level model, RMM matrix, assertions, significant risk | `references/risk-framework.md` |
 | Default IR starting points by audit type | `defaults/{CODE}.md` |
 | Build a HANDOFF to `cch-axcess` | `references/cch-handoff.md` |

@@ -4,7 +4,7 @@
 **dataBindingKey:** `FAIRVALUE2`
 **Default-applies-to:** all six audit types when fair-value-measured assets/liabilities are present.
 
-> **Captured live 2026-05-21 from APNM 2025 NPO.** 15 library steps, 6 tailoring questions, 4 audit objectives. Much narrower than `investments.md` — this program is the FV-methodology overlay for any area that uses fair value (most often Investments via AUD-802).
+> 15 library steps, 6 tailoring questions, 4 audit objectives. Much narrower than `investments.md` — this program is the FV-methodology overlay for any area that uses fair value (most often Investments via AUD-802).
 
 ## How a program ties together
 
@@ -34,7 +34,7 @@ Same chain as `cash.md`. Six TQs gate which of the 15 steps become `IsApplicable
 
 1. Transactions subject to FV measurement are identified, authorized, and recorded correctly as to account, amount, period.
 2. Financial and other information is presented in accordance with the applicable framework.
-3. (Confidential / not captured — appeared as filtered output in GET.)
+3. (Not captured.)
 4. Accounting estimates in this audit area are properly identified, authorized, recognized, measured, presented, and disclosed.
 
 ## Tailoring Questions (6)
@@ -76,21 +76,21 @@ Same chain as `cash.md`. Six TQs gate which of the 15 steps become `IsApplicable
 
 > **Not yet locked** — pending working capture against a tailored engagement.
 
-**Starting baseline for NPO with marketable securities priced via broker statements (Level 1 dominant) + a beneficial interest in a community foundation (likely Level 3 / NAV)**, e.g. APNM:
+**Starting baseline for NPO with marketable securities priced via broker statements (Level 1 dominant) + a beneficial interest in a community foundation (likely Level 3 / NAV):**
 
 | Idx | Step | Why |
 |---|---|---|
-| 0 | Understanding of FV Measurements | Document approach (Level 1 broker pricing + Level 3 NAV for ACF) |
+| 0 | Understanding of FV Measurements | Document approach (Level 1 broker pricing + Level 3 NAV for community foundation interest) |
 | 2 | Understanding of Valuation Technique | Technique varies by holding; document |
-| 5 | Fair Value Procedures | Substantive FV testing of broker stmts + ACF NAV statement |
+| 5 | Fair Value Procedures | Substantive FV testing of broker stmts + community-foundation NAV statement |
 | 6 | Measurements and Disclosures | Disclosure tie-in (Level 1/2/3 hierarchy) |
 | 11 | Those Charged with Governance Informed | If FV estimates are material to FS |
 | 12 | Disclosures Testing | FV hierarchy disclosure |
-| 13 | Information To Be Used As Audit Evidence | RBC stmt + ACF audited FS evaluation |
+| 13 | Information To Be Used As Audit Evidence | Custodian stmt + community-foundation audited FS evaluation |
 
 Add as engagement warrants:
-- Step 1 if RBC's pricing is via an external pricing service (research before answering Q0).
-- Step 4 if ACF's NAV statement is treated as management's specialist work (AU-C 500/620 evaluation).
+- Step 1 if the custodian's pricing is via an external pricing service (research before answering Q0).
+- Step 4 if the community foundation's NAV statement is treated as management's specialist work (AU-C 500/620 evaluation).
 - Step 14 if analytical procedures are planned.
 
 ## Audit Approach

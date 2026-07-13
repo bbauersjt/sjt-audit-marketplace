@@ -7,7 +7,7 @@
 //
 // USAGE (paste this whole file via javascript_tool to define window.kcPop, then):
 //   const cfg = {binder:'<engGuid>', wp:'<workpaperId>', area:'CASH'|'AR'|'PPE'|'AP'|'EQUITY'|...,
-//                tqYesCount:4, gibberish:'zzz gibberish ', initials:'BB'};
+//                tqYesCount:4, gibberish:'zzz gibberish ', initials:'XX'};
 //   1) await window.kcPop.tqAndVisible(cfg)   // answers TQs + sets the visible step-set (server-side)
 //   2) RELOAD the tab, then RE-PASTE this file   // <-- REQUIRED: see gotcha below
 //   3) await window.kcPop.build(cfg)          // reads form + rendered DOM -> ordered payload list
@@ -16,11 +16,11 @@
 //    long single calls; repairing ~35 not-done payloads per call stays under it and
 //    is idempotent, so re-runs and dropped writes self-heal.)
 //
-// Confirmed live 2026-05-31 across AUD-801/803/809/810/814 (Claude Playground, NFP):
+// Behavior notes:
 //  - SignOff needs BOTH value AND valueKey = initials. valueKey-only is silently
-//    ignored (state stays 0). (Corrects the old enums/arch "valueKey only" note.)
+//    ignored (state stays 0).
 //  - Tight back-to-back UpdateProperty writes to one form silently drop (HTTP 200,
-//    no persist). 2026-07-08 correction: the old ~300ms floor is WRONG — ~60% still
+//    no persist). The old ~300ms floor is WRONG — ~60% still
 //    dropped at ~350ms, and ~30-50% drop even at 1-2s gaps. Pace ~1200ms and rely on
 //    the verify+repair loop (NOT pacing) for persistence; verify-by-read is mandatory
 //    (field-conventions.md section 5 item 3a).
@@ -63,7 +63,7 @@
 
     // Phase 1 — answer first-N visible TQs = Yes, then set the applicable visible-set. (Server-side.)
     async tqAndVisible(cfg) {
-      cfg = Object.assign({ tqYesCount: 4, gibberish: 'zzz gibberish ', initials: 'BB' }, cfg); this.cfg = cfg;
+      cfg = Object.assign({ tqYesCount: 4, gibberish: 'zzz gibberish ', initials: 'XX' }, cfg); this.cfg = cfg;
       let form = await readForm(cfg.binder, cfg.wp);
       const tqCol = JSON.parse(form.collections).find(c => c.path === `.${cfg.area}.TailoringQuestions`);
       const tqFirst = (tqCol ? tqCol.objectList.filter(x => x.visible) : []).slice(0, cfg.tqYesCount);
@@ -76,7 +76,7 @@
 
     // Phase 2 — build the ordered payload list from form + rendered DOM. (Run AFTER reload.)
     async build(cfg) {
-      cfg = cfg || this.cfg; cfg = Object.assign({ tqYesCount: 4, gibberish: 'zzz gibberish ', initials: 'BB' }, cfg); this.cfg = cfg;
+      cfg = cfg || this.cfg; cfg = Object.assign({ tqYesCount: 4, gibberish: 'zzz gibberish ', initials: 'XX' }, cfg); this.cfg = cfg;
       const form = await readForm(cfg.binder, cfg.wp); const coll = ps(form, cfg.area);
       const risk = domRisk(); const presentRMM = new Set(risk.codes.filter(c => /^RMM-/.test(c)));
       const mgmt = risk.codes.find(c => /^FINANCIALLEVELRISKS-/.test(c) && /override/i.test(risk.label[c] || '')) || risk.codes.find(c => /^FINANCIALLEVELRISKS-/.test(c));

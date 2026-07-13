@@ -17,7 +17,7 @@
     }
   },
   "use_cases": ["Look up clientGuid for delete-form workflows", "Inventory the binder for bulk-capture or audit"],
-  "not_found_shape": "A missing/wrong-guid binder returns HTTP 200 wrapping an inner error: {error:'Binder not found.', statusCode:404, message:'Resource not found'} — check result.id, never the HTTP status alone (live 2026-07-07).",
-  "binder_guid_is_not_the_engagement_guid": "The KC binderId CAN DIFFER from the platform engagementGuid (live 2026-07-07, clientId 103426: engagement 56cafc04… vs KC binder 6ca0d3a3… — GetBinder by the engagement guid gave the wrapped 404 above; KC uses the engagement guid only for /Home/GetPermissions). Discover the true binderId from the KC tab's own GetBinder call on open. An earlier same-day note blamed 'binder not created until first KC open' — that was the wrong-guid symptom, superseded by this entry.",
+  "not_found_shape": "A missing/wrong-guid binder returns HTTP 200 wrapping an inner error: {error:'Binder not found.', statusCode:404, message:'Resource not found'} — check result.id, never the HTTP status alone.",
+  "binder_guid_is_not_the_engagement_guid": "The KC binderId CAN DIFFER from the platform engagementGuid: GetBinder by the engagement guid gives the wrapped 404 above; KC uses the engagement guid only for /Home/GetPermissions. Discover the true binderId from the KC tab's own GetBinder call on open. An earlier note blamed 'binder not created until first KC open' — that was the wrong-guid symptom, superseded by this entry.",
   "script_function": "scripts.kc.get_binder(eng_guid, headers)"
 }

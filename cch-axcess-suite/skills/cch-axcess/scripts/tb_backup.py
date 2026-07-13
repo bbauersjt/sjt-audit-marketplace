@@ -12,14 +12,14 @@ DEBITS-POSITIVE. Import sheets and Account Map balances are sign-FLIPPED to
 debits-positive; the All Fields tab keeps the RAW API values (labeled as such).
 
 Subgroup key: `account.financialSubGroup`. `account.subGroup` is always null
-(the NIN package bug) — never read it.
+— never read it.
 
 Typical flow (module: references/modules/tb-backup-package.md):
     from scripts import groups, funds, tb_backup
     js = groups.get_trialbalance_grouped_all(cid, list_id, period_id, "ls:fp")
     rows = tb_backup.parse_tb(js_result)              # one call per period
     ...
-    tb_backup.build_workbook(out_path, "NIN 2025", tb_by_period={"CY-FINAL": rows_cy,
+    tb_backup.build_workbook(out_path, "Engagement 2025", tb_by_period={"CY-FINAL": rows_cy,
         "PY-FINAL": rows_py}, groups=parsed_groups, fund_types=..., funds=...,
         fund_sub_types=...)
 """
@@ -85,7 +85,7 @@ def flip_sign(value: Optional[float]) -> Optional[float]:
     return -value if value else 0.0
 
 
-# --- live-FP normalization (AX-33) ------------------------------------------
+# --- live-FP normalization ------------------------------------------
 #
 # The grouped get_trialbalance_grouped_all() shape is the validated one
 # (account.accountNumber, periods.current.finalBalance as a number, group/fund as
@@ -129,7 +129,7 @@ def _as_label(v: Any) -> Any:
 
 def normalize_tb_rows(rows: list[dict]) -> list[dict]:
     """In-place: make live-FP-variant rows match the grouped TB shape. No-op on
-    already-normalized rows. AX-33.
+    already-normalized rows.
       - account.number          -> account.accountNumber (keeps both)
       - group/fund/subGroup objects -> string labels
       - account.final / periods.current.*Balance comma-strings -> float

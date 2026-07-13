@@ -15,7 +15,7 @@ requires XHR (fetch fails CORS preflight; see architecture.md).
 REFRESH RULE: every write below requires a page reload to show in the UI. Always
 tell the user to refresh after a write.
 
-Cross-API visibility is ONE-DIRECTIONAL (live-confirmed 2026-06-04): FP-API
+Cross-API visibility is ONE-DIRECTIONAL: FP-API
 bubbles/tickmarks written on the system-lead surface appear on TB reports after
 refresh (read-only there, cpComments/cpTickMarks). Workbench REF values appear
 NOWHERE but the TB report itself.
@@ -116,7 +116,7 @@ def post_account_comment(client_id: int, reference_id: int, period_id: int,
     (see annotate-leadsheet.md step 2-pre).
     Response body: {"commentReferenceId": <int>} — store it for delete.
 
-    reference_type levels (live-captured 2026-06-04):
+    reference_type levels:
       "Account"        — account row; reference_id = account.id (see find_reference_id)
       "FinancialGroup" — group/total row; reference_id = financialGroupId
     """
@@ -171,8 +171,8 @@ def tbreport_resolve_report_id(client_id: int, engagement_guid: str,
     """GET /v1/trialbalancereport/tbreportedit/{clientId}/{engGuid}/{reportGuid}.
 
     This is the Step-0 REF-COLUMN PREFLIGHT read (reportFormat.columns), NOT a
-    reportId source: the tbreportedit body has NO usable id field (live-reconfirmed
-    2026-06-04). The integer reportId = the report's WPM documentId ('tbreports/{int}'
+    reportId source: the tbreportedit body has NO usable id field.
+    The integer reportId = the report's WPM documentId ('tbreports/{int}'
     row) — resolve it from the binder map / WPM listing, not from this response.
     reportGuid comes from the report URL.
     """

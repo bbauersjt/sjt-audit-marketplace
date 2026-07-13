@@ -54,6 +54,7 @@ Set these once with the user; they parametrize Tests 1 and the always-significan
 | Performance materiality as % of overall | 50–75% | Lower for higher-risk / first-year. Confirm firm policy. |
 | Tolerable misstatement basis | = performance materiality | Some firms set a separate tolerable per area. |
 | Clearly-trivial threshold (CTT) | 3–5% of overall materiality | Below CTT, misstatements aren't accumulated. KBA-301. |
+| PAJE / passed-adjustment threshold | **max(10% of TM, $5,000)** — EBP **max(20% of TM, $5,000)** | The **$5,000 floor is mandatory on every engagement** — always take the greater of the % and $5,000; never record the raw % if it's below $5,000. KBA-301. |
 | Transaction classes scoped separately? | Yes | Whether gross flows get their own KBA-400 row vs folded into the balance area. |
 
 ## Output
@@ -63,3 +64,5 @@ For each area produce: **significant Y/N · which test triggered it · the measu
 ## What significance does NOT decide
 
 Significance decides *whether* an area is in scope and the *relevant assertions* (`references/cascade/kba-400.md`), not *how high* the risk is. IR/CR/RMM levels are a separate judgment on KBA-502 — a significant area can still carry LOW inherent risk on most assertions. Don't conflate "significant" with "high risk."
+
+The **PAJE threshold does not drive scope**, either. An individual item exceeding PAJE inside an area that isn't otherwise significant (under TM, no qualitative driver) does **not** pull that area into testing; PAJE only governs passing vs. accumulating a misstatement in work that is already scoped.

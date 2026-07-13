@@ -39,7 +39,29 @@ Significance is measured against a threshold. Get it, don't guess it.
 - **Ask the user** for tolerable misstatement (often = performance materiality) and overall/planning materiality, or
 - **Read project notes / KBA-301** if materiality has already been set this year. KBA-301 (or KBA-301E for EBP) is the CCH home for overall materiality, performance materiality, and the clearly-trivial threshold.
 - If only overall materiality is available, **performance materiality** is typically a haircut of it (commonly ~50–75%); confirm the firm's percentage with the user rather than assuming. *(Firm-tunable — see `scoping/significance.md`.)*
+- **PAJE / passed-adjustment threshold = max(10% of TM, $5,000)** (EBP: max(20% of TM, $5,000)). The **$5,000 floor is mandatory on every engagement** — compute the percentage, then take the greater of it and $5,000; never record the raw percentage when it falls below $5,000.
 - Record which number you used and where it came from. The whole significance call rests on it.
+
+### KBA-301 method (the firm's benchmark → PM → TM derivation)
+
+When materiality is being **set** (not just read back), follow the firm's method — don't do ad-hoc
+reasonableness math:
+
+1. **Benchmark selection — take the one that yields the LARGER materiality, then justify it.** Compute the
+   candidate benchmarks the form offers for the entity (e.g. total revenues/contributions and total assets),
+   and choose whichever produces the greater overall materiality, stating the one-paragraph rationale tied to
+   the entity's users and objectives. Bigger materiality is the firm's default posture where the benchmark
+   choice is otherwise defensible.
+2. **Benchmark percentage stays inside the form's stated acceptable range.** KBA-301's benchmark table prints
+   a rule-of-thumb range per benchmark; pick a percentage **within** it. The **top of the range is
+   acceptable** (the firm routinely maxes it); **above the range is not** — never exceed the stated range.
+3. **Performance materiality / TM is an explicit line item, not skipped.** The firm does not leave PM/TM
+   unentered: on KBA-301 add the **"financial statements taken as a whole"** line (the step-8 "click to add
+   new item" control), set **TM = 75% of planning materiality, rounded DOWN to the nearest hundred**. This TM
+   ("performance materiality") is the number the rest of the audit is scoped and concluded against — planning
+   materiality itself drives almost nothing downstream. Govt computes a PM/TM set per opinion unit.
+4. **PAJE = max(10% of TM, $5,000)** — the $5,000 floor is mandatory (above). It is computed off TM, so TM
+   must exist first; a PAJE derived before TM is set is wrong.
 
 For EBP, materiality is usually set on net assets available for benefits; for governmental, materiality is applied by opinion unit. Note the basis.
 

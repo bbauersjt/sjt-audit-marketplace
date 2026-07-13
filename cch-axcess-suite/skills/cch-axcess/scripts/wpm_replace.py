@@ -1,10 +1,10 @@
 """wpm_replace.py — replace a workpaper's content in place ("Upload new version").
 
-NEW capability (capture 2026-06-19). Native in-place version overwrite via
+Native in-place version overwrite via
 PUT /v1/Documents/file/{clientId}/{documentId}. Endpoint spec:
 references/endpoints/wpm_replace_version.json.
 
-HARD RULE (live-validated): the uploaded File's BASE name must equal the workpaper's
+HARD RULE: the uploaded File's BASE name must equal the workpaper's
 CURRENT DISPLAY NAME, or WPM returns 400 "File name does not match existing workpaper
 name." The name can NOT come from the stored blob (crypto). So the caller MUST read the
 current display name from WPM metadata first (wpm.folder_get -> row.name for the documentId)
@@ -16,7 +16,7 @@ builder you MUST (1) tell the user plainly it cannot be undone, (2) show the exa
 each replacement, the TARGET (index + display name + folder/address) and the REPLACEMENT (file
 name + source) — and (3) get an explicit "yes". No silent/batched/implied replace; the gate
 fires every time, and a user "just do it" does NOT waive showing the plan + getting the yes.
-It fires NO delete (not the Kymera hazard) but is destructive-in-spirit. file-io.md's DEFAULT
+It fires NO delete but is destructive-in-spirit. file-io.md's DEFAULT
 replace stays soft-delete->evict->claim; use THIS only when the user explicitly wants a true
 in-place new version. Full gate: references/modules/replace-workpaper.md.
 

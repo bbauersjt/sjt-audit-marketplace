@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# NOTE (2026-07-07): the JS_ADD / JS_CAPTURE snippets below assume raw in-page
+# NOTE: the JS_ADD / JS_CAPTURE snippets below assume raw in-page
 # fetch() against knowledgecoach.cchaxcess.com. KC now ships a strict CSP that
 # blocks in-page fetch/eval (both MAIN and ISOLATED worlds) on that origin — a
 # pasted-into-the-tab capture like this will be CSP-blocked. Run captures
 # through the chrome-bridge `chrome_api_call` verb (service-worker fetch,
 # CSP-exempt + CORS-bypassed for *.cchaxcess.com) instead, or drive the calls
 # from the engagement-tab origin rather than the KC tab. See
-# cch-axcess/references/architecture.md "Transport by origin" (AX-34).
+# cch-axcess/references/architecture.md "Transport by origin".
 """Re-runnable capture of AUD-8xx program TAILORING QUESTIONS into program_question.
 
 WHY THIS EXISTS: the CCH tailoring-question set changes every year (new title
@@ -42,8 +42,11 @@ pass here if the firm decides to track them.
 import csv, json, os
 from _db import SEED_DIR
 
-CATALOG_PATH = ("/sessions/brave-intelligent-franklin/mnt/.claude/skills/"
-                "cch-axcess/references/data/kc-forms-catalog-rich.xlsx")  # cch-axcess sibling skill; repoint per install
+HERE = os.path.dirname(os.path.abspath(__file__))
+# cch-axcess is a sibling skill of cch-risk-assessment; its catalog lives in references/data.
+# Derived relative to this file so it resolves on any install; override below if the sibling lays out differently.
+CATALOG_PATH = os.path.join(HERE, "..", "..", "cch-axcess", "references", "data",
+                            "kc-forms-catalog-rich.xlsx")
 NPO_TITLE = "dcf6ee8e-6256-48d6-a3bc-91939f4d7792"
 # audit_type -> CCH title GUID (from kc-forms-catalog-rich.xlsx). CNS/HOA deferred.
 TITLES = {

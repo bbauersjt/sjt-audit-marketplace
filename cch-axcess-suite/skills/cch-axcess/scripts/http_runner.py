@@ -10,7 +10,7 @@ from typing import Any
 
 # WPM locale headers — REQUIRED on every workpapermanagementapi call.
 # Without them the server returns status 200 with an EMPTY ARRAY (silent
-# failure that looks like "nothing in the folder"). Confirmed live 2026-06-03.
+# failure that looks like "nothing in the folder").
 # scripts.wpm merges these into every call automatically; callers that build
 # WPM XHRs by hand must merge them too. Caller-supplied values win.
 WPM_LOCALE_HEADERS = {
@@ -25,11 +25,9 @@ def with_wpm_locale(headers):
     return {**WPM_LOCALE_HEADERS, **(headers or {})}
 
 
-# --- localStorage self-sourcing auth (AX-26 / "with_ls_auth" fix) ---------------
+# --- localStorage self-sourcing auth ("with_ls_auth") ---------------------------
 #
-# BT3 sessions improvised localStorage-self-sourcing wrappers in B1/B2/B3 (~20 bash
-# calls) because every builder baked the headers dict as a JSON literal. This is the
-# shipped version: pass the SENTINEL string "ls:wpm" / "ls:fp" / "ls:kc" as the
+# Pass the SENTINEL string "ls:wpm" / "ls:fp" / "ls:kc" as the
 # `headers` argument of any build_* function and the emitted JS reads tokens from
 # localStorage AT RUNTIME (tokens never cross the tool channel; kc.refreshToken
 # keeps them fresh — re-read per call).
@@ -37,10 +35,10 @@ def with_wpm_locale(headers):
 # Families and casing (architecture.md):
 #   ls:wpm / ls:fp / ls:workbench -> all-caps IDToken + WPM locale headers
 #   ls:kc                         -> mixed-case IdToken
-# NOTE: workbench-api is NOT reachable with KC tokens (live 2026-06-04). The probe is
-# CLOSED (2026-06-05): the monkeypatch-captured WPM bearer IS accepted by workbench-api
-# and financialprep-api — production workbench calls pass the captured header DICT (the
-# WPM leg). "ls:workbench" stays defined but has no validated use; don't reach for it.
+# NOTE: workbench-api is NOT reachable with KC tokens. The monkeypatch-captured WPM
+# bearer IS accepted by workbench-api and financialprep-api — production workbench
+# calls pass the captured header DICT (the WPM leg). "ls:workbench" stays defined
+# but has no validated use; don't reach for it.
 
 _LS_FAMILIES = {
     "wpm":       {"id_token_key": "IDToken", "locale": True},
@@ -49,7 +47,7 @@ _LS_FAMILIES = {
     "kc":        {"id_token_key": "IdToken", "locale": False},
 }
 
-# --- capture-leg auth (AX-32b: engagement-only-tab leg) -------------------------
+# --- capture-leg auth (engagement-only-tab leg) ---------------------------------
 #
 # The ls:<family> sentinels read KC localStorage and are DEAD on an engagement-only
 # tab (no kc.* keys there). The `cap:<family>` sentinel is the counterpart: it reads
@@ -174,7 +172,7 @@ def build_fetch_call(method, url, headers, body=None):
     """Build a JS expression that runs ONE fetch() and returns {status, body}.
 
     Safe for same-origin (e.g. KC tab -> KC API). For cross-origin use build_xhr_call.
-    `headers` may be a dict OR an "ls:<family>" sentinel (AX-26).
+    `headers` may be a dict OR an "ls:<family>" sentinel.
     """
     headers_js = _headers_js(headers, content_type_if_body=(body is not None))
     init_js = ('{"method": ' + json.dumps(method)
@@ -202,7 +200,7 @@ def build_batch_xhr(calls, headers, concurrency=1, retry_on_body_drop=False):
     call has a body — this is THE 415 fix (the single-call builders already inject it;
     this batch builder used to omit it, so every body-bearing KC write 415'd).
 
-    retry_on_body_drop (AX-33, the "stick" fix): when True, each call retries up to
+    retry_on_body_drop: when True, each call retries up to
     5x (~200ms apart) while the response body matches /non-empty request body|Bad
     Request/i — the intermittent 400-in-a-200 where the POST body sporadically isn't
     received and the write silently no-ops (UpdateProperty). Default False keeps
@@ -264,14 +262,13 @@ def build_batch_xhr(calls, headers, concurrency=1, retry_on_body_drop=False):
 
 
 def build_compact_batch_xhr(calls, headers, retry_on_body_drop=True):
-    """Compact batch XHR for KC UpdateProperty writes (AX-36).
+    """Compact batch XHR for KC UpdateProperty writes.
 
-    Same writes + same AX-33 body-drop retry as build_batch_xhr, but returns ONLY
+    Same writes + same body-drop retry as build_batch_xhr, but returns ONLY
     [{i, status, attempts, ok, bodyDrop}] per call -- NEVER the response body. KC
     UpdateProperty echoes the full ~88KB working-copy form on every write; that echo's
     only consumer is the body-drop check (200-wrapping-400 silent no-op), which runs
-    IN-PAGE here -- so the body never crosses the bridge. (A 55-field form went from
-    ~2.7h of echo transfer to seconds.) Verification is unchanged: submit -> reload ->
+    IN-PAGE here -- so the body never crosses the bridge. Verification is unchanged: submit -> reload ->
     GetWorkpaperDiagnostics ("200 != applied"). Sequential (writes on one form drop if
     parallel). Keep build_batch_xhr for callers that genuinely need response bodies.
     """
@@ -311,7 +308,7 @@ def build_compact_batch_xhr(calls, headers, retry_on_body_drop=True):
 
 
 def build_keepalive_js(enable=True):
-    """Silent-audio keep-alive — the Chrome throttle killer (AX-33).
+    """Silent-audio keep-alive — the Chrome throttle killer.
 
     A backgrounded ('hidden') tab gets frozen/throttled (eval timeouts, token-refresh
     stall). A 0-gain Web-Audio oscillator makes Chrome treat the tab as AUDIBLE, which
@@ -374,7 +371,7 @@ def parse_result(js_result_str):
 # Both keep the honest execution model (architecture.md): the Python BUILDS a JS
 # string, the browser EXECUTES it, auth is read from localStorage at runtime, and
 # big payloads stay IN the page (`window.__x`) instead of crossing the tool channel.
-# Naming them kills the B7-style ad-hoc inline JS that bred errors in testing.
+# Naming them avoids ad-hoc inline JS.
 
 
 def build_relay_store_js(payload, slot="__x"):

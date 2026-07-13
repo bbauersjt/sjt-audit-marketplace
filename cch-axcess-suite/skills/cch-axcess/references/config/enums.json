@@ -2,7 +2,7 @@
   "description": "CCH internal enums used by API writes. Mirrored from the cch-risk-assessment skill where applicable. Update both if CCH adds new values.",
   "inherent_risk_and_control_risk": {
     "key_property": "ir or cr on .{AREA}.RelevantAssertion",
-    "_note_surface": "ir/cr live on the AUD-8xx IR/CR grid at .{AREA}.RelevantAssertion. The KBA-400 relevant-assertion SELECTION is a different surface: .KBA400.AuditareaRelevantAssertions. KBA-502 is a read-through rollup, not where IR/CR is written.",
+    "_note_surface": "ir/cr/rmm/PlannedAuditApproach are written against KBA-502's wpId at collectionKey .{AREA}.RelevantAssertion. The AUD-8xx program's own RelevantAssertion grid is a DERIVED view — direct writes there are discarded on refresh. The KBA-400 relevant-assertion SELECTION remains a separate surface: .KBA400.AuditareaRelevantAssertions. See field-conventions.md §3 rows 58-60 / §4 lines 89-90.",
     "values": [
       {"value": "Max", "valueKey": "MAX", "meaning": "Maximum"},
       {"value": "SBM", "valueKey": "SBM", "meaning": "Slightly Below Maximum"},
@@ -23,7 +23,7 @@
   "financial_assertions": {
     "key_property": "objectKey on .{AREA}.RelevantAssertion",
     "values": ["EO", "RO", "CO", "AV", "CU", "UC"],
-    "_note_surface_split": "Two distinct surfaces use these assertion keys. KBA-400 relevant-assertion SELECTION (which assertions are relevant per area) lives on KBA-400 at .KBA400.AuditareaRelevantAssertions. The IR/CR (and RMM / PlannedAuditApproach) grid keyed by assertion lives on the AUD-8xx program at .{AREA}.RelevantAssertion. Do not conflate them: select on KBA-400, set IR/CR on AUD-8xx."
+    "_note_surface_split": "Two distinct surfaces use these assertion keys. KBA-400 relevant-assertion SELECTION (which assertions are relevant per area) lives on KBA-400 at .KBA400.AuditareaRelevantAssertions. The IR/CR (and RMM / PlannedAuditApproach) grid keyed by assertion is written against KBA-502's wpId at collectionKey .{AREA}.RelevantAssertion; the AUD-8xx program's RelevantAssertion grid is a DERIVED view whose direct writes are discarded on refresh. Do not conflate them: select on KBA-400, set IR/CR/RMM/approach on KBA-502. See field-conventions.md §3 rows 58-60 / §4 lines 89-90."
   },
   "risks_property_codes": {
     "key_property": "Risks on .{AREA}.ProgramSteps",

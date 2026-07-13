@@ -22,7 +22,7 @@ from . import http_runner
 WB = "https://workbench-api.cchaxcess.com"
 FP = "https://financialprep-api.cchaxcess.com"
 
-# JE type integer IDs — confirmed positionally on 2026-05-24.
+# JE type integer IDs — positional.
 # POST body [1,4,2,3] in UI order AJE,RJE,TJE,PAJE produced reports named
 # AJE_AJE, AJE_RJE, AJE_TJE, AJE_PAJE in sequential reportId order.
 # Source of truth: references/config/je_types.json.
@@ -32,11 +32,8 @@ JE_TYPE_IDS = {"AJE": 1, "TJE": 2, "PAJE": 3, "RJE": 4}
 # Source of truth: GET /v1/trialbalancereport/reporttypesandsettings.
 TB_REPORT_TYPES = {"SummaryByGroup", "SummaryBySubGroup", "AccountDetail"}
 
-# TB Report column types — partial enum. Captured types on 2026-05-24:
-# Unadjusted, Aje, Final, Remarks. Brett also saw an "Adjusted" option in the
-# UI (excluded from his selection so it didn't reach the wire). Reclassified,
-# Tax, and variance variants likely exist too — to be mapped in a future
-# all-columns-selected capture pass.
+# TB Report column types — partial enum: Unadjusted, Aje, Final, Remarks (and
+# 'Adjusted'). Reclassified, Tax, and variance variants likely exist too.
 # Source of truth: references/config/tb_column_types.json.
 TB_COLUMN_TYPES = {"Unadjusted", "Aje", "Final", "Remarks", "Adjusted"}
 
@@ -152,12 +149,9 @@ def build_fund_settings(funds) -> dict | None:
     funds=[fundId, ...]  → include only those funds (internal ids from
                            scripts.funds.list_funds -> 'id' / fundaccountmap)
 
-    Wire shapes captured + validated live 2026-05-31 (all 3 modes POST 200);
-    byte-for-byte spec: references/config/fund_settings.json. fundOptions is
-    pinned to 'fundsInRows' (CCH ignores the value — confirmed inert).
-    Restored 2026-07-07: the function was dropped in a rebuild while its spec
-    and validation record survived. JE reports take no fund options — leave
-    create_je_report's fundSettings null.
+    Byte-for-byte spec: references/config/fund_settings.json. fundOptions is
+    pinned to 'fundsInRows' (CCH ignores the value). JE reports take no fund
+    options — leave create_je_report's fundSettings null.
     """
     if funds in (None, "default"):
         return None
@@ -304,8 +298,7 @@ def build_leadsheet_columns(
     prior_period_id: int | None = None,
     prior_end_date: str | None = None,
 ) -> list[dict]:
-    """Build the firm-standard leadsheet column set (TWO Remarks columns —
-    locked 2026-07-09, supersedes the single-REF-column layout from 2026-06-04).
+    """Build the firm-standard leadsheet column set (TWO Remarks columns).
 
     Layout (TB-report leadsheet, the firm's DEFAULT surface — protocol B in
     annotate-tbreport.md's two-protocol split):
@@ -329,7 +322,7 @@ def build_leadsheet_columns(
     client_id goes into each Remarks column's engagementId field (CCH naming
     quirk) — set on BOTH Remarks columns, omitted from every other column.
     Remarks_1 → tbreportcomment columnId 1; Remarks_2 → columnId 2 (positional,
-    rename-proof — captured 2026-06-04, reconfirmed 2026-07-09).
+    rename-proof).
 
     `order` stays sequential 1..6 (no PY column) or 1..7 (with PY column) —
     the PY Final column's order shifts to 7 only when it is included.
@@ -354,7 +347,7 @@ def add_remarks_column(client_id: int, engagement_guid: str, report_guid: str,
                        current_settings: dict, headers: dict,
                        name: str = "REF") -> str:
     """Build JS for PATCH /v1/trialbalancereport/editReports — add a Remarks
-    column to an EXISTING report. Live-captured 2026-06-04.
+    column to an EXISTING report.
 
     The firm standard is TWO Remarks columns on a TB-report leadsheet — "REF"
     (cross-refs/index/imm tags) and "Notes" (free notes), see
@@ -408,7 +401,7 @@ def group_by_leadsheet(
 ) -> list[dict]:
     """Partition a flat financial-group list into leadsheet sections.
 
-    Rules (derived from Kymera EBP, 2026-05-28):
+    Rules:
       - Groups whose index falls in income_range  → one section, keyed at income_range[0]
       - Groups whose index falls in expense_range → one section, keyed at expense_range[0]
       - All other groups → section key = floor(index / 100) * 100
@@ -453,7 +446,7 @@ def get_grouping_lists(client_id: int | str, headers: dict) -> str:
     one's id as `grouping_list_id` to create_tb_report. NOTE: this is the
     report-flow endpoint; to check whether a grouping list EXISTS on the
     engagement, use scripts.groups.list_financial_lists (financialList) — see
-    architecture.md, AX-04.
+    architecture.md.
     """
     return http_runner.build_xhr_call(
         "GET", f"{FP}/v1.0/financialgrouptemplate/engagement/{client_id}", headers

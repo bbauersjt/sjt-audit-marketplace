@@ -1,6 +1,5 @@
 {
-  "_description": "Journal Entry type integer IDs used in workbench-api /v1/JournalEntryReport body fields SeparateReports[] and CombinedReports[]. Confirmed positionally on 2026-05-24: POST body [1,4,2,3] in UI order AJE,RJE,TJE,PAJE produced reports named AJE_AJE, AJE_RJE, AJE_TJE, AJE_PAJE in sequential reportId order, locking the integer→type mapping. CCH did NOT order these alphabetically.",
-  "_validated_on": "2026-05-24 (APNM 2025, client 97509, eng 381325)",
+  "_description": "Journal Entry type integer IDs used in workbench-api /v1/JournalEntryReport body fields SeparateReports[] and CombinedReports[]. Confirmed positionally: POST body [1,4,2,3] in UI order AJE,RJE,TJE,PAJE produced reports named AJE_AJE, AJE_RJE, AJE_TJE, AJE_PAJE in sequential reportId order, locking the integer→type mapping. CCH did NOT order these alphabetically.",
   "AJE": 1,
   "TJE": 2,
   "PAJE": 3,

@@ -1,6 +1,5 @@
 {
   "_description": "TB report column type keys observed in the wire body workbench-api /v1/trialbalancereport/createReports under reportFormat.columns[].type. Each captured column object has shape {id, type, name, abbrev, variance, order, periodId, periodEndDate, isDeleted}; columns with type='Remarks' additionally include an `engagementId` field.",
-  "_validated_on": "2026-05-24 (APNM 2025, client 97509, eng 381325)",
   "_known_unmapped": [
     "Tax (TJE) \u2014 likely exists; not yet captured",
     "Prior-period adjustment (PAJE) \u2014 likely exists; not yet captured",
@@ -18,7 +17,7 @@
       "name": "Adjusted Balance",
       "id_pattern": "Adjusted_Current | Adjusted_PriorPeriod_{N}",
       "needs_engagementId": false,
-      "_note": "Observed in UI as a removable column; not captured on the wire yet (Brett removed it from selection on the run that hit the wire)."
+      "_note": "Observed in UI as a removable column; not captured on the wire yet."
     },
     "Aje": {
       "abbrev": "AJE",
@@ -43,13 +42,13 @@
       "abbrev": "RJE",
       "name": "Reclassifying Journal Entry",
       "id_pattern": "Rje_Current",
-      "_note": "Live-captured 2026-06-04 (firm-standard leadsheet, client 94136 Cash Lead). Part of build_leadsheet_columns default layout."
+      "_note": "Part of build_leadsheet_columns default layout."
     }
   },
   "_prior_period_column": {
     "id_pattern": "Final_PriorPeriod_{N}",
     "type": "Final",
     "DOM_colId": "ppBalanceFinal",
-    "_note": "Comparative/PY column \u2014 periodId = PY engagement id, PY periodEndDate. Live-captured 2026-06-04. Only present when a comparative TB is imported."
+    "_note": "Comparative/PY column \u2014 periodId = PY engagement id, PY periodEndDate. Only present when a comparative TB is imported."
   }
 }

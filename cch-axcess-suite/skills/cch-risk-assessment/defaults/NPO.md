@@ -171,7 +171,7 @@ PPC-derived CCH inherent risk defaults. CR defaults to MAX. Tune per engagement.
 
 ## Universal risk-area defaults (apply to all entity types)
 
-These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaults. CCH-determined applicable assertions only — empty assertions are N/A for the area. CR defaults to MAX; RMM derives from IR×CR (will equal IR when CR=MAX).
+These five risk areas appear on KBA-502 but aren't part of PPC's per-area defaults. CCH-determined applicable assertions only — empty assertions are N/A for the area. CR defaults to MAX; RMM derives from IR×CR (will equal IR when CR=MAX). The AUD-8xx numbers in the headers below are the **NPO title's** numbering; the stable key is the binding key (JE2, RPTRNS2, …) — for any other title resolve each area's program number via `scoping/area-map-by-title.md`.
 
 ### Journal Entries (JE2 / AUD-816)
 

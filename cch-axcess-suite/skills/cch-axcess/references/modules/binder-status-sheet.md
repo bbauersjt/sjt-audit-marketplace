@@ -18,7 +18,7 @@ calls:
   - scripts.wpm.folder_tree
   - scripts.binder_status.rows_from_folders
   - scripts.binder_status.build_status_workbook
-status: validated (bridge, 2026-06-23)
+status: validated
 ---
 # Module — Binder Status / Sign-off Sheet
 
@@ -51,7 +51,7 @@ engagement app). Bridge-first; no clicks.
 ## Sign-off column
 Sign-off status comes from the WPM row's **`signOffs[]`** — NOT `documentStatus`/`formStatus` (those are
 lifecycle state: "Active"/blank). Empty `signOffs` -> "Not signed off". The populated key names in
-`binder_status._signoff` are best-effort (the validation binder had nothing signed); confirm against one
+`binder_status._signoff` are best-effort; confirm against one
 signed form and adjust the display mapping if needed (display-only, low risk).
 
 <!-- END -->

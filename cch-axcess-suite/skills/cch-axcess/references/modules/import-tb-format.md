@@ -12,17 +12,13 @@ inputs:
   - "A real CCH TB export from the same engagement (ground truth for columns)"
 calls: []
 status: wip
-validated_on:
-  - "Coop Consulting playground (Govt, 5-fund TB) — 2026-06-03 (constraints captured; full column spec NOT yet documented)"
-  - "Sign convention corrected 2026-06-05 (BT3 provenance audit)"
 ---
 # Module — CCH TB Import Format
 
 ## What this does
 
 Documents what CCH Axcess will and will not accept when importing a trial balance from
-Excel, so import files are built from known constraints instead of improvised. Captured
-2026-06-03; sign convention corrected 2026-06-05.
+Excel, so import files are built from known constraints instead of improvised.
 
 ## Known constraints
 
@@ -31,10 +27,7 @@ Excel, so import files are built from known constraints instead of improvised. C
 - **No title/decoration rows.** Header row, then data. Nothing above the header.
 - **Sign convention: DEBITS POSITIVE, CREDITS NEGATIVE** — the standard TB convention,
   and what CCH TB exports/imports actually use.
-  **Provenance correction (2026-06-05):** this line previously said the opposite. The
-  earlier "credits positive" capture reverse-engineered a CCH export from an engagement
-  (BT3) whose TB had itself been imported INVERTED — the bad import seeded a false
-  "ground truth". Separately, the **FP-API trialbalance endpoint serves balances
+  Separately, the **FP-API trialbalance endpoint serves balances
   credits-positive** (`endpoints/fp_trialbalance.json`) — that is API-internal
   convention, NOT the import convention. Building an import file from API rows
   requires a sign flip. Do not conflate the two again.
@@ -48,7 +41,7 @@ Excel, so import files are built from known constraints instead of improvised. C
 ## Column spec + classification — now captured in trial-balance-prep
 
 The firm's importable TB layout and the classification vocabulary are captured in
-the **`trial-balance-prep`** skill (2026-07-06), which resolves the two items that
+the **`trial-balance-prep`** skill, which resolves the two items that
 were open here:
 
 - **Column order/headers** — three tiers (Basic / Grouped / Fund) in
@@ -73,7 +66,7 @@ optional.
 Export the TB from the target engagement (or have the user provide a prior export).
 That file IS the column spec — mirror headers and order exactly. Sanity-check its signs:
 debits positive. If an export shows credits-positive, suspect a prior inverted import
-(the BT3 failure) and raise it with the user before mirroring anything.
+and raise it with the user before mirroring anything.
 
 ### 2. Build the file
 `xlsx` skill; apply every Known constraint above. No freeze panes, no extra rows.

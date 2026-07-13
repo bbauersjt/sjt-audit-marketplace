@@ -17,8 +17,8 @@ status: foundation
 **Why this exists.** The bash sandbox reaches this install through a mount
 (`…/mnt/.claude/skills/cch-axcess`). That mount serves **text files truncated** —
 cut at a stale byte length, mid-line, mid-token — while serving **binary files
-(zip/xlsx) intact**. Confirmed live 2026-06-04: all 16 `.py` files corrupt through
-the mount, all 7 `.xlsx` and every zip intact, while host `Read` showed every file
+(zip/xlsx) intact**. All 16 `.py` files corrupt through
+the mount, all 7 `.xlsx` and every zip intact, while host `Read` shows every file
 complete on disk. So `python3` against the mount can run corrupt code, and
 `cat`/`grep`/`cp` against it can return corrupt text. Host `Read` is the **arbiter
 of truth** for file content; the mount is transport only — trustworthy ONLY for
@@ -33,14 +33,17 @@ binaries.
 1. **Compute the cache key from the payload binary** (binaries survive the mount):
 
    ```bash
-   PAYLOAD="<mount-path-to>/cch-axcess/exec-payload_AX-39.bin"   # version in the filename
+   PAYLOAD="<mount-path-to>/cch-axcess/exec-payload_AX-50.bin"   # version in the filename
    VER=$(basename "$PAYLOAD" | sed 's/exec-payload_\(.*\)\.bin/\1/')
    HASH=$(sha256sum "$PAYLOAD" | cut -c1-12)
    EXEC=/tmp/cch-ax-${VER}-${HASH}
    ```
 
    The payload filename is **versioned per build** and must match the top CHANGELOG
-   entry. Missing payload = install predates this mechanism → fallback R below.
+   entry (current: `exec-payload_AX-50.bin`). Missing payload =
+   install predates this mechanism → fallback R below. A payload whose version tag
+   lags a script-touching CHANGELOG entry is stale — run the affected scripts from
+   live source and flag for repackage; never rebuild unsupervised.
 
 2. **Cache hit → use it, zero verify.** If `$EXEC/.verified` exists and is readable
    by you, the copy was already gated this build — run from it immediately. Skip
@@ -79,7 +82,7 @@ mv path/to/file path/to/file.cb && mv path/to/file.cb path/to/file
 tail -1 path/to/file   # now serves the true tail; confirm the <!-- END --> marker
 ```
 
-Validated 2026-06-19: cleared stale-truncated views that a 70s wait did not. Use this as the
+This clears stale-truncated views that a 70s wait did not. Use this as the
 first recovery for any file YOU edited this session; fall back to R below only if the rename
 round-trip still shows a short tail (i.e. the disk file really is short).
 

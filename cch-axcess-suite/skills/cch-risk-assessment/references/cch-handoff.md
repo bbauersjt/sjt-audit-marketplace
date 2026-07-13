@@ -15,13 +15,13 @@ Writes:
 Reason: <one-line rationale — becomes the workpaper breadcrumb>
 ```
 
-**Name the AUD-8xx program as the Form for IR/CR/RMM/approach writes — NOT KBA-502.** The editable
-per-assertion IR / CR / RMM / planned-approach grid lives on each **AUD-8xx program workpaper** (the area's
-`RelevantAssertion` collection). **KBA-502 is a read-through summary** with no per-assertion grid of its
-own — it rolls those values up and owns only the FS-level risks. So a HANDOFF that sets IR/CR for an area
-names that area's program (Cash = AUD-801, etc.). `cch-axcess` resolves the exact writable workpaperId and
-the field mechanics; this skill just names the program + the values. (Verified 2026-05-30 — see
-`cascade/kba-502.md`. Do not tag these as "confirm writable surface" — it's resolved.)
+**Name KBA-502 as the Form for IR/CR/RMM/approach writes — NOT the AUD-8xx program.** KBA-502 owns the
+per-assertion IR / CR / RMM / planned-approach grid (collectionKey `.{AREA}.RelevantAssertion`, posted
+against **KBA-502's wpId**); the program's grid is the **derived / read-through** view — a write aimed at
+the program's wpId lands in a working copy the KBA-502-owned recompute discards on refresh. So a HANDOFF
+that sets IR/CR for ANY area names **KBA-502** as the form, with the area carried in the collectionKey.
+`cch-axcess` resolves the exact writable workpaperId and the field mechanics; this skill just names the
+form + the values. (See `cascade/kba-502.md`.)
 
 **Cascade order:** hand off the forms in funnel order — AUD-100 → KBA-400 → KBA-502/programs. Each stage's
 output (areas, assertions, risk levels) is the next stage's input. Don't write IR before KBA-400 has set
@@ -29,26 +29,43 @@ the assertions `selected`.
 
 ## Examples
 
-### Apply NPO Cash IR defaults (writes to the AUD-801 program)
+### Set materiality — first-year / re-set ONLY (KBA-301 write)
+
+Only when materiality is being **set** this year (new engagement or re-benchmarked). If KBA-301 already
+carries this year's numbers, it's a read (SKILL.md Step 0.3), not a HANDOFF. Method: `references/intake.md`
+(the KBA-301 benchmark → PM → TM → PAJE derivation).
 
 ```
 HANDOFF → cch-axcess
 Module: fill-kc-form.md
-Form: AUD-801 (Cash) — the area's AUD-8xx PROGRAM workpaper (NOT KBA-502)
-Engagement: 6b99b20e-cf08-4537-850f-a7f159eec1bc
-Writes (per assertion, write order: selected → ir → rmm; CR left MAX; AV is N/A for Cash):
-  - CASH RelevantAssertion / EO / selected = "Yes" (YES)
-  - CASH RelevantAssertion / EO / ir = "Mod" (MOD)
-  - CASH RelevantAssertion / RO / selected = "Yes" (YES)
-  - CASH RelevantAssertion / RO / ir = "Low" (LOW)
-  - CASH RelevantAssertion / CO / selected = "Yes" (YES)
-  - CASH RelevantAssertion / CO / ir = "Low" (LOW)
-  - CASH RelevantAssertion / CU / selected = "Yes" (YES)
-  - CASH RelevantAssertion / CU / ir = "Mod" (MOD)
-  - CASH RelevantAssertion / UC / selected = "Yes" (YES)
-  - CASH RelevantAssertion / UC / ir = "Low" (LOW)
-  - (then read each row's CCH-recommended rmm and write it back)
-Reason: PPC-derived NPO Cash defaults (defaults/NPO.md). CR=MAX, controls not tested. Basis → KBA-503.
+Form: KBA-301 (Materiality) — KBA-301E for EBP
+Engagement: <guid>
+Writes:
+  - Benchmark = <e.g. Total revenues/contributions> — pick the benchmark yielding the LARGER materiality
+  - Benchmark % = <within the form's printed range; top of range is acceptable, above it is not>
+  - Planning materiality = <benchmark × %>
+  - "Financial statements taken as a whole" line (step-8 add-item): TM = 75% of planning materiality, rounded DOWN to nearest $100
+  - PAJE / passed-adjustment threshold = max(10% of TM, $5,000)   (EBP: max(20% of TM, $5,000); $5,000 floor mandatory)
+Reason: First-year benchmark set per intake.md KBA-301 method. TM ("performance materiality") is the number
+        the audit is scoped/concluded against. (Govt: a PM/TM set per opinion unit.)
+```
+
+### Apply NPO Cash IR defaults (writes to KBA-502 — the programs are derived)
+
+```
+HANDOFF → cch-axcess
+Module: fill-kc-form.md
+Form: KBA-502 (Summary of Risk Assessments) — the IR/CR/RMM/approach WRITE TARGET (NOT the AUD-801 program)
+Engagement: <guid>
+Writes (per relevant assertion, on KBA-502's wpId; write order ir → cr → rmm → approach; AV is N/A for Cash;
+        `selected` not required — grid presence already reflects KBA-400):
+  - .CASH.RelevantAssertion / EO / ir = "Mod" (MOD), cr = "Max" (MAX), rmm = "Mod" (MOD), PlannedAuditApproach = "Substantive: In-depth" (INDEPTH)
+  - .CASH.RelevantAssertion / RO / ir = "Low" (LOW), cr = "Max" (MAX), rmm = "Low" (LOW), PlannedAuditApproach = "Substantive: In-depth" (INDEPTH)
+  - .CASH.RelevantAssertion / CO / ir = "Low" (LOW), cr = "Max" (MAX), rmm = "Low" (LOW), PlannedAuditApproach = "Substantive: In-depth" (INDEPTH)
+  - .CASH.RelevantAssertion / CU / ir = "Mod" (MOD), cr = "Max" (MAX), rmm = "Mod" (MOD), PlannedAuditApproach = "Substantive: In-depth" (INDEPTH)
+  - .CASH.RelevantAssertion / UC / ir = "Low" (LOW), cr = "Max" (MAX), rmm = "Low" (LOW), PlannedAuditApproach = "Substantive: In-depth" (INDEPTH)
+  - (per-area submit → refresh on KBA-502's wpId before the next area; RMM=IR because CR=MAX)
+Reason: PPC-derived NPO Cash defaults (defaults/NPO.md) applied AS-IS. CR=MAX, controls not tested. Basis → KBA-503.
 ```
 
 ### Answer AUD-100 (engagement tailoring → areas + controls)
@@ -78,16 +95,22 @@ Writes:
 Reason: Assertion sets per significance scope sheet (all applicable for significant areas).
 ```
 
-### Single override after engagement-specific judgment
+### Engagement-specific concern — response steps, NOT an IR bump
+
+IR comes from `defaults/{CODE}.md` as-is — **never MAX, never elevated**.
+An engagement fact that raises concern (fraud flag, suspended control, estimate) is addressed by the
+significant-risk flag + **targeted response steps** on the program; any actual IR deviation is queued to
+the firm principal, not written.
 
 ```
 HANDOFF → cch-axcess
-Module: fill-kc-form.md
+Module: populate-program.md
 Form: AUD-801 (Cash) — program workpaper
-Engagement: 6b99b20e-cf08-4537-850f-a7f159eec1bc
+Engagement: <guid>
 Writes:
-  - CASH RelevantAssertion / EO / ir = "SBM" (SBM)
-Reason: Default MOD raised to SBM — wire-transfer dual-control suspended Aug–Oct 2025 (CFO transition). Elevated fraud risk.
+  - Activate + link targeted response steps for EO (wire-transfer testing expanded to the Aug–Oct window)
+Reason: Wire-transfer dual-control suspended Aug–Oct 2025 (CFO transition) — addressed via targeted
+        response, IR stays at the NPO default (MOD). Any IR override → queue to the firm principal.
 ```
 
 ### Flag a Significant Risk
@@ -96,7 +119,7 @@ Reason: Default MOD raised to SBM — wire-transfer dual-control suspended Aug�
 HANDOFF → cch-axcess
 Module: fill-kc-form.md
 Form: AUD-801 (Cash) — Identified Risks table
-Engagement: 6b99b20e-cf08-4537-850f-a7f159eec1bc
+Engagement: <guid>
 Writes:
   - Add row to the area's AssertionLevelRisk table:
     - RiskName = "Cash skimming at field offices"
@@ -116,7 +139,7 @@ Module: populate-program.md   (full pipeline: step selection + risk-linking + re
                                 the rest. Use add-audit-programs.md only if the AUD-8xx form itself
                                 isn't yet in the binder.)
 Form: AUD-801 (Cash) — program workpaper
-Engagement: 6b99b20e-cf08-4537-850f-a7f159eec1bc
+Engagement: <guid>
 Writes:
   - Add step "Confirm cash balances directly with financial institutions"
   - Linked Assertions = [EO, RO, CO, AV, CU, UC]

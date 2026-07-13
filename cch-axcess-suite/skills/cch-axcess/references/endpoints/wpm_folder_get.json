@@ -47,5 +47,5 @@
   ],
   "script_function": "scripts.wpm.folder_get(client_id, eng_id, folder_id, headers)  |  scripts.binder_map.build_map_js(client_id, eng_id)",
   "response_kind": "FLAT JSON ARRAY of rows - no {lineItems} / {result} wrapper. json.loads(body) is the array.",
-  "locale_headers_gotcha": "USERLocale / Accept-Language / CountryCode are REQUIRED. Without them: status 200 + empty array [] for EVERY folder (silent failure; confirmed 2026-06-03). scripts.wpm merges http_runner.WPM_LOCALE_HEADERS automatically."
+  "locale_headers_gotcha": "USERLocale / Accept-Language / CountryCode are REQUIRED. Without them: status 200 + empty array [] for EVERY folder (silent failure). scripts.wpm merges http_runner.WPM_LOCALE_HEADERS automatically."
 }

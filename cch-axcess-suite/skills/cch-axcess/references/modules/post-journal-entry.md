@@ -15,8 +15,6 @@ inputs:
 calls:
   - scripts.je.build_post_je_js
 status: validated
-validated_on:
-  - "Coop / Axcess Blind Test 03 (client 100930, eng 393137) 2026-06-19 — AJE+RJE captured; programmatic replay 201 id 391378"
 ---
 # Module — Post Journal Entry (FinancialPrep)
 
@@ -39,7 +37,7 @@ build a report workpaper.
 ```python
 from scripts import je
 js = je.build_post_je_js(
-    client_id=100930, eng_id=393137, je_type="AJE",
+    client_id=<clientId>, eng_id=<engagementId>, je_type="AJE",
     lines=[{"number":"20000-100","side":"D","amount":100.00},
            {"number":"40500-200","side":"C","amount":100.00}],
     comment="To reclass ...", document_id=None)   # document_id = referenced workpaper's WPM documentId
@@ -56,10 +54,10 @@ matches the new `id`. (Note: request uses `rollforwardOption`; read-back echoes 
 - **Unbalanced** → builder refuses to POST (`{error:'unbalanced'}`). JEs must net to zero.
 - **Account not found** → the number didn't exact-match `accounts[].number`; check the chart.
 - **Wrong engagement** → builder aborts via the URL guard; navigate the correct binder first.
-- **PAJE/TJE** type strings are inferred (AJE/RJE captured live) — confirm on first real use.
+- **PAJE/TJE** type strings are inferred (only AJE/RJE verified) — confirm on first real use.
 
 ## No-hard-delete
 CREATE only (`journalEntryId:0`). Editing (non-zero id) or deleting a JE is **not** scripted —
-done manually (Brett: infrequent + destructive).
+done manually (infrequent + destructive).
 
 <!-- END -->

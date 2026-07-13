@@ -19,17 +19,14 @@ calls:
   - scripts.wpm.download_url / scripts.wpm.download_to_browser_js
   - scripts.wpm.evict_for_replace / scripts.wpm.claim_original_slot
   - scripts.wpm.check_index_available
-status: validated   # live end-to-end on Playground binder 2026-05-31
+status: validated
 ---
 # Module — Workpaper File I/O (upload / download / replace)
 
-> **Index verification.** Read display indexes with `scripts.wpm.verify_index(row, object_type)` —
-> Reports/KCForms use `index`, Workpapers use `documentIndex` (architecture.md → `index` vs
-> `documentIndex`); hand-picking the field false-negatives. And NEVER hand-assemble the move body /
-> `folderParentLineItems` — `wpm.move()` owns the per-type mapping and refuses raw bodies (the
-> semantics are inverted per type; architecture.md → Move payload semantics).
-
-All three flows live-validated on the Playground binder (client 100173, eng 390765) 2026-05-31.
+> **Index verification & Move body.** Use `scripts.wpm.verify_index(row, object_type)` for display
+> indexes and `wpm.move()` for the move body — never hand-pick the index field or hand-assemble
+> `folderParentLineItems`. Rules live in architecture.md → `index` vs `documentIndex` and → Move
+> payload semantics.
 
 ## Prerequisites
 
@@ -49,13 +46,19 @@ Both flows therefore lean on browser-native mechanisms (the `file_upload` tool f
 
 ## 1. UPLOAD — add a file to the binder
 
-> **BRIDGE PRIMARY (preferred):** `chrome_upload(local_path=<Windows host path>, url="https://workpapermanagementapi.cchaxcess.com/v1/Documents/{clientId}", field_name="file", headers={Authorization, IDToken})` — verified full pipeline (upload -> `wpm.move` into section -> set index). Do NOT set Content-Type. Capture headers via `chrome_network_recent`. The `file_upload`/base64-XHR flow below is the LINKED-TAB FALLBACK.
+> **BRIDGE PRIMARY (preferred):** `chrome_upload(local_path=<Windows host path>, url="https://workpapermanagementapi.cchaxcess.com/v1/Documents/{clientId}", field_name="file", headers={Authorization, IDToken})` — full pipeline (upload -> `wpm.move` into section -> set index). Do NOT set Content-Type. Capture headers via `chrome_network_recent`. The `file_upload`/base64-XHR flow below is the LINKED-TAB FALLBACK.
 
 Endpoint (informational): `POST workpapermanagementapi.cchaxcess.com/v1/Documents/{clientId}` — `multipart/form-data`, single field `file`. You do NOT build this POST yourself.
 
 **▶ Run the name-collision preflight BEFORE uploading** — the collision is enforced at the
 upload POST itself (400 "File name already exists for an active workpaper."), not just at the
-rename step (confirmed 2026-06-03). See AX-02 below.
+rename step. See the name-collision preflight in Known failure modes below.
+
+**Transcription trap:** `chrome_upload` takes the
+bearer as a literal `headers` param, so a hand-copied JWT can pick up a single-char typo that
+returns **401 with an empty body — indistinguishable from expiry**. Before treating a 401 as a
+rotation, diff the pasted bearer against the exact `chrome_network_recent` string; a still-valid
+token 401s only if mangled. Paste the captured string once and reuse it verbatim across the batch.
 
 ```
 # a) Find the page's hidden file input (the drop-zone backs onto a real <input type=file>):
@@ -67,9 +70,9 @@ file_upload(ref, ["C:\\...\\local\\file.xlsx"])              # native upload, no
 
 **▶ Verify the POST actually fired** — don't assume. Confirm a new Workpaper appeared in Unfiled
 (`-1`) via `wpm.folder_get`. The Angular change handler is unreliable: it sometimes doesn't fire,
-or the page navigates instead (AX-01).
+or the page navigates instead.
 
-**▶ VERIFIED fallback when the auto-POST doesn't fire (live 2026-06-03, T07):** the file_upload
+**▶ VERIFIED fallback when the auto-POST doesn't fire:** the file_upload
 tool still places the File into the `<input>`. In-page JS reads that File off the input and POSTs
 `multipart/form-data` to `/v1/Documents/{clientId}` with the captured WPM headers — the bytes
 never cross the tool boundary, so the base64/PII constraint above does NOT block this:
@@ -91,7 +94,7 @@ The file lands in **Unfiled Workpapers** (folder `-1`), `type:"Workpaper"`, `ind
 
 **Place + index it** (see `scripts/wpm.py`):
 
-**▶ Name-collision preflight (AX-02).** A `(index, name)` is reserved across the WHOLE binder,
+**▶ Name-collision preflight.** A `(index, name)` is reserved across the WHOLE binder,
 including the `User to delete` folder (index `9999`) — a stale copy parked there will block your
 new file's name with `400 "File name already exists for an active workpaper."` Before claiming
 the name, `folder_get` the target folder AND `9999` and scan for the same name; if a blocker
@@ -109,7 +112,7 @@ js = wpm.move(client_id, [{"object_type":"Workpaper",
 js = wpm.rename_workpaper(client_id, document_id, "3100", current_doc, headers)
 ```
 
-**▶ Active-user lock (AX-03).** Right after an upload, `rename_workpaper` can return
+**▶ Active-user lock.** Right after an upload, `rename_workpaper` can return
 `400 "There is an active user. Changes cannot be saved."` — a transient lock. Poll
 `folder_get` / retry the rename until it clears (short backoff) rather than aborting; do NOT
 re-upload (that just makes a duplicate).
@@ -132,8 +135,7 @@ js = wpm.download_to_browser_js(client_id, client_guid, document_id, "C-1 Cash.x
 #   cp ~/Downloads/"C-1 Cash.xlsx"  <target mounted folder>
 # NOTE: use cp, not mv — the bash sandbox CANNOT unlink files on a mounted
 # folder (rm -> "Operation not permitted"), so the Downloads original persists;
-# tell the user it's there to clear. Validated end-to-end 2026-05-31: a 101KB TB
-# workpaper downloaded, opened cleanly in openpyxl, copied to the target mount.
+# tell the user it's there to clear.
 ```
 
 (Other doc routes are red herrings: `/v1/Documents/{cid}/{docId}` returns metadata JSON, `/v1/Documents/{cid}/{docId}/{index}` is an index-collision check, and the metadata's `documentUrl` returns an HTML viewer page — none serve bytes.)
@@ -145,7 +147,7 @@ The problem (live-reproduced): after re-uploading an edited copy, assigning it t
 
 ### ✅ DEFAULT path — soft-delete the original, then upload the replacement (index-bump eviction)
 
-**This is the path to use** (Brett 2026-05-31): it never deletes and never overwrites, so the original always survives as its own recoverable document and no one can be blamed for lost data. The replacement comes in as a NEW document that takes the original's slot; the original is retired beside it.
+**This is the path to use**: it never deletes and never overwrites, so the original always survives as its own recoverable document and no one can be blamed for lost data. The replacement comes in as a NEW document that takes the original's slot; the original is retired beside it.
 
 ```python
 # original: the row being replaced (name, index, documentId, type) from folder_get
@@ -159,16 +161,16 @@ wpm.evict_for_replace(client_id, original_row, headers)
 wpm.claim_original_slot(client_id, new_row, "3100", original_name, headers)
 ```
 
-Live result on Playground: EVICT 200, CLAIM 200, both files coexist —
+Result: EVICT 200, CLAIM 200, both files coexist —
 `new @ "3100", original @ "3100.DEL (replaced)"`. The collision is gone, the original is preserved.
 
 `wpm.check_index_available(client_id, document_id, index, headers)` pre-tests whether a target index is free (`{documentIndexExistsStatusCode:200}`).
 
-### ⚠️ Native "Upload new version" — captured, but consent-gated (AX-33)
+### ⚠️ Native "Upload new version" — captured, but consent-gated
 
 The workpaper row's `…` menu has **Upload new version** (an OVERWRITE: prior content survives only in
-CCH version history, not as an independent workpaper). It fires **NO DELETE call** (not the
-Kymera-style hazard) but is destructive-in-spirit. **The default is still the soft-delete→evict→claim
+CCH version history, not as an independent workpaper). It fires **NO DELETE call** but is
+destructive-in-spirit. **The default is still the soft-delete→evict→claim
 path above** — use it unless the user *explicitly* wants a true in-place version.
 
 The in-place path **is now scripted** via `PUT /v1/Documents/file/{clientId}/{documentId}` —
@@ -178,7 +180,7 @@ yes; a "just do it" does NOT waive the plan+yes). The replacement file's base na
 workpaper's **current display name** or WPM 400s "File name does not match existing workpaper name".
 Don't hand them off to the UI anymore — route to `replace-workpaper.md`.
 
-> **Upload transport (F1, updated AX-34):** `chrome_upload` (bridge, service worker) is the VERIFIED
+> **Upload transport:** `chrome_upload` (bridge, service worker) is the VERIFIED
 > PRIMARY upload path — full pipeline POST `/v1/Documents/{clientId}` -> `wpm.move` -> set index (no
 > Content-Type; capture headers via `chrome_network_recent`). The in-page **base64-XHR** flow above is the
 > LINKED-TAB FALLBACK (used when the bridge is down). The old 'chrome_upload fails CORS, never use it' rule
@@ -187,9 +189,9 @@ Don't hand them off to the UI anymore — route to `replace-workpaper.md`.
 
 ## Known failure modes / gotchas
 
-- **Upload "succeeded" but no Workpaper in Unfiled** = Angular change handler didn't fire (AX-01). Verify with `folder_get(-1)`; run the VERIFIED FormData fallback in the UPLOAD section.
-- **`400 "File name already exists for an active workpaper."`** = name reserved somewhere in the binder, often the `User to delete` folder (`9999`) (AX-02). Enforced at the upload POST itself, not just rename (confirmed 2026-06-03) — run the preflight BEFORE uploading; `evict_for_replace` the blocker.
-- **`400 "There is an active user. Changes cannot be saved."`** = transient post-upload lock (AX-03). Poll/retry the rename; do NOT re-upload.
+- **Upload "succeeded" but no Workpaper in Unfiled** = Angular change handler didn't fire. Verify with `folder_get(-1)`; run the VERIFIED FormData fallback in the UPLOAD section.
+- **`400 "File name already exists for an active workpaper."`** = name reserved somewhere in the binder, often the `User to delete` folder (`9999`). Enforced at the upload POST itself, not just rename — run the preflight BEFORE uploading; `evict_for_replace` the blocker.
+- **`400 "There is an active user. Changes cannot be saved."`** = transient post-upload lock. Poll/retry the rename; do NOT re-upload.
 - **401/404 mid-session** = the captured JWT rotated; re-capture headers and retry.
 - **Workpaper indexing uses `rename_workpaper` (PUT /v1/Documents)** — `set_index` (the KCForms path) silently no-ops on Workpapers.
 - **`rename_workpaper` needs the ACTUAL folder_get row** — synthetic dicts 400 (`rollForwardOption`, `documentId` missing). PUT success body is EMPTY; verify via follow-up folder_get.

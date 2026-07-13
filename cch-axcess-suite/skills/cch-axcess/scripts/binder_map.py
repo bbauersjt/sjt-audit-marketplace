@@ -31,9 +31,6 @@ click needed when a KC tab is open. FALLBACK (engagement-tab-only): install
 scripts.auth_capture.INSTALL_MONKEYPATCH_JS and trigger ONE WPM call (click any
 folder); the JS then discovers the freshest captured workpapermanagementapi
 header set from window.__cch_capture. Either way tokens never leave the browser.
-
-Validated: Nansemond Indian Nation 2025 (client 94136 / engagement 368481),
-2026-05-28 — 35 folders, 151 items (82 KCForms, 38 Workpaper, 17 Report, 14 LeadSheet).
 """
 import json as _json
 

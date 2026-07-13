@@ -63,13 +63,19 @@ For the standard 8-step Cash default (no analytical, CR=Max), the result is `IND
 
 ## IR / CR / RMM write order
 
-When writing IR/CR/RMM on `.{AREA}.RelevantAssertion`:
+IR/CR/RMM on `.{AREA}.RelevantAssertion` is written against **KBA-502's wpId** — the program's grid is the
+derived/read-through view (a program-targeted write lands in a working copy the KBA-502-owned recompute
+discards on refresh). Per assertion:
 
-1. **Write `selected = "Yes"` FIRST** for every assertion you'll touch. Otherwise CCH resets IR on submit. valueKey `"YES"`.
-2. **Then write `ir`** with one of `MAX`/`SBM`/`MOD`/`LOW`.
-3. **CR defaults to MAX** until controls are tested — leave alone unless changing.
-4. **RMM uses CCH's `recommendedAnswer`** — read it from the row's `rmm.recommendedAnswer` field after IR/CR are set, then write that value back. CCH computes IR×CR → RMM server-side.
-5. **N/A assertions** show valueKey `resetanswer` on any write attempt — server-side rule. Don't waste calls on them. Per area:
+1. **Write `ir`** with one of `SBM`/`MOD`/`LOW` (never `MAX` — defaults applied as-is).
+2. **Write `cr` = MAX explicitly** on a substantive audit — the pre-committed state-2 default still raises
+   a Question-Unanswered diagnostic. Lower only with controls support.
+3. **RMM = IR when CR=MAX** — deterministic; write it explicitly in the same pass. Only when CR < MAX, read
+   the row's `rmm.recommendedAnswer` back and write that (CCH computes IR×CR → RMM server-side).
+4. **`selected` is NOT required** — assertion presence on the grid already reflects KBA-400's selection.
+5. **Per-area durable unit:** writes → submit (KBA-502's wpId) → refresh before the next area; verify via
+   the diagnostics oracle (cch-axcess `field-conventions.md` §5).
+6. **N/A assertions** render `visible:false` / reject with `resetanswer` — server-side rule. Don't waste calls on them. Per area:
    - Cash: AV is N/A
    - Investments: CU is N/A
    - PP&E: CU is N/A
@@ -94,6 +100,3 @@ PPC didn't track these. Universal defaults are in `defaults/{CODE}.md` under "Un
 
 Submit AFTER your writes; never between writes within a logical group, or partial state may surface. The endpoint and payload shape are `cch-axcess`'s to state (`references/modules/fill-kc-form.md`) — this file only carries the timing rule.
 
-## Validation log
-
-- 2026-05-20 — Conventions captured during APNM 2025 NPO Cash buildout. Universal rules established for Fraud Awareness + Info as Audit Evidence linkage, PlannedAuditApproach decision, and Risks write format.

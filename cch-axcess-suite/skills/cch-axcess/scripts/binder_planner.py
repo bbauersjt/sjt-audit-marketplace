@@ -22,12 +22,12 @@ TEMPLATES = {
 
 
 def section_for_index(idx: str) -> str | None:
-    """Map a form index to its 4-digit binder SECTION index (AX-26).
+    """Map a form index to its 4-digit binder SECTION index.
 
     Rule: section = first-two-digits * 100 — "0201" -> "0200", "8110" -> "8100" —
     EXCEPT indexes whose hundreds digit rolls into a parent section that the firm
-    files flat: "81xx" files to 8000 Single Audit (BT3 B7: the inline FOLDER_MAP
-    was missing the "81" entry). Extend EXCEPTIONS as new flat-filed parents appear.
+    files flat: "81xx" files to 8000 Single Audit. Extend EXCEPTIONS as new
+    flat-filed parents appear.
     """
     if not idx or len(idx) < 2:
         return None
@@ -49,9 +49,9 @@ def _condition_passes(cond: str | None, flags: dict[str, bool]) -> bool:
 def plan(client_type: str, flags: dict[str, bool], _return_skipped: bool = False):
     """Return the list of {idx, fid, name, target_folder_idx, cond} rows that apply.
 
-    AX-26: rows that pass the type/section/condition gates but whose NAME doesn't
+    Rows that pass the type/section/condition gates but whose NAME doesn't
     match FORM_ID_RE are collected as `skipped` (a form whose id we couldn't parse
-    is surfaced, never silently dropped — BT3 B7). With _return_skipped=True the
+    is surfaced, never silently dropped). With _return_skipped=True the
     return is (rows, skipped); default stays a bare list for back-compat.
 
     flags keys (default False unless caller sets True):
@@ -111,11 +111,11 @@ def diff_against_unfiled(plan_rows: list[dict], unfiled_items: list[dict]) -> di
     # Forms already filed elsewhere would need a separate folder-tree scan to detect;
     # caller can compute that if needed. Defaulting to "needs add" if not in Unfiled.
     #
-    # AX-26: split to_add into catalog-resolvable vs not. S-suffix (Single Audit)
+    # Split to_add into catalog-resolvable vs not. S-suffix (Single Audit)
     # forms resolve from the SA title (catalog.load_sa_title_forms / live
     # GetWorkpaperListForAddForms pull — see kc_title_library.json), NOT the binder's
     # own title. NEVER silently skip an unresolved form — surface `unmatched` to the
-    # user by NAME (BT3 B7 silently dropped 22 S-forms).
+    # user by NAME.
     from . import catalog as _catalog
     sa_fids = {r["fid"] for r in _catalog.load_sa_title_forms()}
     sa_title_adds = [p for p in to_add if p["fid"] in sa_fids]

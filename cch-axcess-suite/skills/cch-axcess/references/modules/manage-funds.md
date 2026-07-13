@@ -33,12 +33,12 @@ status: validated
 ---
 # Module — Manage Funds (Fund TB Setup)
 
-> **Placeholder-TB halt (AX-26, mandatory).** Before ANY account-assignment step, pull the
+> **Placeholder-TB halt (mandatory).** Before ANY account-assignment step, pull the
 > account map and run `scripts.funds.preflight_account_map(accounts)`. If `ok=False`, STOP
 > and prompt the user ("looks like no TB has been imported — import it first?"). Never
-> proceed on a dummy map (BT3 incident).
+> proceed on a dummy map.
 >
-> **Fund-reference halt (AX-31, mandatory).** Also run
+> **Fund-reference halt (mandatory).** Also run
 > `scripts.funds.check_fund_references(account_rows, defined_funds)` — `defined_funds` from
 > `list_funds()`. If `ok=False`, an account points at a fund NOT in the defined Fund list
 > (an out-of-range / orphan fund). STOP and surface the offending accounts to the user; the
@@ -134,9 +134,5 @@ After every mutation, re-GET the relevant list and confirm the change landed. Th
 
 - **Rename was not captured directly.** Likely uses the same `upsert_*` PUT (caller sends an existing row with the new `name`), but unverified.
 - **Sub-type assignment via the Fund Sub-Type tab UI** was not captured directly. The data model says it routes through `PUT /v1/Fund` with `fundSubTypeId` set; the UI may fire a different endpoint when used from that tab.
-
-## Validated on
-
-- Captured + replayed live 2026-05-25 on clientId 90773, engagement page 356643. Built the full hierarchy from empty (2 fund types, 2 funds, 2 sub-types, sub-type stamped on fund 01, 2 account assignments + 1 unassign), then deleted everything via `scripts.funds.delete_*` (including a dependency-blocked DELETE that returned the expected 400 + drain + retry). All paths returned the expected status codes and state.
 
 <!-- END -->

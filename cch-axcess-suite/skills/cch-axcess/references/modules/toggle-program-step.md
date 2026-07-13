@@ -18,15 +18,10 @@ inputs:
 calls:
   - scripts.kc.toggle_program_step
 status: validated
-validated_on:
-  - "APNM 2025 (NFP) AUD-802 Investments single + 18/9-step batch toggles — 2026-05-21"
 ---
 # Module — Toggle Program Steps (Add / Remove from Audit Program)
 
-> **wpId lookup — GetBinder FIRST (AX-26).** Any time you need a form's workpaperId (or
-> any binder workpaper's id): `GET https://knowledgecoach.cchaxcess.com/api/binder/GetBinder/{engagementGuid}`
-> from the KC tab (`ls:kc` auth) — `result.workpapers[]` carries every workpaper with
-> name + wpId. Never walk WPM folders for a form lookup (BT3 B9: ~17 wasted calls).
+> **wpId lookup — GetBinder FIRST.** See `architecture.md` → "WPM surface — confirmed facts".
 
 **Trigger phrases:** "add steps to the [Cash/Investments/AR/etc.] program", "pull in steps for [area]", "remove this step from the program", "send this step back to the library", "select these audit steps", "tailor the program steps", "build out the AUD-8xx step list", "update visible steps on [AUD-8xx]".
 
@@ -68,7 +63,7 @@ For each step you want visible, include:
 1. The step row's `key` from `.{AREA}.ProgramSteps[].key`.
 2. Plus the `key` of every entry in that step's `childObjectList` (sub-steps) that should also be visible.
 
-The captured live behavior (AUD-802, APNM 2025, 2026-05-21) added step #0 "Debt and Equity Investments – Detailed Analysis" and the body's `value` was `"<childSubStepKey>;<parentStepKey>"` — two GUIDs because that step has one sub-step in its `childObjectList`. Both went visible together.
+For example, adding step #0 "Debt and Equity Investments – Detailed Analysis" the body's `value` was `"<childSubStepKey>;<parentStepKey>"` — two GUIDs because that step has one sub-step in its `childObjectList`. Both went visible together.
 
 Order in the value string doesn't appear to matter — the server canonicalizes server-side.
 
@@ -152,12 +147,12 @@ per-property `POST /api/Workpaper/UpdateProperty/{eng}/{wp}` documented in `fill
 Plan: toggle visible first, then UpdateProperty in sequence.
 
 **A program step's only fillable per-step fields are `SignOff`, `Comment`, and `Comments`.**
-Settled live 2026-06-04 (read AUD-801, walked 3 steps / 72 distinct field names): **there is
+**There is
 NO `WpReference`-like field on a program step** — no workpaper-reference field exists at the
 step level at all. (`Assertion`/`Risks` belong to the step's risk sub-structures, not the step
 itself; they are not per-step fillable fields and were never a WP-ref.) If a user asks you to
-set a step's WP reference, **say it doesn't exist** — do not silently drop the request (the
-B13 lapse). The per-step write fields are SignOff / Comment / Comments, full stop.
+set a step's WP reference, **say it doesn't exist** — do not silently drop the request. The
+per-step write fields are SignOff / Comment / Comments, full stop.
 
 For each newly-visible step, the firm convention is just:
 1. Set `SignOff` (the step's sign-off token).
@@ -175,14 +170,9 @@ For each newly-visible step, the firm convention is just:
 The endpoint takes binder + workpaper IDs only — there is nothing area-specific in the URL or body shape. Verified for `.INVEST.ProgramSteps`. Highly likely to work identically for every AUD-8xx form (`.CASH.ProgramSteps`, `.AR.ProgramSteps`, etc.) since they all share the same collection schema. First-use in any new area should still verify post-POST.
 
 **Collection-path area token = area SHORT NAME, never the form number.** The path is
-`.CASH.ProgramSteps` — **NOT** `.CASH801.ProgramSteps` (confirmed live 2026-06-04 on AUD-801).
+`.CASH.ProgramSteps` — **NOT** `.CASH801.ProgramSteps`.
 The AUD-8xx form number does not appear in the collection key; using it produces a nonexistent
 collectionKey that UpdateProperty accepts with a silent 200 (the silent-200 class — see
 architecture.md). `build_write_payload` refuses a hand-assembled key for exactly this reason.
-
-## Validated on
-
-- APNM 2025 (NFP), 2026-05-21: AUD-802 Investments. Toggled step #0 (Debt and Equity Investments – Detailed Analysis, key `9D0B9B4E-F2AE-4186-B3E8-AE68405EED44`) from library → visible via UI; captured the POST. Then toggled it back to library; captured the empty-value POST. Both verified via re-GET (`visible: true` then `visible: false`).
-
 
 <!-- END -->

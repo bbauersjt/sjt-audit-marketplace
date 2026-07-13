@@ -15,8 +15,6 @@ description: >-
 
 # CCH Form Fill
 
-> Last verified against cch-axcess AX-37 — 2026-07-07.
-
 Fills the CCH Axcess Knowledge Coach planning forms and audit-program step responses that fall outside the risk cascade. Determine context- and client-aware answers, apply firm-standard confirmable defaults, and write them back through cch-axcess.
 
 ## First — classify the request (do this before anything else)
@@ -45,7 +43,7 @@ Use `cch-axcess` for every platform read and write.
 
 Run against a mounted engagement folder and a live binder. **Load `references/form-content-reference.md` first and keep it resident for the whole engagement** — it carries the cross-reference recognition index (topic → owning form), the per-title form-ID map (§2b — the same AUD/AID number means different programs on different entity titles), and the per-step disposition cascade you apply to every field. Steps:
 
-1. **Determine entity type.** Resolve the binder title through cch-axcess (`lastUsedTitleGuid`) and corroborate with the trial balance: standard (commercial / nonprofit / government) or EBP. Add the Single Audit module when the TB/SEFA shows federal awards. Type controls which reference files apply.
+1. **Determine entity type.** Resolve the binder title through cch-axcess (`lastUsedTitleGuid`) and corroborate with the trial balance: standard (commercial / nonprofit / government), **construction (CNS)**, or EBP. Add the Single Audit module when the TB/SEFA shows federal awards. Type controls which reference files apply. **Construction (CNS)** follows the Commercial content set with parity through Fair Value (AUD-816); from AUD-817 the AUD-8xx numbering diverges (817 = Uncompleted/Completed Contracts, not VIE; the remaining risk/disclosure programs each shift +1) — see `references/type-cns.md` and `cch-risk-assessment/scoping/area-map-by-title.md`.
 
 2. **Read the binder.** Through cch-axcess: `GetBinder` to list workpapers, then `read_form` + field inventory on each target form. Forms cascade — fields appear only after driver questions are answered, so read, answer drivers, re-read to a fixed point. Some forms are empty until a driver activates them (e.g., COR-203 needs a new-engagement flag).
 
@@ -61,18 +59,14 @@ Run against a mounted engagement folder and a live binder. **Load `references/fo
 
 **Write precondition (applies no matter how you got here):** before writing ANY field, steps 1–3 must be complete for this engagement — entity type determined, binder read, gather/confirm batch surfaced. If any is missing (you arrived from a lookup, or you are resuming mid-conversation), stop and run steps 1–3 first. Do not write from a partially-initialized state.
 
-**Fleet mode — pre-built gather context:** when running inside the audit fleet (`bots/`), the
-`0200-planning-risk` bot runs steps 1–3 ONCE per engagement and persists the result as
-**`engagements/<client>/form-fill-context.md`** — entity type + platform, the gleaned [L] facts,
-the [A] answers (named people, dates, predecessor, designated individual), the [C] confirm-batch
-outcomes with a confirmed-on date, and the constants (reviewers, testing-WP indexes, report date).
-A context artifact that matches THIS engagement (client + period) **satisfies steps 1–3**: read it
-and go straight to per-form work — never re-run the gather or re-ask the confirm batch. If the
-artifact is missing or stale, do **not** self-initialize from inside a section bot — report that
-`0200-planning-risk` must supply it and mark the fill pending (fleet rule: `bots/RULES.md` §H).
-Section bots contribute their own section's coverage + evidence refs as [K] inputs to step
-responses. The concluding [C] items are re-confirmed at the end by `0600-concluding` from the
-section status reports (`bots/RULES.md` §S) — update the artifact when any of them flips.
+**Pre-built gather context:** when a pre-built planning-context artifact for this engagement
+(matching client + period) already exists — e.g. **`engagements/<client>/form-fill-context.md`**,
+carrying entity type + platform, the gleaned [L] facts, the [A] answers (named people, dates,
+predecessor, designated individual), the [C] confirm-batch outcomes with a confirmed-on date, and
+the constants (reviewers, testing-WP indexes, report date) — reading it **satisfies steps 1–3**:
+use it and go straight to per-form work, and do not re-run the gather or re-ask the confirm batch.
+If the artifact is missing or stale, perform steps 1–3 yourself. Update the artifact when any
+concluding [C] item flips.
 
 ## Universal rules
 
@@ -108,7 +102,7 @@ Read the file that fits the task:
 - `references/phrasing.md` — global wording rules (narrative vs. WP reference, N/A top-line, list-ties-to-TB) and captured response wording.
 - `references/section-library.md` — per-area procedures, wave-offs, and distilled answers for every back-of-file FS area (standard + EBP), plus the planning/concluding narratives (related party, controls/COSO, understanding the entity, FS review, SEFA).
 - `references/cross-type-core.md` — what is shared across types and the per-type delta map.
-- `references/type-commercial.md`, `references/type-npo.md`, `references/type-ebp.md` — per-type specifics.
+- `references/type-commercial.md`, `references/type-npo.md`, `references/type-ebp.md`, `references/type-cns.md` — per-type specifics (`type-cns.md` = Construction: Commercial parity through AUD-816, +1 numbering shift from AUD-817).
 - `references/sa-module.md` — the Single Audit module.
 - `references/planning-sections/section-01.md` … `section-06.md` — the planning/concluding section maps (knowledge requirements, batched questions, defaults). These are the governmental(+SA) maps and **also serve as the govt per-type reference (there is no separate `type-govt.md`)**; the structure carries to the other types.
 

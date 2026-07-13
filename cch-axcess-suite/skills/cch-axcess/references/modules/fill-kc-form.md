@@ -35,15 +35,10 @@ calls:
   - scripts.xref.load_engagement_form_index
   - scripts.xref.resolve
 status: validated
-validated_on:
-  - "AUD-100 Claude Playground NPO 2026-05-29 — select(Yes/No), free-text answer+comment, multiselect(audit areas)"
 ---
 # Module — Fill KC Forms
 
-> **wpId lookup — GetBinder FIRST.** Any time you need a form's workpaperId (or
-> any binder workpaper's id): `GET https://knowledgecoach.cchaxcess.com/api/binder/GetBinder/{engagementGuid}`
-> from the KC tab (`ls:kc` auth) — `result.workpapers[]` carries every workpaper with
-> name + wpId. Never walk WPM folders for a form lookup.
+> **wpId lookup — GetBinder FIRST.** See `architecture.md` → "WPM surface — confirmed facts".
 
 **Triggers:** "fill out [form ID]", "answer the questions on [form]", "fast-fill the planning forms", "inject answers into [form]", "scan [form] for cross-references", "walk the planning forms", "complete AUD-100 / KBA-302 for [client]".
 
@@ -75,7 +70,7 @@ js = kc.update_properties_sequential(eng_guid, wp_id, payloads, headers)
 ```
 
 **Data channel — bridge vs linked-tab.** On the **bridge** (`chrome_api_call`), KC reads come back as
-**real JSON, NOT DLP-filtered** (validated 2026-06-23) — `kc.read_form`'s payload returns inline (or
+**real JSON, NOT DLP-filtered** — `kc.read_form`'s payload returns inline (or
 auto-saves to the tool-results tree if very large; read it from disk there). Only on the **linked-tab
 fallback** is the channel DLP-filtered (`[BLOCKED...]` on the probe): there, read by download-to-disk —
 bundle the response into a Blob and trigger a native browser download (pattern: `bulk-capture-forms.md`
@@ -87,8 +82,9 @@ save-and-report — mounting Downloads is the skill's job.
 
 ## Field-kind taxonomy (the thing that used to break per-form)
 
-> **The authoritative field/valueKey registry is `references/config/field-conventions.md`** (shipped as
-> `field-conventions.json`, consumed by `classify_property` + `build_write_payload`). It is the ONE
+> **The authoritative field/valueKey registry is `references/config/field-conventions.md`.** There is no
+> `field-conventions.json`; the same conventions are hard-coded in `scripts/kc.py` (`classify_property` +
+> `build_write_payload`), so a convention change must land in BOTH the registry and kc.py. It is the ONE
 > canonical map of every field-kind, valueKey convention, option-set/enum, per-prop convention, and
 > collection-targeting rule. **valueKey conventions are DATA, not discoverable from the form GET** —
 > `floatieItemList` is EMPTY on convention-driven props, so the code/registry must carry them. Look up
@@ -107,7 +103,7 @@ Every field's kind comes from `propertyType` (int), refined by `floatieType` + t
 
 `build_write_payload()` handles all of this: sign-off tokens go to `valueKey`; a choice field with an empty `options` list raises (skip it — don't free-text it). Skip any writable field whose row is an **addable template** (see failure modes).
 
-Two facts that make this reliable (verified across 1535 fields / 10 default NPO forms):
+Two facts that make this reliable:
 
 - **Options live at `prop['floatieItemList']['list']`** — `floatieItemList` is always an object `{isCustomizable, list}`, never a bare array. Each item is `{key, value, isCustom}`; the item's **`key` is the `valueKey`** to send. `legal_dropdown_values()` / `inventory_form()` already extract this. An empty list = free text, not a dropdown — `floatieItemList` is present on every field, so its mere presence means nothing.
 - **A form OBJECT (row) bundles the kinds:** a tailoring row is `Question`(label) + `Answer`(answer) + `Comment`(text) + system fields. `inventory_form()` groups fields under their object and surfaces the object's `visible` flag (the gating signal — see below).
@@ -130,7 +126,7 @@ inv  = kc.inventory_form(form)
 A field is answered iff `kc.is_answered(prop)` (state==3 AND not default). On a fresh form everything is state 0.
 
 **Fill from `inv['fillable']`, not `inv['writable']`.** `kc._is_fillable` applies
-THREE gates — each catches a distinct phantom class, all confirmed live on AUD-100:
+THREE gates — each catches a distinct phantom class:
 
 1. **rendered (column).** `collections` carries every property the form *could*
    hold, including latent ones the layout never shows. Each AUD-100 tailoring row
@@ -164,14 +160,17 @@ THREE gates — each catches a distinct phantom class, all confirmed live on AUD
    surfaced in `inv['heading_answers']` (and stay in `writable`) for review.
 
 **Known limitation + the working path for grid forms.** `inventory_form` over-filters grid forms:
-grid columns that bind by `columnID` with an empty `bindingKey` are dropped (some are genuinely
-linked/computed display columns — KBA-502 drops 66/68 this way, matching its "mostly linked" reality
-— but on KBA-4xx/5xx it also hides real INPUT collections like `.KBA400.Scoping` and KBA-401's
+grid columns that bind by `columnID` with an empty `bindingKey` are dropped (KBA-502 drops 66/68 this
+way; on KBA-4xx/5xx it also hides real INPUT collections like `.KBA400.Scoping` and KBA-401's
 `*Findings`/`*TQ`). **For KBA-4xx/5xx grid forms, read the raw `result.collections`** (the
 inventory under-reports them) and target the INPUT collection directly, writing valueKeys per the
 registry conventions in `references/config/field-conventions.md` (section 4, INPUT vs DISPLAY). Do
-NOT trust `inventory_form`'s `fillable` count alone on grid-heavy / risk-rollup forms (KBA-502/503,
-KBA-400 scoping).
+NOT trust `inventory_form`'s `fillable` count alone on grid-heavy / risk forms (KBA-502/503,
+KBA-400 scoping). **KBA-502 special case:** even the raw bulk GET does NOT embed its
+RelevantAssertion child rows (`OverallAuditAreas[].childObjectList` returns `[]`, even after refresh
+— they're cross-form bindings the SPA renders per area). The grid is real: read KBA-502's `elements`
+OverallAuditAreas columns and write blind by AREA collectionKey (`.{AREA}.RelevantAssertion`)
+against KBA-502's wpId, then verify via the diagnostics oracle.
 
 **Addable empty grids (identify + warn):** some tables are add-row grids whose
 collection ships EMPTY (`objectList: []`) — the UI shows a "type to add" cell but
@@ -180,7 +179,7 @@ isn't (KBA-103 deficiency/noncompliance grids; watch KBA-400 scoping). Check
 `inventory_form()['addable_grids']` (and `stats['addable_grids']`): a non-empty
 list means "this form has add-row grids you have NOT filled." **Warn the user;
 do not silently report complete** — but you CAN now fill them on request.
-**Filling (SOLVED 2026-05-30):** spawn IS REST. CREATE a row with
+**Filling (SOLVED):** spawn IS REST. CREATE a row with
 `kc.build_spawn_payload(collection_path, value)` — UpdateProperty with empty
 identity keys + the collection path in `dataEntryExpression` (the old "SignalR-only
 / NOT REST / non-existent objectKey no-ops" belief was a misdiagnosis; SignalR is a
@@ -228,11 +227,9 @@ Build each payload from the inventory record:
 p_text   = kc.build_write_payload(text_field, "GIBBERISH ANSWER")              # valueKey=""
 p_select = kc.build_write_payload(select_field, "Yes")                          # resolves valueKey from options
 p_multi  = kc.build_write_payload(ms_field, ["Cash", "Accounts Receivable and Revenue"])  # or valueKey=["CASH","AR"]
-p_signoff= kc.build_write_payload(signoff_field, "BB")                          # token -> valueKey
+p_signoff= kc.build_write_payload(signoff_field, "ABC")                         # token -> valueKey
 ```
 `build_write_payload` raises if the field isn't writable, a choice value can't be resolved, or a sentinel-detected choice has no options yet — trust it over a hand-built dict, and let the loop pick the field up on a later iteration once its options populate.
-
-Validated: AUD-100 fixed-point fill converged in 2 rounds and left **0 unfilled visible choices** — it caught 3 selects-gated-by-selects (`AudSpecialist`/`MSExpert`/`PriorWP`) and the controls-testing multiselect (`OperatingAuditAreas`) that a 2-pass fill had missed.
 
 ### 4. Write sequentially + submit
 ```python
@@ -244,8 +241,7 @@ js = kc.submit(eng_guid, wp_id, headers)   # per-workpaper — NEVER empty wpId 
 **Expect silent drops even when everything is right — CONVERGE, don't count retries.** KC drops a
 **rotating subset** of rapid sequential UpdateProperty writes: every write echoes state 3, but the
 commit loses some of them — ~30–50% of write→submit pairs with convention-correct payloads;
-inter-write sleeps (1–2s) reduce but do NOT eliminate the loss (SFRC 401k 0100 + batch-2 isolated
-tests, 2026-07-08). The per-write echo is NEVER proof; only the committed read is. The standard
+inter-write sleeps (1–2s) reduce but do NOT eliminate the loss. The per-write echo is NEVER proof; only the committed read is. The standard
 fill procedure for every write set is the **converge loop**:
 
 ```
@@ -260,9 +256,7 @@ One committed re-read covers the whole set — verify in batch, rewrite ONLY the
 (never blind-repeat the full set), and loop until the committed read matches intent. A write not
 verified state-3-after-reload was NOT made. Because the drop set ROTATES between rounds, a fixed
 "retry the misses ≤3×" pass under-delivers on large write sets — converge to match-intent instead.
-Validated at scale 2026-07-09 (Coop Consulting planning cascade: KBA-302/303/401/402 — an 81-write
-form converged, with different cells dropping each round).
-(field-conventions.md §5 3a; RECOVERY.md silent write-drop entry.)
+(field-conventions.md §5 3a.)
 
 **The dominant KC-write failure was 415, not a body-drop.** Every KC write went out without a
 `Content-Type: application/json` header (`build_batch_xhr` omitted it; the single-call builders inject
@@ -310,7 +304,7 @@ a dependent form — flip it to No or add the form.
 - **CheckBox multiselect** (e.g., AUD-100 audit-area scoping): one POST, `value` and `valueKey` semicolon-joined, **full-state replacement** (send the complete desired set each time). The server normalizes a trailing semicolon off. `build_write_payload(field, [...])` does the join.
 - **Risks** on `.{AREA}.ProgramSteps`: full-state replacement, semicolon-joined valueKeys **with** trailing semi. See `references/config/enums.json`. Sending an unknown code returns 500 "Index was outside the bounds of the array" — verify codes first.
 - **PlannedAuditApproach** on `.{AREA}.RelevantAssertion`: one canonical valueKey per checkbox (COMBINED / ANALYTICAL / INDEPTH), one POST each.
-- **Custom ("add custom value") multiselect entries** (e.g. KBA-400 `CtrlConTestWp`/C09, which has an add-custom box): the custom value's valueKey is NOT free-form — the server derives it as `"KEY_" + value` upper-cased with non-alphanumerics → `_` (typing "Control Memo" POSTs `KEY_CONTROL_MEMO`). Pass `build_write_payload(field, None, valueKey=[<option keys>], custom="Control Memo")` — `custom_value_key()` derives the key and appends it. **FALSE-POSITIVE TRAP:** an invented token (e.g. `ZZ_CUSTOM_9931`) is accepted into the working copy so the GET right after the write looks fine, but it is DROPPED on the next refresh/reload and never persists. Confirm a custom value truly stuck by re-reading AFTER `POST /api/Workpaper/refresh`, not by the immediate GET. (Validated live 2026-05-30: INVENTORY/OTHREV C09 customs survived a refresh; arbitrary-token writes did not.)
+- **Custom ("add custom value") multiselect entries** (e.g. KBA-400 `CtrlConTestWp`/C09, which has an add-custom box): the custom value's valueKey is NOT free-form — the server derives it as `"KEY_" + value` upper-cased with non-alphanumerics → `_` (typing "Control Memo" POSTs `KEY_CONTROL_MEMO`). Pass `build_write_payload(field, None, valueKey=[<option keys>], custom="Control Memo")` — `custom_value_key()` derives the key and appends it. **FALSE-POSITIVE TRAP:** an invented token (e.g. `ZZ_CUSTOM_9931`) is accepted into the working copy so the GET right after the write looks fine, but it is DROPPED on the next refresh/reload and never persists. Confirm a custom value truly stuck by re-reading AFTER `POST /api/Workpaper/refresh`, not by the immediate GET.
 
 ## Known failure modes
 
@@ -318,7 +312,7 @@ a dependent form — flip it to No or add the form.
 
 - **Choice field written as free text** → 200 back, but CCH rejects it by resetting to `valueKey='resetanswer'` (select) or `valueKey='resetcheckbox'` (multiselect). `was_rejected(before, after)` detects this by prefix. Root cause: free-texting a sentinel-detected choice whose option list was empty at read time. Fix: the fixed-point loop will skip empty-option fields (build_write_payload raises on them) and re-visit once options populate.
 
-- **`build_reset_payload` is FORBIDDEN** — removed 2026-05-30. Resetting a required toggle via the API leaves `state==3` with a blank value; KC's diagnostic engine never re-fires, so the form reads COMPLETE while empty. Do not reintroduce. To genuinely clear a section, remove + re-add the form so KC rebuilds from scratch.
+- **`build_reset_payload` is FORBIDDEN.** Resetting a required toggle via the API leaves `state==3` with a blank value; KC's diagnostic engine never re-fires, so the form reads COMPLETE while empty. Do not reintroduce. To genuinely clear a section, remove + re-add the form so KC rebuilds from scratch.
 
 - **Addable grid (objectList empty) looks done but isn't** — `inventory_form()['addable_grids']` surfaces these. The UI shows a "type to add" cell, `fillable` is 0, and the form can falsely appear complete. Warn the user; do not silently report complete. **Filling IS supported** via `build_spawn_payload` (creates a row over REST) → re-read → `build_write_payload` on the new GUID. Loop by a known target count; the trailing UI add-box never disappears so "until no add-row remains" never terminates. Full walkthrough: `references/deferred/empty-grid-row-spawn.md`.
 
@@ -331,13 +325,10 @@ a dependent form — flip it to No or add the form.
   `YESNONA-YES/-NO/-NA`) — NOT the `EntityEnv*` DISPLAY collections (those reject with `resetanswer`).
   These render from `elements` as Generic nodes bound `<parent>[current].<child>` (e.g.
   `OverallAuditAreas[current].RelevantAssertion`), but the input target is the flow collection, not the
-  display rollup. **KBA-502 is a rollup** (read-through; only its `Comment` is writable) — the IR/CR/RMM
-  and PlannedAuditApproach grid lives on the AUD-8xx program at `.{AREA}.RelevantAssertion`. See
+  display rollup. **KBA-502 OWNS the IR/CR/RMM/PlannedAuditApproach grid and is its WRITE target.** Write
+  `collectionKey ".{AREA}.RelevantAssertion"` against **KBA-502's wpId**; the AUD-8xx program's grid is
+  the DERIVED view — writes aimed at the program's wpId land in a working copy the KBA-502-owned
+  recompute discards on refresh (the historical "reverts / unwritable" symptom). See
   `references/config/field-conventions.md` §3 (per-prop conventions) and §4 (INPUT vs DISPLAY).
-
-## Validated on
-
-- AUD-100 Claude Playground NPO 2026-05-29 — select (Yes/No), free-text answer+comment, multiselect (audit areas).
-- Fixed-point loop converged in 2 rounds; 0 unfilled visible choices; caught 3 selects-gated-by-selects and the controls-testing multiselect (`OperatingAuditAreas`).
 
 <!-- END -->

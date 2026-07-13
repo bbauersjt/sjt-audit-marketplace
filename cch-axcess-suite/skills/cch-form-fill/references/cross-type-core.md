@@ -1,6 +1,6 @@
 # Cross-Type Core + Delta Taxonomy
 
-**Engagement types:** Governmental, Nonprofit, EBP, Commercial, Construction (its own KC title; the question set overlaps heavily, so it is mapped as well). **Single Audit is a cross-cutting module** (federal awards), not a separate type.
+**Engagement types:** Governmental, Nonprofit, EBP, Commercial, Construction (its own KC title; the question set overlaps heavily with Commercial, so it is mapped as well — see `type-cns.md`). **Single Audit is a cross-cutting module** (federal awards), not a separate type.
 
 **Anti-repeat principle:** the KC planning/concluding forms are largely **title-uniform** — KBA-200/201/302/303/401/402/501, KBA-102/103/105/902/903, AUD-901/909/813/814, AUD-101/201, COR-203, AID-201/837 share the same structure across all four titles. (Structure is uniform, but some AUD/AID form NUMBERS map to different programs per entity title — see `form-content-reference.md` §2b.) The **knowledge spine is answered once** (the governmental section maps document it). Only the **deltas** below change per type.
 
@@ -74,7 +74,7 @@ All four engagement types mapped (forms pulled cross-title into the test binder)
 - **EBP** — `type-ebp.md`
 - **NPO** — `type-npo.md`
 - **Commercial** — `type-commercial.md`
-- **Construction** — not included in core.
+- **Construction** — `type-cns.md` (Commercial parity through AUD-816; +1 numbering shift from AUD-817, CONTRACT area; not yet re-verified live).
 - **Single Audit (8000) module** — `sa-module.md` (S-form series).
 
 **Confirmed across all four:** the form machinery is identical; each type's delta is its entity/plan profile + a set of gating toggles (mostly default No) + a few unique forms (EBP tax status / 103(a)(3)(C); NPO net assets/contributions/split-interest; Commercial 606/VIE/equity). The core spine + collapse levers carry every type.

@@ -27,6 +27,5 @@
     "Global endpoint — no clientId in path. Same enum returned regardless of engagement.",
     "Source of truth for the ReportType field and the boolean flag keys used in the TB create body."
   ],
-  "validated_on": ["2026-05-24"],
   "script_function": "scripts.reports.tb_report_settings(headers)"
 }

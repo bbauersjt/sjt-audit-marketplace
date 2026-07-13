@@ -1,4 +1,4 @@
-# Training Mode — Script-First Capture Protocol
+﻿# Training Mode — Script-First Capture Protocol
 
 > **Gate, checklist, front-matter spec, and module template live in `learn-protocol.md`.**
 > Read it first — it owns the CONSENT WALL and the mechanical close-out. This file is the
@@ -98,20 +98,26 @@ REFERENCE DATA NEEDED:
 
 When a known unknown lands, run the ladder. Don't take shortcuts.
 
-### Document-level sign-off REMOVAL — CAPTURED 2026-07-09 (was the top backlog item)
+### Workpaper FILE UPLOAD — resolved
 
-Done. Rung-2 capture ran live in a BB-supervised session (Coop Consulting, clientId 101229):
+The `file-io` upload leg (`chrome_upload` → `POST /v1/Documents/{clientId}`) fails with
+browser-level "Failed to fetch" from an engagement-origin tab (CORS). The fix: park a tab on
+the WPM-origin root and POST via `chrome_upload` — works end-to-end. Codified in
+`modules/file-io.md` as BRIDGE PRIMARY (see also transport.md "Uploads").
+
+### Document-level sign-off REMOVAL — done
+
 `POST /v1/signoff/removeSignOff`, keyed by (objectId, signatureType), a POST state-change not a
 DELETE (No-Hard-Delete rule cleared). Shipped as `scripts.wpm.remove_signoff` +
 `scripts.wpm.document_get` (per-document sign-off read), `references/endpoints/signoff_remove.json`,
 and `references/modules/remove-signoff.md`. **Applying** sign-offs stays human-only (no add script).
-The in-form program-STEP un-sign-off (KC leg) was captured in the SAME session — a `.{AREA}.ProgramSteps`
+The in-form program-STEP un-sign-off (KC leg) is a `.{AREA}.ProgramSteps`
 `SignOff` property set to `"[]"` via UpdateProperty (`scripts.kc.clear_program_step_signoff`,
-`modules/clear-program-step-signoff.md`). Scope bound (api-ui-parity, BB 2026-07-09): removing ANOTHER
-user's document-level sign-off is OUT OF BOUNDS — the UI only removes your own, so the bot must too.
+`modules/clear-program-step-signoff.md`). Scope bound (api-ui-parity): removing ANOTHER
+user's document-level sign-off is OUT OF BOUNDS — the UI only removes your own, so this skill must too.
 The API keys removal by (objectId, signatureType) with no userId and WOULD remove a colleague's; the
 artifacts require confirming the leg is the logged-in user's before removing, and the foreign-removal
-path is NOT to be probed (the original Anchondo/KBA-400 case was deliberately left untested). See CHANGELOG AX-42.
+path is NOT to be probed.
 
 
 <!-- END -->

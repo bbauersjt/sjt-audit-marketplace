@@ -22,7 +22,7 @@ calls:
   - scripts.leadsheet.tbreport_post_comment
   - scripts.leadsheet.tbreport_delete_comment
   - scripts.reports.add_remarks_column
-status: validated (transport + columnId + referenceType live-captured 2026-06-04; TWO Remarks columns REF+Notes made the firm standard 2026-07-09)
+status: validated
 ---
 # Module — Annotate TB Report REF/Notes columns (workbench-api)
 
@@ -60,7 +60,7 @@ is on before writing anything:
   user works off system leads (protocol A) — route ALL annotation asks to bubbles
   (`annotate-leadsheet.md`); REF/Notes columns don't exist there.
 
-## Transport (live-captured 2026-06-04 — supersedes all prior claims)
+## Transport
 
 - **workbench-api is NOT reachable with KC localStorage tokens from the KC tab** — fetch
   AND XHR both fail (status 0). The localStorage-primary pattern does NOT apply here.
@@ -69,11 +69,11 @@ is on before writing anything:
   200 on GET and the SPA's own POSTs use the same surface.
 - Therefore: leg `wpm` (Step 0) — install `scripts.auth_capture.INSTALL_MONKEYPATCH_JS` in
   the engagement tab BEFORE navigating to the report. The patch dies on every page load,
-  and **Refresh Report is a hard reload** (TT1-2 terminal wall) — do NOT re-capture on the
+  and **Refresh Report is a hard reload** — do NOT re-capture on the
   report page; capture from the engagement view, or reuse the already-captured WPM bearer
-  (accepted by workbench-api — validated 2026-06-05; transport matrix, architecture.md).
+  (accepted by workbench-api — transport matrix, architecture.md).
 
-## Navigation — deep-link, never tree-walk (live-captured 2026-06-04)
+## Navigation — deep-link, never tree-walk
 
 Individual TB reports ARE URL-addressable:
 
@@ -84,7 +84,7 @@ https://engagement.cchaxcess.com/en-US/engagement/{clientId}/tbreports/{reportGu
 Folder depth is irrelevant — a report filed 3+ levels deep opens the same way. Resolve the
 `reportGuid` from the WPM listing / binder map (`tbreports/{int}` rows carry it) or the
 `tbreports/{clientId}` GET. Do NOT click down the binder tree and do NOT use the integer id
-in the URL (`trialbalance/{int}` errors — that was BT3's dead end).
+in the URL (`trialbalance/{int}` errors).
 
 ## Procedure
 
@@ -100,8 +100,8 @@ do NOT add a Remarks column or warm anything first.
   `account.group` / `account.financialSubGroup` / `account.fund` carry the names
   (`endpoints/fp_trialbalance.json` — `subGroup` is always null, never match on it).
 - **Not found → STOP and ask:** "there is no '<Cash>' group/subgroup/fund on this TB report —
-  did you mean <closest matches>, or should one be added?" This is the TT1 failure class;
-  catching it here is the entire point of this step. Only once the row is confirmed do you
+  did you mean <closest matches>, or should one be added?" Catching it here is the entire
+  point of this step. Only once the row is confirmed do you
   proceed to the column preflight.
 
 ### 0b. Preflight — REF/Notes columns present? Existing value? (mandatory)
@@ -118,12 +118,12 @@ After resolving the report, GET `tbreportedit/{clientId}/{engagementGuid}/{repor
   user to add them in the UI (Edit report → Columns → add remarks column, twice). The page
   must be reloaded after.
 - **Only ONE `type:"Remarks"` entry exists** → the report is missing its second column
-  (older report, or built before AX-43). OFFER to add the missing one via
+  (older report, or built before the two-column standard). OFFER to add the missing one via
   `add_remarks_column` with the appropriate `name`.
 - **Existing value at the target cell** → prompt the user before overwriting (the POST is a
   silent upsert). Read current values via the row probe or the report data GET.
 - Column NAME is irrelevant to the API: `columnId` is positional — `Remarks_1` → columnId 1,
-  `Remarks_2` → columnId 2 — and is RENAME-PROOF (captured: column renamed to "REF" still
+  `Remarks_2` → columnId 2 — and is RENAME-PROOF (a column renamed to "REF" still
   posts columnId 1). Identify the target column by `Remarks_{N}` id, never by header text.
   By firm convention `Remarks_1` = "REF", `Remarks_2` = "Notes", but always confirm against
   the actual `name` field on this report rather than assuming the convention held.
@@ -139,9 +139,8 @@ return a usable `id` field.
 Scroll the target row into view first (AG Grid virtualizes; unpainted rows probe as
 missing). **If the probe returns nothing AFTER the row is scrolled into view and the
 Step 0 existence gate passed, the label doesn't match a real row — surface it and STOP;
-do not re-probe variant labels in a loop (that is the 2-fail path, not progress).** The
-probe returns `rowType` and ids; map to the POST's `referenceType` by ROW LEVEL
-(live-captured 2026-06-04 — the old blanket Group→FinancialSubGroup mapping is WRONG):
+do not re-probe variant labels in a loop.** The
+probe returns `rowType` and ids; map to the POST's `referenceType` by ROW LEVEL:
 
 | Row level | POST `referenceType` | `referenceGuid`? |
 |---|---|---|

@@ -60,14 +60,14 @@ The firm runs two parallel protocols:
 ## Prerequisites
 
 - **Auth: pass `headers="ls:fp"` to every builder** — runtime localStorage self-sourcing,
-  works from a KC tab OR the engagement tab, XHR transport, no monkeypatch (AX-26).
+  works from a KC tab OR the engagement tab, XHR transport, no monkeypatch.
 - `clientId`, `periodId`, and the target `financialGroupId` (look it up with `get_groups` if unknown).
 - FALLBACK only (no KC tokens reachable): engagement tab with
   `scripts.auth_capture.INSTALL_MONKEYPATCH_JS` installed + one captured FP-API/WPM XHR, then
   `scripts.auth_capture.headers_from_capture(captures, 'financialprep-api')`.
 
 > **Auth note:** pass `headers="ls:fp"` to every builder (runtime localStorage
-> self-sourcing — AX-26; works from KC tab AND engagement tab, XHR transport, no
+> self-sourcing; works from KC tab AND engagement tab, XHR transport, no
 > monkeypatch). Captured-header dicts remain supported. See architecture.md transport matrix.
 
 ## Procedure
@@ -84,7 +84,7 @@ ref_id = leadsheet.find_reference_id(res["body"], "20000-300")   # -> 7358153
 
 `referenceId` is `account.id` (a CCH-internal integer), never the account-number string.
 
-### 2-pre. Existing-annotation check (NEW — mandatory before any comment write)
+### 2-pre. Existing-annotation check (mandatory before any comment write)
 
 The comment POST is a SILENT UPSERT — it replaces an existing comment without warning.
 Before writing, check `row.account.annotation.comment` (or the group row's annotation) in
@@ -98,7 +98,7 @@ js = leadsheet.post_account_comment(client_id, ref_id, period_id, client_id, "W/
 # response body: {"commentReferenceId": <int>} — keep it if you may delete later
 ```
 
-### 2a-group. Group-level comment (total line) — live-captured 2026-06-04
+### 2a-group. Group-level comment (total line)
 
 Bubbles also attach to GROUP rows (e.g. the bold "Total Assets" line):
 same POST with `referenceType:"FinancialGroup"` and `referenceId` = the financialGroupId.
@@ -108,12 +108,11 @@ same POST with `referenceType:"FinancialGroup"` and `referenceId` = the financia
 #              "referenceType": "FinancialGroup", "periodId": <engagementId>,
 #              "engagementId": <clientId>}
 ```
-`post_account_comment` hardcodes `referenceType:"Account"` — pass/extend for group rows
-(`reference_type` param added in AX-26).
+`post_account_comment` hardcodes `referenceType:"Account"` — pass/extend for group rows.
 
 ### 2b. Delete an inline comment
 
-(Delete live-confirmed 2026-06-04: `DELETE /v1.0/Annotation/comment/{clientId}/{commentReferenceId}` → 200.)
+(Delete: `DELETE /v1.0/Annotation/comment/{clientId}/{commentReferenceId}` → 200.)
 
 ```python
 js = leadsheet.delete_account_comment(client_id, comment_reference_id, headers)
@@ -137,7 +136,7 @@ js = leadsheet.post_tickmarks(client_id, ref_id, period_id, client_id, [1, 40], 
 
 Re-read with `get_leadsheet` to confirm writes. Annotations land under `row.account.annotation`:
 ```python
-# confirmed response shape (2026-06-03):
+# response shape:
 row["account"]["annotation"] = {
     "tickMarkIds": [1, 40],          # set-replace, [] = none
     "commentReferenceId": 42718,     # from post_account_comment response
@@ -153,16 +152,6 @@ Top-level comment box is at `response_body["comments"]["comments"]` (nested key)
 - `No captures match 'financialprep-api'` → no FP/sibling XHR fired yet → navigate to any leadsheet first.
 - Account not found → confirm the exact number from `get_leadsheet`; CCH uses a 5-digit prefix (`20000-300`, not `2000-300`).
 - Tickmark `ids` is the complete set, not a delta — sending `[1]` when `[1,2]` were set removes mark 2.
-
-## Validated on
-
-- Test binder, client 100173 / eng 390765, 2026-06-03 (T10).
-  - get_groups: 200, returns [{financialGroupId, name, number}]
-  - get_leadsheet: 200, annotations under `row.account.annotation`
-  - patch_comment_box: 200, body `{"result":"Successfully updated Comments","leadSheetComments":{...}}`
-  - post_account_comment: 200, body `{"commentReferenceId": 42718}`
-  - post_tickmarks: 200, empty body
-  - delete_account_comment: 200
 
 ## Known gaps
 

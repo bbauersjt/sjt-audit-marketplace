@@ -23,7 +23,7 @@ Everything else below is **[D] generic** — auto-filled, no confirm.
 | GAGAS / Yellow Book | Yes if government or grant-required, else No |
 | Single Audit | Yes if federal expenditures ≥ $750K, else No |
 | Integrated audit | **No** |
-| Test operating effectiveness of controls | **No** (substantive) |
+| Test operating effectiveness of controls | **[X] → AUD-100** — read RA's live answer (via `cch-axcess`, or a `form-fill-context.md` artifact if one exists); default No/substantive only if RA is silent. Do NOT silently auto-fill — a controls-reliance election lives on AUD-100 (mirrors the `ConTestingEffControlQuestion` treatment). |
 | Rely on prior-year control evidence | **No** |
 | Key Audit Matters | **No** |
 | EQ / concurring review (EQR) | **[C] confirm-default — No** unless firm QM policy requires it (second-partner review = the KBA-902 partner sign-off, not an EQR) |

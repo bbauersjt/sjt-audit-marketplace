@@ -2,7 +2,7 @@
 summary: Pick the transport for browser work by TARGET ORIGIN, then by VERB. chrome-bridge is PRIMARY for ALL origins — engagement/WPM/workbench/FP via in-page verbs, and knowledgecoach (KC) via chrome_api_call (the service-worker fetch verb, CSP-exempt). The linked Claude-in-Chrome tab is the FALLBACK everywhere (used when the bridge/extension is unavailable). The bridge's IN-PAGE verbs (chrome_eval, chrome_fetch) stay CSP-blocked on KC — for KC use chrome_api_call. The rest of the skill stays transport-agnostic.
 triggers:
   - "(internal) transport selection — consulted from SKILL.md Step 0 and session-bootstrap.md"
-status: BRIDGE=primary for ALL origins — engagement/WPM/workbench/FP via in-page verbs (validated 2026-06-17/19) + KC via chrome_api_call/SW-fetch (validated live 2026-06-23, read+write+submit+diagnostics); LINKED-TAB=fallback everywhere (CSP only blocks the bridge's IN-PAGE verbs on KC, never chrome_api_call)
+status: BRIDGE=primary for ALL origins — engagement/WPM/workbench/FP via in-page verbs + KC via chrome_api_call/SW-fetch (read+write+submit+diagnostics); LINKED-TAB=fallback everywhere (CSP only blocks the bridge's IN-PAGE verbs on KC, never chrome_api_call)
 ---
 # Runbook — Transport selection (route by origin, then verb)
 
@@ -18,9 +18,8 @@ status: BRIDGE=primary for ALL origins — engagement/WPM/workbench/FP via in-pa
 
 ## Bounded execution — HARD RULES for every injected eval (any origin, any transport)
 
-These are not style preferences. Each one was paid for in a wedged or silently-failing agent
-(Rock binder build, 2026-07-07 — 3 agent attempts, 2 kills before these rules made the run
-survivable). They apply to every `chrome_eval` / `javascript_tool` payload that executes
+These are not style preferences. Each one was paid for in a wedged or silently-failing agent.
+They apply to every `chrome_eval` / `javascript_tool` payload that executes
 platform operations.
 
 1. **≤10 operations per injected eval.** Never assemble one giant payload ("the walk") that
@@ -38,7 +37,7 @@ platform operations.
 3. **Verify each chunk BY READ before sending the next.** Re-GET what the chunk claims to have
    written; resume from the last verified op after any failure — never blind-repeat writes.
 4. **One-line progress note between chunks.** On delegated/background runs this is the
-   heartbeat the orchestrator's watchdog feeds on; silence reads as a stall.
+   heartbeat the parent session's supervision feeds on; silence reads as a stall.
 5. **Batch ops beat call loops.** Before chunking N single calls, check whether a batch call
    exists for the operation (`wpm.move` takes an `items` LIST — 2 PUTs filed 19 objects live;
    `kc_add_forms` takes the whole form array). Chunk the batch payload, don't loop singles.
@@ -63,8 +62,8 @@ The ONE origin-specific rule is a VERB rule, not an origin ban:
 - **knowledgecoach.cchaxcess.com (KC origin)** → use **`chrome_api_call`** (the service-worker fetch
   verb). It is **CSP-exempt** (the SW context is not subject to the page CSP) and **CORS-bypassed**
   for hosts in the extension `host_permissions` (`*.cchaxcess.com`). It drives the full KC pipeline —
-  GET form, GetBinder, `UpdateProperty`, spawn, `submit`, refresh, diagnostics — verified live
-  2026-06-23. Pass the captured KC bearer + **`IdToken`** (capital-I/lower-d/capital-T) in `headers`
+  GET form, GetBinder, `UpdateProperty`, spawn, `submit`, refresh, diagnostics. Pass the captured
+  KC bearer + **`IdToken`** (capital-I/lower-d/capital-T) in `headers`
   (the SW has no in-page auth). The bridge's **in-page** verbs (`chrome_eval`, `chrome_fetch`) ARE
   CSP-blocked on KC (no `unsafe-eval`, blocked in MAIN and ISOLATED worlds) — never use them on KC;
   `chrome_api_call` is the KC bridge path. Linked-tab fallback if the bridge is down.
@@ -102,14 +101,14 @@ Call `chrome_bridge_status` (MCP tool, chrome-bridge plugin).
 
 `chrome_api_call` accepts `body` as a JSON **string or a dict** — `server.py` `json.dumps`'s a dict
 before forwarding, and the extension self-serializes non-string bodies as a second net (verified in
-code 2026-07-07; the old "server rejects a dict / json.dumps at the call site" rule is OBSOLETE).
+code; the old "server rejects a dict / json.dumps at the call site" rule is OBSOLETE).
 Passing the builders' dict output directly is fine. If an arg layer ever mangles an inline JSON
 object, pass it pre-serialized — but that is a fallback, not the rule.
 
 **⚠ Top-level JSON ARRAY bodies are NOT covered — do not fight `chrome_api_call` on them.** Some
 endpoints take a bare JSON array as the whole body (the KC **add-forms batch**
 `POST knowledgecoach.cchaxcess.com/api/binder/{guid}` — body is `[ {form}, {form}, … ]`, not an
-object). Observed live 2026-07-07 (Rock binder build, agents `ac7dabb` + `ac67226`): the tool's
+object). The tool's
 `body.str` validation **rejects a Python list** (`Input should be a valid string`), and passing the
 array as a **stringified** JSON literal **double-encodes** — the array arrives on the wire as a JSON
 *string*, and the server returns **400** (a 200 here is likewise the wrong shape — validate by body,
@@ -120,18 +119,18 @@ string — hits the wire) with a freshly-captured KC bearer. **Flagged for reval
 `chrome_api_call(body=[...])`. (This is the single most re-derived transport fact in delegated
 platform runs; it is a doc gap, not per-agent cleverness — read it, don't rediscover it.)
 
-## curl-from-Bash with a wire-captured bearer — the preferred KC auth pattern (validated 2026-07-09)
+## curl-from-Bash with a wire-captured bearer — the preferred KC auth pattern
 
 KC and WPM auth is **pure header-bearer** — no cookies, no XSRF — so a captured token works from
 ANY HTTP client, entirely outside the browser. On a session where the user's KC tabs are throttled
-background tabs, this is the RELIABLE KC path (validated live 2026-07-09, Coop Consulting 0200 —
-GetBinder + the full read/UpdateProperty/submit/refresh/diagnostics pipeline over curl from Git
-Bash, same endpoint/payload shapes as the skill's builders).
+background tabs, this is the RELIABLE KC path (GetBinder + the full
+read/UpdateProperty/submit/refresh/diagnostics pipeline over curl from Git Bash, same
+endpoint/payload shapes as the skill's builders).
 
 1. **Token source = the wire, not localStorage.** `chrome_network_recent(host_filter="cchaxcess")`
    — the user's OWN KC/engagement browsing mints fresh `auditprod` bearers (~32-minute life) that
    BOTH KC and WPM accept. `kc.accessToken` in localStorage goes STALE on throttled background
-   tabs (the refresh timer stalls — architecture.md AX-33), and re-reading it just re-reads the
+   tabs (the refresh timer stalls — architecture.md → tab-visibility section), and re-reading it just re-reads the
    stale value; the wire capture is the ground truth for freshness.
 2. **Write the token to a FILE — never hand-transcribe.** A hand-copied JWT 401'd
    `chrome_api_call` live (transcription error, not a platform problem). Land the capture in a
@@ -170,7 +169,7 @@ uploaded, filed, indexed, with a working TB link):
 ## Transport-specific facts
 
 - **Data channel — NOT DLP-filtered on the bridge, for ALL origins (incl. KC).** Over `chrome_api_call`,
-  KC reads return real JSON (validated 2026-06-23: GetBinder + form reads came back as full JSON, no
+  KC reads return real JSON (GetBinder + form reads come back as full JSON, no
   `[BLOCKED]`). So on the bridge set `filtered = false` for KC too: return JSON directly; **skip the
   download-to-disk dance**. The DLP `[BLOCKED...]` filter + download-to-disk applies ONLY to the
   **linked-tab** channel (fallback): there KC reads are filtered = true and big forms come back by
@@ -194,7 +193,7 @@ uploaded, filed, indexed, with a working TB link):
 - The bridge transport and every verb are **built and validated live** on Axcess: engagement/WPM/FP/
   workbench (reads, `chrome_eval`, authenticated XHR, binary `chrome_download`, tab ops, bearer capture)
   AND **KC via `chrome_api_call`** (read + `UpdateProperty` + `submit` + refresh + diagnostics, no CSP
-  error, no linked tab — validated 2026-06-23). Source + setup: the chrome-bridge plugin (see its README).
+  error, no linked tab). Source + setup: the chrome-bridge plugin (see its README).
 - **Route by origin, then verb:** KC origin -> `chrome_api_call` (bridge) PRIMARY, linked-tab fallback;
   engagement/WPM/workbench/FP -> bridge PRIMARY, linked-tab fallback. `session-bootstrap.md` and the
   per-module steps describe the LINKED-TAB flow as the fallback (and for any bridge-down session) — that

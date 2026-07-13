@@ -136,8 +136,8 @@ def claim_tab_js(token: str) -> str:
 # silent-no-op. See session-bootstrap.md "On-warm release check".
 #
 # THROTTLE: the baseline + timestamp live in the ENGAGEMENT WORKING FOLDER (never the
-# read-only install), so the FIRST bot to warm in a work session pays the one GET and
-# every other bot in that engagement skips it until the window lapses.
+# read-only install), so the FIRST caller to warm a work session pays the one GET and
+# every other caller in that engagement skips it until the window lapses.
 RELEASE_CHECK_THROTTLE_SEC = 4 * 3600  # tunable; releases are infrequent, hours is plenty
 
 # Which public index to fetch per leg (the origin that leg talks to).

@@ -17,8 +17,6 @@ calls:
   - scripts.kc.program_step_signoff_payload
   - scripts.kc.submit
 status: validated
-validated_on:
-  - "Coop Consulting 2025 (NPO) — AUD-808 AP program, 2026-07-09. Wire captured live (sign/un-sign/N-A/un-N-A); scripted clear replayed live (200, clean form echo)."
 ---
 # Module — Clear Program-Step Sign-Off / N/A (in-form, KC)
 
@@ -28,7 +26,7 @@ step's `SignOff` property to `"[]"` via `UpdateProperty`. This is the KC-leg cou
 document-level `remove-signoff.md` (WPM). **Different things — don't cross them:** this is a step
 cell inside a KC form; that one is the workpaper's binder-level sign-off.
 
-## The SignOff property shape (captured live)
+## The SignOff property shape
 `SignOff` on a `.{AREA}.ProgramSteps` step object is a JSON-ARRAY-IN-A-STRING:
 - **sign-off:** `[{"userId","userReportName","date","staffId","type":0}]`
 - **N/A mark:** `[{"userId","date","staffId","type":1}]`  (N/A carries no `userReportName`)
@@ -61,7 +59,7 @@ converge loop: write → ~1.2s → submit → re-read committed state → rewrit
 - **Read-back looks clear but reverted after reload** — the clear wasn't submitted (or was dropped).
   Submit per-workpaper, then verify off diagnostics after reload; retry the miss.
 - **Wrong collectionKey** — embedding the form number (`.AP808.ProgramSteps`) → the write no-ops.
-- **eval hang on a backgrounded KC tab (AX-40)** — never fire the in-page fetch on a throttled/hidden
+- **eval hang on a backgrounded KC tab** — never fire the in-page fetch on a throttled/hidden
   KC tab; act on the active tab (or curl the captured bearer off-browser).
 
 ## See also
