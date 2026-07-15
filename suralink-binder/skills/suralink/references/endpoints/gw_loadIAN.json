@@ -33,5 +33,5 @@
   },
   "usage": "An activity feed. NOT a dependable whole-engagement source - it can return 0 messages even when the binder holds files, and it throttles under rapid calls. For a reliable 'what's new' use map_binder_js (a free DOM scrape) and the per-engagement index instead.",
   "script": "suralink.py :: load_ian_js  |  flatten with suralink-sync sync.py :: ian_files",
-  "validated": "2026-05-23, audit 2774111 - loadIAN requires lastId; with lastId=0 it returns {success:true}"
+  "validated": "loadIAN requires lastId; with lastId=0 it returns {success:true}"
 }

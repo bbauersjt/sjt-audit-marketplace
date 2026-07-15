@@ -20,10 +20,13 @@ current-year audits are sibling `auditId`s under one `clientId`.
 
 ## Procedure — enumerate the whole roster
 
+1. Read `organizationId` once:
 ```python
 from scripts import suralink, browser
 org = run(suralink.get_org_id_js())                  # GUID string
-
+```
+2. Page through the roster until exhausted:
+```python
 clients, offset = [], 0
 while True:
     res  = browser.parse_result(run(suralink.list_clients_page_js(org, 100, offset)))
@@ -33,29 +36,28 @@ while True:
     if offset >= body["totalCount"] or not body["data"]:
         break
 ```
-
-Each client: `{id, customId, name, state, ...}`. `id` is the `clientId`.
-`limit` is capped at 100 server-side — page with `offset`.
+3. Read each client as `{id, customId, name, state, ...}` — `id` is the `clientId`.
+   - Guard: `limit` is capped at 100 server-side — page with `offset`.
 
 ## Procedure — resolve a client the user named
 
+1. Run:
 ```python
-res  = browser.parse_result(run(suralink.search_clients_js(org, "Kymera")))
+res  = browser.parse_result(run(suralink.search_clients_js(org, "ExampleCo")))
 hits = res["body"]["clients"]            # [{score, highlight, source}, ...]
 ```
-`source` is the client object; `source.engagementCounts` gives
-`{total, active, inactive, archived}`. If there are several hits, show the user
-the names + `customId`s and let them pick.
+2. Read `source` as the client object; `source.engagementCounts` gives `{total, active, inactive, archived}`.
+3. If there are several hits, show the user the names + `customId`s and let them pick.
 
 ## Procedure — a client's engagements
 
+1. Run:
 ```python
 js  = suralink.get_client_engagements_js(client_id)   # run sequentially (session-serialized)
 out = json.loads(run(js))
 # out = {clientId, engagements:[{auditId, name, state, customId}]}
 ```
-`state` is `Active` / `Inactive` / `Archived`. Each `auditId` is an engagement
-the `Audit.php` modules operate on.
+2. Read `state` as `Active` / `Inactive` / `Archived`. Each `auditId` is an engagement the `Audit.php` modules operate on.
 
 ## Known failure modes
 
@@ -63,12 +65,6 @@ the `Audit.php` modules operate on.
 - `search_clients_js` with an empty term → HTTP 400. Use it only with a real term.
 - `getClientInfo` `Invalid Csrf Token` / `missingParameter` → rare; re-read
   `window.csrf` and retry. Run gateway calls sequentially anyway — Suralink's
-  session serializes them. See `architecture.md` for the corrected story.
+  session serializes them. See `architecture.md` → CSRF handling.
 - Engagement rows show **Active** engagements; a client with inactive/archived
   audits reports them in `engagementCounts` (from `search_clients_js`).
-
-## Validated on
-
-- Firm `f65b4c53…` — 249 clients enumerated, 100/page, 2026-05-23.
-- Client 1121161 (Animal Protection New Mexico) — 3 engagements
-  (Audit 2023 / 2024 / 2025), all Active, 2026-05-23.

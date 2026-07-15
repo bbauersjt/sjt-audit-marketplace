@@ -2,8 +2,8 @@
 
 Two deliverables share this file because they route from the same menu row, but they are not one voice. Emails are casual, in the register you'd use with a teammate. Technical and position memos are formal and run close to the workpaper voice. Pick the half that matches.
 
-- Email voice: complete, built from real Sent Items.
-- Memo voice: complete, built from real position, memo-of-record, and analytics memos.
+- Email voice: casual register, for internal and external messages.
+- Memo voice: formal register, for technical/position memos and memos of record.
 
 ---
 
@@ -52,7 +52,7 @@ Batch them and label them rather than scattering them through the body. "Couple 
 State timing in one sentence, plainly, with the honest range: "Tomorrow by COB, or at the worst Monday morning first thing." Fold constraints into the same line when they explain the timing ("...but Armando can only do Thursday, so if it's Wednesday it's just me").
 
 ## Example bank
-Real sent messages. Match the shape, not the specifics.
+Match the shape, not the specifics.
 
 - Internal one-liner: "Here you go."
 - Scheduling reply, external, casual: "Hi Kelly, Had to get with Armando - can we do Thursday? Thanks, Brett"
@@ -79,7 +79,7 @@ Every memo follows one arc: conclusion or purpose up front, then the sourced fac
 
 ## Openers (pick by memo type)
 - Position / technical conclusion: state the conclusion in the first sentence and say what it rests on. "We copied the following ... to justify our conclusion that [conclusion]."
-- Memo of record (documenting a call or inquiry): lead with the event, dated, naming who did it in full third person. "On 2/12/2024, Brett Bauer spoke with Scott Dunagan, Benefit Plan Audit Analyst for the DOL..." This is a record, so the full name and date carry weight.
+- Memo of record (documenting a call or inquiry): lead with the event, dated, naming who did it in full third person. "On [date], [Preparer] spoke with [Contact], [Title] for [Organization]..." This is a record, so the full name and date carry weight.
 - Analytics / explanatory: "The purpose of this memo is to [describe X]."
 
 ## Sourcing
@@ -98,7 +98,6 @@ End on what the firm will do or what follows, not a restatement. A decision ("we
 "We / our" for firm positions and decisions: our conclusion, we will include, we should show, our tests. Full-name third person when the memo records a specific person's action for the file.
 
 ## Example skeletons
-From the real memos, facts changed.
 
 - Position memo: "[Conclusion, stated as the reason for the memo]. Per [person or schedule], [client facts, with figures]. Per [ref], [corroboration]. [Standard cite, or per research at ref]. Because [driver], we will [treatment]. [Forward-looking note]."
 - Memo of record: "On [date], [Full Name] spoke with [Name], [title] for [org]. Per [Name], [the guidance obtained]. [Client's facts]. Because [reason], we should [action]."

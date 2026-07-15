@@ -5,7 +5,7 @@ description: Use this skill any time the user asks to pull, identify, or plan an
 
 # Audit Sampling
 
-Identify, plan, and pull audit samples. Two modes (direct sample request, full engagement intake), default behavior is to pick the sampling method that produces the smallest defensible sample, run standard cleanup before pulling, and deliver Excel output per `references/output.md`.
+Identify, plan, and pull audit samples. Two modes (direct sample request, full engagement intake). Default: pick the sampling method that produces the smallest defensible sample, run standard cleanup before pulling, and deliver Excel output per `references/output.md`.
 
 ## When to invoke
 
@@ -19,7 +19,7 @@ Skip when:
 - The user has fully specified a non-business random pull and no judgment is required ("pull 25 random rows from this CSV with these columns")
 - The task is data manipulation, not sampling
 
-If unsure, prefer triggering. Undertriggering is the bigger failure mode.
+If unsure, trigger. Undertriggering is the bigger failure mode.
 
 ## Sample categories
 
@@ -39,8 +39,8 @@ The user names a specific balance or transaction stream.
 2. Read that MD
 3. Read each acceptable method's MD in `methods/`
 4. Check whether required source documents are in the conversation / uploads
-5. **Check whether tolerable misstatement (TM) is needed.** If any acceptable method depends on TM (most do — `substantive` always needs it, `progressive-subsequent` always needs it), and TM has not already been provided, include it in the missing-docs ask
-6. If anything is missing (docs or TM), ask for it in **a single batch** — don't drip-feed
+5. Check whether tolerable misstatement (TM) is needed. If any acceptable method depends on TM (most do — `substantive` always needs it, `progressive-subsequent` always needs it), and TM has not already been provided, include it in the missing-docs ask
+6. If anything is missing (docs or TM), ask for it in a single batch — don't drip-feed
 7. Apply general rules (`references/general-rules.md`) — both population cleanup and selection bias rules
 8. Compute n under each acceptable method against the cleaned population. Pick the smallest. If the sample MD declares a `mandatory_method`, use that instead. If `acceptable_methods` includes `substantive`, that token expands to the four-way comparison documented in `methods/substantive.md`
 9. Pull the selections per the method's selection logic (and any sample-MD-specific selection rules)
@@ -60,14 +60,14 @@ The user wants to identify what should be sampled across an engagement.
    - State OSA / other compliance → `other-*` (may layer on top of FS)
 3. Apply mandatory samples first (each MD's `mandatory` field)
 4. For optional samples, evaluate against TB balances and engagement context — surface only ones with a meaningful balance or stream
-5. Recommend `progressive-subsequent` for AR completeness when nonprofit indicators are present (grants receivable / contributions revenue). For AR, this fires **alongside** the substantive sample, not instead of it
-6. **Apply the walkthrough omission rule** before finalizing the proposed list:
+5. Recommend `progressive-subsequent` for AR completeness when nonprofit indicators are present (grants receivable / contributions revenue). For AR, this fires alongside the substantive sample, not instead of it
+6. Apply the walkthrough omission rule before finalizing the proposed list:
    - If significant controls testing of vendor disbursements is planned → omit `wt-vendors`
    - If significant controls testing of payroll is planned → omit `wt-payroll`
    - If significant controls testing of revenue / deposits is planned, OR if `fs-revenue` will hit `controls-substantive-fallback` → omit `wt-receipts`
-   - The principle: walkthrough-style static samples and controls testing of the same area are redundant. Pick one
+   - Walkthrough-style static samples and controls testing of the same area are redundant — pick one
 7. Present the proposed sample list to the user; await confirmation
-8. **Ask for tolerable misstatement once, up front** — most samples in the engagement will depend on it. Get it before running Mode A on each sample so you don't have to ask repeatedly. If the engagement uses different TMs by area, capture that mapping
+8. Ask for tolerable misstatement once, up front — get it before running Mode A on each sample so you don't have to ask repeatedly. If the engagement uses different TMs by area, capture that mapping
 9. For each confirmed sample, run Mode A. For single-audit programs, follow `references/single-audit-workflow.md` instead of independent Mode A runs per program
 
 ## Sampling methods
@@ -102,13 +102,11 @@ Method details (size formula, applicability, selection logic) live in `methods/`
 
 For each sample:
 1. Read the sample MD's `acceptable_methods`
-2. **If `mandatory_method` is set, use it and stop**
+2. If `mandatory_method` is set, use it and stop
 3. Otherwise, compute n under each acceptable method (expanding `substantive` to its four-way comparison per `methods/substantive.md`) and pick the smallest
-
-Smaller samples save engagement time without sacrificing defensibility — as long as the method is acceptable for the assertion under test. Compute and compare.
 
 ## Tolerable misstatement
 
-Most sampling methods need TM (or a TM-derived threshold). The skill should:
+Most sampling methods need TM (or a TM-derived threshold).
 
-- Ask once per engagement / Mode B run, t
+1. Ask once per engagement / Mode B run, t

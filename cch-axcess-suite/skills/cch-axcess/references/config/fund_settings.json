@@ -1,8 +1,8 @@
 {
   "_description": "Wire shape for the `fundSettings` sub-object of the TB createReports body (POST workbench-api/v1/trialbalancereport/createReports). Fund scoping applies to fund engagements (governmental / NFP) ONLY. JE reports (POST /v1/JournalEntryReport) carry fundSettings in the body but expose no fund options in the UI, so leave it null.",
-  "_builder": "scripts.reports.build_fund_settings(funds) emits exactly these shapes. NOTE: the function was dropped in a mid-June rebuild while this spec survived (create_tb_report hard-coded fundSettings null — fund scoping silently unreachable); RESTORED with a unit test against this file, wired via create_tb_report(fund_settings=...).",
+  "_builder": "scripts.reports.build_fund_settings(funds) emits exactly these shapes, wired via create_tb_report(fund_settings=...).",
   "fundOptions": {
-    "_doc": "Fund layout - INERT. Pinned to the constant 'fundsInRows'. CCH ignores the value: it does NOT round-trip (absent from the saved report definition, GET tbreportedit) and the report always renders funds in rows. The UI Funds tab has no rows/columns toggle (include-all / include-selected / do-not-include only). 'fundsInColumns' does nothing - confirmed inert (created two reports differing only in fundOptions; saved definitions were byte-identical and both rendered funds-in-rows). The `fund_layout` builder param was removed.",
+    "_doc": "Fund layout - INERT. Pinned to the constant 'fundsInRows'. CCH ignores the value: it does NOT round-trip (absent from the saved report definition, GET tbreportedit) and the report always renders funds in rows. The UI Funds tab has no rows/columns toggle (include-all / include-selected / do-not-include only). 'fundsInColumns' does nothing.",
     "value": "fundsInRows"
   },
   "_readback_note": "The saved definition (GET tbreportedit/{clientId}/{engGuid}/{reportGuid}) echoes fundSettings WITHOUT fundOptions and capitalizes the flag as 'includeCurrentAndFutureFunds' (capital A) vs the lowercase 'includeCurrentandFutureFunds' we send on create - the create endpoint accepts our lowercase (200, persists true).",

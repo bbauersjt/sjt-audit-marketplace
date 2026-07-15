@@ -17,8 +17,7 @@ status: wip
 
 ## What this does
 
-Documents what CCH Axcess will and will not accept when importing a trial balance from
-Excel, so import files are built from known constraints instead of improvised.
+- Documents what CCH Axcess will and will not accept when importing a trial balance from Excel, so import files are built from known constraints instead of improvised.
 
 ## Known constraints
 
@@ -38,29 +37,24 @@ Excel, so import files are built from known constraints instead of improvised.
 - Fund TBs carry the fund as part of the account-number prefix structure — see
   `manage-funds.md` for the fund hierarchy the numbers must match.
 
-## Column spec + classification — now captured in trial-balance-prep
+## Column spec + classification (captured in trial-balance-prep)
 
-The firm's importable TB layout and the classification vocabulary are captured in
-the **`trial-balance-prep`** skill, which resolves the two items that
-were open here:
+The firm's importable TB layout and the classification vocabulary are captured in the **`trial-balance-prep`** skill:
 
 - **Column order/headers** — three tiers (Basic / Grouped / Fund) in
   `trial-balance-prep/references/cch-import-examples.xlsx`, documented in that
   skill's `references/cch-import-formats.md`. Mirror the tier the engagement needs.
-- **CLASSIFICATION valid values** — the firm's 10-way list is confirmed:
+- **CLASSIFICATION valid values** — the firm's 10-way list:
   `CA NA CL NL EQ REV COR OI OPX OE` (`trial-balance-prep/references/
-  default-classes.xlsx`). These ARE the accepted abbreviations — the earlier "do
-  not invent values like CA" caution is superseded. They map onto the API's
+  default-classes.xlsx`). These ARE the accepted abbreviations. They map onto the API's
   `accountTypeClassificationId` in `references/config/group_account_types.json`
   (1=Current Assets=CA, 2=Non-Current Assets=NA, 3=Current Liabilities=CL, …).
+- Still confirm against a **real export from the target engagement** when one exists
+  — a specific engagement's export can carry extra columns (e.g. merged date
+  sub-rows) beyond these tiers.
+- `trial-balance-prep` builds the import file (`tb_io.write_cch_import`); a CCH-side `generate_import_file()` here remains optional.
 
-Still confirm against a **real export from the target engagement** when one exists
-— a specific engagement's export can carry extra columns (e.g. merged date
-sub-rows) beyond these tiers. `trial-balance-prep` builds the import file
-(`tb_io.write_cch_import`); a CCH-side `generate_import_file()` here remains
-optional.
-
-## Procedure (interim, until scripted)
+## Procedure
 
 ### 1. Get ground truth
 Export the TB from the target engagement (or have the user provide a prior export).

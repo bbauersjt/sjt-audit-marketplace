@@ -35,15 +35,15 @@ it. `tb_io.load_classes()` reads it.
 
 ### cch-import-examples.xlsx
 Ground-truth column specs for the three CCH import tiers — `Basic`, `Grouped`,
-`Fund` sheets. This is a real, importable layout captured from an engagement;
-mirror it exactly. `cch-import-formats.md` documents the columns, the hard
+`Fund` sheets. This is a real, importable layout — mirror it exactly.
+`cch-import-formats.md` documents the columns, the hard
 constraints (no freeze panes, debits-positive, etc.), and how classification
 and fund index are derived.
 
 ## Maintenance
 
-Edit the xlsx files directly in Excel when the firm revises an index, the class
-list, or the import layout. Keep column headers intact — the loaders key off
-them. `default-classes.xlsx` and `cch-import-examples.xlsx` originate from the
-firm's default class list and a sample CCH import; re-capture from a real CCH
-export if CCH changes the accepted format.
+1. Edit the xlsx files directly in Excel when the firm revises an index, the class
+   list, or the import layout.
+2. Keep column headers intact — the loaders key off them.
+3. If CCH changes the accepted format, re-capture `cch-import-examples.xlsx` from a
+   real CCH export, and `default-classes.xlsx` from the firm's default class list.

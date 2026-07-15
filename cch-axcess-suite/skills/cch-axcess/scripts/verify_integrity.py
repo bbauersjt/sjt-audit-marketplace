@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
 """verify_integrity.py — deterministic truncation detector for the cch-axcess skill.
 
-WHY THIS EXISTS
-The recurring failure was a critical Markdown file (SKILL.md, architecture.md)
-landing on disk truncated — usually because an editing session read the stale,
-truncated bash-mount view of a file and wrote that truncated copy back as the
-real file. Truncation was then "detected" by human judgment, which is slow and
-unreliable.
-
 THE GUARD
 Every sentinel-protected file ends with a fixed marker line:
 
     <!-- END -->
 
 Code files carry it as a trailing comment: `# <!-- END -->` (.py) or
-`// <!-- END -->` (.js). This matters for .py especially — a truncation that
-lands inside a trailing comment block still COMPILES, so the marker is the only
-deterministic tell.
+`// <!-- END -->` (.js) — a truncation that lands inside a trailing comment
+block still COMPILES, so the marker is the only deterministic tell.
 
 A write that gets cut off cannot land the marker, so a missing marker == the
 file is truncated. This script checks the marker (and a per-file minimum byte

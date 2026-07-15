@@ -28,7 +28,7 @@
       "path": "/v1.0/FinancialGroup",
       "body_signal": "rename / reclassify / re-index an EXISTING group. Body = the reorder PUT shape (full account-type trio + positionFinancialGroupId + positionId) with the edited index/name/classification.",
       "script_function": "scripts.groups.update_financial_group(client_id, financial_list_id, financial_group_id, index, name, account_type_id, classification_id, anchor_group_id, headers, position=1)",
-      "verification_status": "Renaming a group in place is done via PUT (count unchanged). The old POST-with-own-id is CONFIRMED WRONG — it created a duplicate group. PUT also REQUIRES a position anchor (positionFinancialGroupId+positionId) or 400 'Invalid group location'; to edit without moving, anchor on the group currently directly above the target with position=1."
+      "verification_status": "Renaming a group in place is done via PUT (count unchanged) — do NOT POST with the group's own id, it creates a duplicate group. PUT also REQUIRES a position anchor (positionFinancialGroupId+positionId) or 400 'Invalid group location'; to edit without moving, anchor on the group currently directly above the target with position=1."
     },
     "list_types": {
       "method": "GET",

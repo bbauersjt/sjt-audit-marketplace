@@ -38,7 +38,3 @@ Run `js` in the tab. Each row: `{id, newFiles, newComments, created, due, catego
 
 - Empty request list → tab is not on `Audit.php`, or the page has not finished rendering. Wait and re-run.
 - `window.csrf missing` errors do not apply here — this module makes no gateway calls.
-
-## Validated on
-
-- Audit 2774111 (Kymera 401(k) Plan) — 56 request rows scraped, 2026-05-22.

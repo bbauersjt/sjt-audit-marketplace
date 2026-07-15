@@ -1,9 +1,10 @@
 # Industry overlays
 
-One module per industry, loaded on top of the framework modules when intake detects the
-industry's signals (see `shared/steps/intake.md`). Each module covers: the industry's
-supplementary schedules (with any dedicated script), classification/presentation checks,
-revenue-recognition specifics, disclosures, and plausibility checks.
+1. Load one module per industry, on top of the framework modules, when intake detects the
+   industry's signals (`shared/steps/intake.md`).
+2. Each module covers: the industry's supplementary schedules (with any dedicated script),
+   classification/presentation checks, revenue-recognition specifics, disclosures, and
+   plausibility checks.
 
 Built:
 - `construction.md` — contractors: WIP / contracts-in-progress schedules (`scripts/tie_wip.py`),

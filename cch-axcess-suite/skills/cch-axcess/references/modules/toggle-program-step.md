@@ -27,7 +27,8 @@ status: validated
 
 ## What this module does
 
-Move program steps between the **library** (sidebar, `visible: false`) and the **active program** (`visible: true`) on any AUD-8xx form via one POST. Same mechanism for adds, removes, and reorders — it's **full-state replacement**, not incremental.
+- Moves program steps between the **library** (sidebar, `visible: false`) and the **active program** (`visible: true`) on any AUD-8xx form via one POST.
+- Same mechanism for adds, removes, and reorders — it's **full-state replacement**, not incremental.
 
 ## Prerequisites
 
@@ -63,7 +64,7 @@ For each step you want visible, include:
 1. The step row's `key` from `.{AREA}.ProgramSteps[].key`.
 2. Plus the `key` of every entry in that step's `childObjectList` (sub-steps) that should also be visible.
 
-For example, adding step #0 "Debt and Equity Investments – Detailed Analysis" the body's `value` was `"<childSubStepKey>;<parentStepKey>"` — two GUIDs because that step has one sub-step in its `childObjectList`. Both went visible together.
+Example: a parent step with one sub-step in its `childObjectList` requires `value` to include BOTH the parent's key and the sub-step's key — two GUIDs in the string, not one. Both go visible together.
 
 Order in the value string doesn't appear to matter — the server canonicalizes server-side.
 
@@ -124,7 +125,7 @@ await fetch('https://knowledgecoach.cchaxcess.com/api/Workpaper/UpdateProgramSte
 });
 ```
 
-Server returns 200 and the page's internal state updates immediately. No explicit `/api/Workpaper/submit` was observed to be required for step-toggle to persist (the page fires a `Workpaper/refresh` automatically after the POST).
+Server returns 200 and the page's internal state updates immediately. No explicit `/api/Workpaper/submit` is required for step-toggle to persist — the page fires a `Workpaper/refresh` automatically after the POST.
 
 ### Step 4 — Verify
 

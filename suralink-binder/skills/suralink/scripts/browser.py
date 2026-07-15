@@ -33,13 +33,12 @@ def js_gateway(controller, command, params):
     Reads `window.csrf` LIVE per call, assembles the x-www-form-urlencoded
     body, returns JSON string {status, body, error}.
 
-    CSRF behavior — what is actually observed, not assumed:
+    CSRF behavior:
 
     - Read-only commands like `/Controllers/Auditors/Audit.getRequest` do NOT
-      rotate `window.csrf` between calls. A whole engagement's 28-40 requests
-      can be enumerated in one sequential JS sweep using the same token.
-      Confirmed 2026-05-25 on Kymera 401k Audit 2025 (28 requests, single
-      `window.csrf` snapshot, zero rotations, zero errors).
+      rotate `window.csrf` between calls. A whole engagement's requests can be
+      enumerated in one sequential JS sweep using the same token snapshot,
+      zero rotations expected.
     - Some mutating commands (state changes, sign-offs) may rotate. The safe
       rule: always read `window.csrf` live per call so a rotation never
       stales the token mid-sweep.

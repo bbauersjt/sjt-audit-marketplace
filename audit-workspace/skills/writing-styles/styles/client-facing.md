@@ -18,7 +18,7 @@ The shared baseline holds (plain, no marketing words, no em dashes, say it once)
 Often not accountants. A tribal council, a board, a finance committee. They want to know what you did, whether the news is good, and what it means. Give them the result first and the mechanics only as far as they need.
 
 ## Two versions, tailored to the room
-Keep a technical version and a lay version of the same deck when the audience differs. The Santo Domingo decks show the split:
+Keep a technical version and a lay version of the same deck when the audience differs. A technical deck and a council deck for the same audit show the split:
 
 - Technical deck: names the standards (GASB 101, Government Auditing Standards, Uniform Guidance), uses "unmodified opinion," keeps the full required-communications slides.
 - Council version: translates each of those into a plain outcome, drops what a lay board doesn't act on, and leads with the good news.

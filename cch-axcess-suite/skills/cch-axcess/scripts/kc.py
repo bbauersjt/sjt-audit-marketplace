@@ -14,7 +14,7 @@ back through JS. Do not run field walking or planning inside the JS tool — kee
 in Python so it's scripted and re-runnable.
 
 HARD-DELETE POLICY: this module does NOT expose a delete-form endpoint. See
-`scripts/wpm.py` header for the incident note. To remove a form, use
+`scripts/wpm.py` header for the policy. To remove a form, use
 `wpm.soft_delete_form` (moves to "User to delete" folder).
 """
 import json
@@ -52,15 +52,13 @@ def add_forms(eng_guid: str, forms: list[dict], headers: dict) -> str:
     RESPONSE SHAPE: {"result": [...], "statusCode": ...,
     "message": ...}. `result` ECHOES every SUCCESSFULLY-added form, each with its
     server-assigned `workpaperId`/`id`/`wState` — it is NOT failures-only and is
-    NOT empty on full success. (The old "result lists only flagged/failed forms;
-    successes are silent" claim is FALSE — do not reintroduce it.) Confirm an add
-    by matching each planned referenceTag to a result[] entry; that entry's
-    workpaperId is the new form's id — success is directly visible.
+    NOT empty on full success. Confirm an add by matching each planned referenceTag
+    to a result[] entry; that entry's workpaperId is the new form's id — success is
+    directly visible.
 
-    Do NOT blind-retry the POST. The reason is NOT that successes are invisible
-    (they are visible in result[]); it is that a re-POST adds DUPLICATE forms to
-    the binder. Read result[] before retrying; on a genuine retry, dedup-diff
-    your planned referenceTags against the ones already echoed/in the binder.
+    Do NOT blind-retry the POST — a re-POST adds DUPLICATE forms to the binder.
+    Read result[] before retrying; on a genuine retry, dedup-diff your planned
+    referenceTags against the ones already echoed/in the binder.
     """
     return http_runner.build_fetch_call("POST", f"{KC}/api/binder/{eng_guid}", headers, forms)
 
@@ -122,12 +120,11 @@ def submit(eng_guid: str, wp_id: str, headers: dict) -> str:
     """JS for: POST /api/Workpaper/submit scoped to ONE workpaper. wp_id is REQUIRED.
 
     REQUIRED for persistence. UpdateProperty writes sit in a pending working copy;
-    a refresh/reload DISCARDS any unsubmitted writes. (The old "persists without
-    submit; submit only refreshes counts" claim is FALSE.) Call submit after a
+    a refresh/reload DISCARDS any unsubmitted writes. Call submit after a
     batch of writes, then verify after reload (never the immediate in-page GET —
     that reads the uncommitted working copy and gives false state-3 positives).
 
-    NEVER submit with an EMPTY workpaperId. The old "submit all pending in
+    NEVER submit with an EMPTY workpaperId — the "submit all pending in
     binder" form ({workpaperId:""}) silently DISCARDS pending writes on other
     forms instead of committing them.
     Only per-workpaper-scoped submits persist — hence the required wp_id.
@@ -322,8 +319,7 @@ def legal_dropdown_values(prop: dict) -> list[dict]:
     Reads `floatieItemList.list`. Each option item is `{key, value, isCustom}`;
     the item's `key` is what UpdateProperty wants as `valueKey`. Yes/No fields use
     the UPPERCASE convention: write `YES`/`NO` (and `YESNONA-YES/-NO/-NA` for the
-    Yes/No/N-A variant). Lowercase `yes` is REJECTED (→ resetanswer); the old
-    "lowercase valueKey='yes' is accepted" claim is DISPROVEN. Note many convention-
+    Yes/No/N-A variant). Lowercase `yes` is REJECTED (→ resetanswer). Note many convention-
     driven props ship with an EMPTY floatieItemList — the valueKey is not
     discoverable from the form GET and must come from the field registry. An empty
     list here means the field is free text OR a convention-driven choice, not
@@ -452,12 +448,12 @@ def addable_empty_grids(decoded_form: dict) -> list:
 
     WARN-ONLY - do NOT treat these as auto-fillable, but a new grid row CAN be
     created over REST: use build_spawn_payload (POST UpdateProperty with the three
-    identity keys EMPTY and the collection PATH in dataEntryExpression). The old
-    "creation is SignalR-only / NOT REST" claim is FALSE — that misdiagnosis came
-    from writes naming a specific non-existent objectKey (which IS a silent HTTP-200
-    no-op), not the empty-keys + dataEntryExpression append form. After spawning, the
-    new GUID row arrives empty; re-read so inventory_form picks it up, then fill its
-    cells by GUID (text direct; choices via resolve_choice_options_from_templates).
+    identity keys EMPTY and the collection PATH in dataEntryExpression) — NOT
+    SignalR-only. Writing a specific non-existent objectKey IS a silent HTTP-200
+    no-op; the empty-keys + dataEntryExpression append form is the one that creates
+    a row. After spawning, the new GUID row arrives empty; re-read so inventory_form
+    picks it up, then fill its cells by GUID (text direct; choices via
+    resolve_choice_options_from_templates).
     """
     els = decoded_form.get("elements")
     if isinstance(els, str):
@@ -824,8 +820,17 @@ def custom_value_key(text: str) -> str:
     return "KEY_" + norm
 
 
-def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
+def build_write_payload(field: dict, value, valueKey=None, custom=None,
+                        decoded_form: dict = None) -> dict:
     """Assemble an UpdateProperty payload from an inventory_form() field record.
+
+    - decoded_form (optional): pass the decode_form() output to auto-resolve a
+      choice field whose inline option list is empty (repeating-row chooseitem,
+      S-form yes/no rows) from the form's OWN rowTemplates
+      (resolve_choice_options_from_templates). ValueKeys always come from the
+      form's own template, never a registry/other-form default — S-forms use
+      lowercase `yes`/`no`/`yesnona-*` and a guessed or wrong-case key is
+      reset-rejected (state 2 / `resetanswer`).
 
     - text: free text. valueKey is "".
     - signoff: token (initials) goes in `valueKey`, not `value` (free-text write
@@ -905,11 +910,21 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
         }
 
     if kind in ("select", "multiselect") and not field.get("options"):
-        raise ValueError(
-            f"choice field {field.get('key_original')!r} has no loadable options "
-            f"(sentinel-detected; option list empty at read time) — SKIP it or "
-            f"resolve options first. Do NOT write free text: it is reset-rejected."
-        )
+        if decoded_form is not None:
+            enrich_repeating_choice(field, decoded_form)
+        if not field.get("options"):
+            raise ValueError(
+                f"choice field {field.get('key_original')!r} has no loadable options "
+                f"(sentinel-detected; option list empty at read time). Resolve from the "
+                f"form's OWN template first — pass decoded_form= to this call, or run "
+                f"enrich_repeating_choice(field, decoded_form) / "
+                f"resolve_choice_options_from_templates(). Still empty = a dynamic "
+                f"cross-form multiselect (options rendered by the SPA from another "
+                f"container, e.g. a major-program list) — resolve via the DOM "
+                f"(kc_dom_parser) or leave it for a UI fill; SKIP here. Do NOT write "
+                f"free text or a guessed/registry-default valueKey: reset-rejected "
+                f"(state 2 / resetanswer)."
+            )
 
     if kind == "multiselect":
         opts = field.get("options", [])
@@ -991,11 +1006,11 @@ def build_write_payload(field: dict, value, valueKey=None, custom=None) -> dict:
 # ROW CREATION IS REST.
 # To append a row: POST UpdateProperty with the three identity keys EMPTY and the
 # collection PATH in `dataEntryExpression` (build_spawn_payload). The server
-# creates a fresh GUID row and lands `value` in its first writable cell. The old
-# "silent no-op" finding was a misdiagnosis - those writes named a specific
-# NON-EXISTENT objectKey instead of the empty-keys + dataEntryExpression append
-# form. After spawning, re-read the form to get the GUID, then fill remaining
-# columns with normal build_write_payload writes keyed by that GUID.
+# creates a fresh GUID row and lands `value` in its first writable cell. A write
+# naming a specific NON-EXISTENT objectKey is a silent no-op — use the
+# empty-keys + dataEntryExpression append form instead. After spawning, re-read
+# the form to get the GUID, then fill remaining columns with normal
+# build_write_payload writes keyed by that GUID.
 #
 # STOPPING RULE: each spawn creates exactly one row (plus the UI's perpetual
 # trailing add-box, which has NO object in `collections` and so is never picked

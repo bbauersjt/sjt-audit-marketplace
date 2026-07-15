@@ -4,45 +4,41 @@ Rules and patterns that apply to **every** CCH AUD-8xx audit program. Apply thes
 
 ## Step → Assertion → RMM linkage rule
 
-Each visible program step has three linked sets:
+Each visible program step has two linked sets:
 
 1. **`Assertion`** valueKey (semicolon-joined, e.g., `"EO;CO;CU;"`) — which assertions this step addresses.
 2. **`Risks`** valueKey (semicolon-joined, e.g., `"FINANCIALLEVELRISKS-1;RMM-EO;RMM-CO;RMM-CU;"`) — which risks this step is linked to.
 
-**Convention:** For each visible step, the `Risks` valueKey must include `RMM-{assertion}` for every assertion in the step's `Assertion` valueKey, **skipping** any assertion that is N/A for the area (CCH server-side rule — e.g., AV is N/A for Cash, no `RMM-AV` checkbox exists).
-
-Preserve any FS-level risk references already on the step (e.g., `FINANCIALLEVELRISKS-1` for Management Override) when adding RMM-X links. Full-state replacement on write — see `cch-axcess/references/modules/fill-kc-form.md` "Multi-value / multiselect" (the Risks bullet) for the API format.
+Rules:
+1. For each visible step, the `Risks` valueKey must include `RMM-{assertion}` for every assertion in the step's `Assertion` valueKey, skipping any assertion that is N/A for the area (CCH server-side rule — e.g., AV is N/A for Cash, no `RMM-AV` checkbox exists).
+2. Preserve any FS-level risk references already on the step (e.g., `FINANCIALLEVELRISKS-1` for Management Override) when adding RMM-X links.
+3. Write full-state, not incremental — see `cch-axcess/references/modules/fill-kc-form.md` "Multi-value / multiselect" (the Risks bullet) for the API format.
 
 ## Cross-cutting steps — Fraud Awareness & Information as Audit Evidence
 
-Two steps appear in **every** AUD-8xx program with **no specific assertion linkage** by default:
+Two steps appear in **every** AUD-8xx program with no specific assertion linkage by default:
 
 - **Fraud Awareness** (AU-C 240) — alertness for fraud indicators. Cross-cutting professional skepticism.
 - **Information To Be Used As Audit Evidence** (AU-C 500) — evaluation of evidence relevance/reliability. Cross-cutting evaluation step.
 
-CCH's diagnostic flags both as "Program Step Not Linked to Risk or Relevant Assertion" when left empty. **Firm convention:**
-
-For each of these two steps, write:
-- `Assertion` = all applicable (non-N/A) assertions for the area, semicolon-joined.
-- `Risks` = `FINANCIALLEVELRISKS-1;` (Management Override) + every `RMM-{assertion}` for the applicable set.
+Leaving either empty triggers CCH's "Program Step Not Linked to Risk or Relevant Assertion" diagnostic. To clear it, for each of these two steps write:
+1. `Assertion` = all applicable (non-N/A) assertions for the area, semicolon-joined.
+2. `Risks` = `FINANCIALLEVELRISKS-1;` (Management Override) + every `RMM-{assertion}` for the applicable set.
 
 Example for Cash (AV is N/A):
 - Assertion = `"EO;RO;CO;CU;UC;"`
 - Risks valueKey = `"FINANCIALLEVELRISKS-1;RMM-EO;RMM-RO;RMM-CO;RMM-CU;RMM-UC;"`
 - Risks value = `"Management Override;RMM-EO;RMM-RO;RMM-CO;RMM-CU;RMM-UC;"`
 
-This clears the CCH diagnostic and reflects the audit-standards reality that these steps cover all evidence/fraud risk across the area.
-
 ## Management Override (FINANCIALLEVELRISKS-1)
 
-`FINANCIALLEVELRISKS-1` is the engagement-wide Management Override of Controls fraud risk per AU-C 240. It's an **FS-level risk**, not an area-level one. CCH auto-creates it on every engagement.
+`FINANCIALLEVELRISKS-1` is the engagement-wide Management Override of Controls fraud risk per AU-C 240. It's an FS-level risk, not an area-level one. CCH auto-creates it on every engagement.
 
-**Convention:** Management Override should be linked to:
-- Cross-cutting steps (Fraud Awareness, Info as Audit Evidence) — always.
-- Specific procedure steps where management override is a plausible concern (e.g., Account Summary, Subsequent Bank Statements where journal entry posting/cash manipulation could occur).
-- NOT linked to disclosure-testing or routine FS tie-out steps where management override isn't the relevant risk.
-
-CCH defaults will pre-link Management Override on the steps where it's a typical concern. Preserve those defaults; only add it where CCH didn't auto-link if the engagement specifically identifies management override risk in that procedure.
+Rules:
+1. Link Management Override to cross-cutting steps (Fraud Awareness, Info as Audit Evidence) — always.
+2. Link it to specific procedure steps where management override is a plausible concern (e.g., Account Summary, Subsequent Bank Statements where journal entry posting/cash manipulation could occur).
+3. Do NOT link it to disclosure-testing or routine FS tie-out steps where management override isn't the relevant risk.
+4. Preserve CCH's default pre-linking on steps where it's a typical concern; only add it elsewhere if the engagement specifically identifies management override risk in that procedure.
 
 ## PlannedAuditApproach (Combined / Analytical / In-depth)
 

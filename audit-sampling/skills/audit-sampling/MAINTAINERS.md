@@ -1,6 +1,6 @@
 # Maintainers Doc — audit-sampling
 
-This is the handoff. When you (Claude) come back to this skill to add or modify something, **read this file first**. It captures the architecture, the interdependencies, the open TODOs, and the warnings you need to know before changing anything.
+Read this file first before adding to or modifying this skill.
 
 ## What this skill does
 
@@ -196,7 +196,7 @@ The `description:` field in `SKILL.md` frontmatter is the **primary triggering m
 - **Single-audit logic spread across files** — `methods/single-audit.md`, `references/single-audit-workflow.md`, `samples/sa-major-program-transactions.md`. When changing SA logic, audit all three
 - **Output.md is unstable on purpose** — the user wants it revisable. Don't bake output assumptions into other files; read `references/output.md` every time
 
-## Open TODOs (as of last update)
+## Open TODOs
 
 1. **Sampling form formula** — firm-specific, needs Brett's actual sampling form to be dropped in. Currently a placeholder in `methods/sampling-form.md`. Until then, the substantive comparison runs on three methods, not four
 2. **Mode A omission rule check** — currently the omission rule only fires in Mode B. If a user calls `wt-payroll` directly via Mode A while controls testing is happening, the skill won't catch the conflict. Decision pending: ask in Mode A or trust the user

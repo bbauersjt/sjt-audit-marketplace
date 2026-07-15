@@ -27,5 +27,5 @@
     "the response field data.requestId is a 2-char display index, NOT the real id; data.id is the real id"
   ],
   "script": "scripts/suralink.py :: get_request_js, extract_files",
-  "validated": "2026-05-22, audit 2774111"
+  "validated": true
 }

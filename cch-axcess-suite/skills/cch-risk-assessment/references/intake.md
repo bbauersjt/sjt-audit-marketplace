@@ -26,11 +26,10 @@ Map the entity's accounts to the firm's audit areas. The area set is title-speci
 When the TB is a raw account list with no area mapping, group it yourself into the title's areas so you can total each one.
 
 1. Classify each account to an audit area by account name + normal balance + sign. Use `scoping/area-map-by-title.md` for the target area list and the firm's standard 4-digit taxonomy (`cch-axcess/references/data/tb-group-codes.xlsx` — Natural columns for commercial/NFP, Governmental columns when the engagement shows a Funds Setup button).
-2. Keep **classes of transactions** distinct from **account balances**: revenue streams, payroll, purchases/disbursements, and contributions are transaction classes that get scoped and tested even when no single balance-sheet line is large. A small net balance can sit on top of a large gross transaction flow — scope on the flow, not the residual.
-3. Sum each area: current-year balance, prior-year balance (from prior TB or FS), and **absolute** dollar change. Significance is tested on the **larger of** the current balance or the gross activity in the class.
-4. Produce a working scope sheet: area · CY balance · PY balance · change · gross activity (for transaction classes) · significant Y/N · basis. This is the artifact that justifies the KBA-400 scoping and should be saved to the engagement folder.
-
-> Deriving balances is judgment, not just arithmetic — when an account is ambiguous (e.g., "Other"), classify by what's actually in it (read the detail if available) and note the call. Flag anything you're unsure of for the user rather than burying it.
+2. Keep classes of transactions distinct from account balances: revenue streams, payroll, purchases/disbursements, and contributions are transaction classes that get scoped and tested even when no single balance-sheet line is large. Scope on the gross flow, not the net residual.
+3. Sum each area: current-year balance, prior-year balance (from prior TB or FS), and absolute dollar change. Test significance on the larger of the current balance or the gross activity in the class.
+4. Produce a working scope sheet: area · CY balance · PY balance · change · gross activity (for transaction classes) · significant Y/N · basis. This is the artifact that justifies the KBA-400 scoping — save it to the engagement folder.
+5. When an account is ambiguous (e.g., "Other"), classify by what's actually in it (read the detail if available) and note the call — don't guess. Flag anything you're unsure of for the user rather than burying it.
 
 ## Step 3 — Materiality / tolerable
 
@@ -67,7 +66,11 @@ For EBP, materiality is usually set on net assets available for benefits; for go
 
 ## Step 4 — Significance call
 
-Apply `scoping/significance.md`. In short: an area/class/disclosure is **significant** if its balance or gross activity **exceeds tolerable**, OR if it is **qualitatively significant** regardless of size (the always-significant list — e.g., cash, revenue, related parties, journal entries, areas with fraud risk or significant estimates, required disclosures). Significant areas get scoped on KBA-400, get a relevant-assertion set, get IR/CR/RMM on KBA-502, and get an audit program.
+Apply `scoping/significance.md`. An area/class/disclosure is significant if:
+1. Its balance or gross activity exceeds tolerable, OR
+2. It is qualitatively significant regardless of size (the always-significant list — e.g., cash, revenue, related parties, journal entries, areas with fraud risk or significant estimates, required disclosures).
+
+Significant areas get scoped on KBA-400, get a relevant-assertion set, get IR/CR/RMM on KBA-502, and get an audit program.
 
 ## Step 5 — Hand the result to the cascade
 
@@ -84,11 +87,11 @@ The intake output feeds, in order:
 
 ## Roll-forward discipline (when a prior RA exists)
 
-Default to the prior year's scoping and IR, then **challenge each one** against this year's TB and facts:
-- New or newly-material area this year → add to scope.
-- Area that fell below tolerable and has no qualitative driver → consider de-scoping (document why).
-- Changed facts (new debt, new revenue stream, new estimate, control change, restatement) → revisit IR and significant-risk flags.
-- Never carry a prior IR forward blind — the basis must hold this year (KBA-503).
+Default to the prior year's scoping and IR, then challenge each one against this year's TB and facts:
+1. New or newly-material area this year → add to scope.
+2. Area that fell below tolerable and has no qualitative driver → consider de-scoping (document why).
+3. Changed facts (new debt, new revenue stream, new estimate, control change, restatement) → revisit IR and significant-risk flags.
+4. Never carry a prior IR forward blind — the basis must hold this year (KBA-503).
 
 ## Open / firm-tunable (confirm with user, then codify)
 

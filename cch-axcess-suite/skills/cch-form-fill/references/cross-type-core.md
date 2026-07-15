@@ -68,13 +68,12 @@ AUD-909 FS-review and AUD-901/813/814 entity-fact toggles differ (govt: funds/op
 
 ---
 
-## Delta reads — status
-All four engagement types mapped (forms pulled cross-title into the test binder):
+## Per-type reference files
 - **Govt** — full section maps (`section-01`…`06`).
 - **EBP** — `type-ebp.md`
 - **NPO** — `type-npo.md`
 - **Commercial** — `type-commercial.md`
-- **Construction** — `type-cns.md` (Commercial parity through AUD-816; +1 numbering shift from AUD-817, CONTRACT area; not yet re-verified live).
+- **Construction** — `type-cns.md` (Commercial parity through AUD-816; +1 numbering shift from AUD-817, CONTRACT area; not re-verified live — confirm via `GetBinder` before relying on CNS-unique numbering).
 - **Single Audit (8000) module** — `sa-module.md` (S-form series).
 
-**Confirmed across all four:** the form machinery is identical; each type's delta is its entity/plan profile + a set of gating toggles (mostly default No) + a few unique forms (EBP tax status / 103(a)(3)(C); NPO net assets/contributions/split-interest; Commercial 606/VIE/equity). The core spine + collapse levers carry every type.
+The form machinery is identical across all four types; each type's delta is its entity/plan profile + a set of gating toggles (mostly default No) + a few unique forms (EBP tax status / 103(a)(3)(C); NPO net assets/contributions/split-interest; Commercial 606/VIE/equity). The core spine + collapse levers carry every type.

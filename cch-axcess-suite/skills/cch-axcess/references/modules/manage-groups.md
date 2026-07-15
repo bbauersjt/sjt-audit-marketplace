@@ -104,7 +104,7 @@ A subgroup is a child level below a financialGroup (TB Sub-Group column; UI: Acc
 404s) — read subgroup membership from the grouped TB at **`row.account.financialSubGroup`** (NOT
 `row.account.subGroup`, which is silently null — see architecture.md FP-trialbalance gotcha).
 
-Status: not yet round-trip live-validated the way group create/reorder is.
+Status: not yet round-trip validated (unlike group create/reorder).
 
 1. **Create subgroups under a parent group** — same insert-after anchor rule as groups, on its
    own field (`0` = first subgroup under the parent; else the preceding sibling's

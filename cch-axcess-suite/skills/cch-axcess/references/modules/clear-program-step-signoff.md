@@ -21,10 +21,8 @@ status: validated
 # Module — Clear Program-Step Sign-Off / N/A (in-form, KC)
 
 ## What this does
-Removes ONE in-form program-STEP sign-off **or** N/A marker on an AUD-8xx program by setting the
-step's `SignOff` property to `"[]"` via `UpdateProperty`. This is the KC-leg counterpart to the
-document-level `remove-signoff.md` (WPM). **Different things — don't cross them:** this is a step
-cell inside a KC form; that one is the workpaper's binder-level sign-off.
+- Removes ONE in-form program-STEP sign-off **or** N/A marker on an AUD-8xx program, by setting the step's `SignOff` property to `"[]"` via `UpdateProperty`.
+- This is the KC-leg counterpart to the document-level `remove-signoff.md` (WPM). **Different things — don't cross them:** this is a step cell inside a KC form; that one is the workpaper's binder-level sign-off.
 
 ## The SignOff property shape
 `SignOff` on a `.{AREA}.ProgramSteps` step object is a JSON-ARRAY-IN-A-STRING:

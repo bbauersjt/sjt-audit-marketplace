@@ -57,8 +57,8 @@ def _parse_simple_yaml(text: str) -> dict:
             current_key = key
             if val == "" or val == "[]":
                 # bare key (block list follows) OR an inline empty list `key: []`.
-                # Without the `[]` case, "[]" was kept as a scalar string and later
-                # iterated char-by-char, rendering `[`, `]` in the INDEX (M4 bug).
+                # Must map to [] here — treating "[]" as a scalar string instead
+                # gets iterated char-by-char, rendering `[`, `]` in the INDEX.
                 out[key] = []
             else:
                 # strip a trailing inline comment ("wpm   # what Step 0 warms")

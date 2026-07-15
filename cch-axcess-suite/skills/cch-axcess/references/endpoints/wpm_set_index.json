@@ -14,7 +14,7 @@
   },
   "batch_support": false,
   "gotchas": [
-    "USE PUT, NOT POST. Live UI captures show POST but POST returns 200 and is a silent no-op (index does not persist). PUT is the working method. Discovered empirically.",
+    "USE PUT, NOT POST. POST returns 200 and is a silent no-op (index does not persist). PUT is the working method.",
     "Move PRESERVES the index; locationId stays stable. Set-Index after Move only for genuinely new (null-index) forms — NOT to restore a cleared index (Move does not clear it)."
   ],
   "script_function": "scripts.wpm.set_index(client_id, items, headers)  # serializes a list sequentially"

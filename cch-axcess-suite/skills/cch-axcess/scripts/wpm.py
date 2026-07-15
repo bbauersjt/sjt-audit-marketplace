@@ -18,15 +18,12 @@ automatically; hand-rolled XHRs must merge them too.
 
 HARD DELETE IS NOT A CAPABILITY OF THIS SKILL.
 
-Known hazard: DELETE calls to
-/v1/KnowledgeCoach/.../deleteform/... corrupted the binder — `lastUsedTitleGuid`
-went null and ALL workpapers became invisible (not just the deleted ones).
-Recycle Bin did NOT recover them. The binder had to be rebuilt from scratch.
-
 Rule: NEVER hard-delete anything in CCH from this skill — forms, folders,
-leadsheets, reports. If a user requests a delete, soft-delete: move the
-object into a "User to delete" folder (index 9999) and let them clean up
-from the UI on their own time.
+leadsheets, reports. A DELETE call to /v1/KnowledgeCoach/.../deleteform/...
+can corrupt the binder (`lastUsedTitleGuid` goes null, ALL workpapers become
+invisible, not recoverable via Recycle Bin). If a user requests a delete,
+soft-delete: move the object into a "User to delete" folder (index 9999)
+and let them clean up from the UI on their own time.
 
 If a future training-mode capture session sees a DELETE call, DO NOT
 script it. Wrap it as a soft-delete instead, or refuse the operation.

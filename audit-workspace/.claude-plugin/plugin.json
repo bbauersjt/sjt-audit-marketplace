@@ -1,7 +1,7 @@
 {
   "name": "audit-workspace",
   "description": "Audit engagement workspace onboarding — one-pass setup orchestrator (crosswalk, memos, CCH conversion imports), the CaseWare DBF reader (document crosswalk + TB/grouping/fund extract), trial-balance prep (grouping conversion, CCH import tiers, fund imports), and the firm writing voice.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "SJT Group CPA",
     "email": "bbauer@sjtgroupcpa.com"

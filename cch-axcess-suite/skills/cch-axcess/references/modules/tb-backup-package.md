@@ -30,11 +30,8 @@ status: wip
 
 ## What this does
 
-One workbook backing up an engagement's trial balance state: a sterile, import-ready
-TB sheet per period (CY + optional PY), an Account Map (account → group →
-subgroup → fund, balances for both years), the Groups inventory, the Fund Structure,
-and a consolidated all-fields tab (default on). Built for "back this engagement up
-before we touch it" and for re-import after a failed/inverted import.
+- Produces one workbook backing up an engagement's trial balance state: a sterile, import-ready TB sheet per period (CY + optional PY), an Account Map (account → group → subgroup → fund, balances for both years), the Groups inventory, the Fund Structure, and a consolidated all-fields tab (default on).
+- Use it to back an engagement up before touching it, and for re-import after a failed/inverted import.
 
 ## Prerequisites
 

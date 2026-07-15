@@ -35,5 +35,3 @@ Apply during selection, after the method has been chosen and n computed.
 ## Sampling unit
 
 Sample at the unit defined in the sample MD (transaction, batch, vendor, customer, employee, period, distribution event, etc.). Don't sample at a different level than the method or sample MD specifies — e.g. don't pull individual invoices when the unit is the vendor, or individual journal-entry lines when the unit is the batch. Mixing units distorts both the sizing and the coverage conclusion.
-
-<!-- [recovery 2026-06-01: trailing text reconstructed from context after a write-truncation; verify] -->

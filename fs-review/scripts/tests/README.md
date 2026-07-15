@@ -1,19 +1,17 @@
 # Pipeline regression test
 
-`make_test_fs.py` (needs `reportlab`) generates two fixtures:
-
-- `test_fs.pdf` — a synthetic construction-contractor package with **five planted math
-  errors** (E1–E5, documented in the script docstring: $1 footing slip, $100 PY
-  fat-finger, $1,000 broken debt-note tie, bad WIP over/underbilling row, short-footed
-  WIP column) and **eleven planted proof errors** on the notes page (P1–P10 in the
-  script: skipped Note 3, out-of-order note headings, dangling "Note 9" reference,
-  mixed Auditor's/Auditors', mixed serial comma, capitalization drift on a repeated
-  heading, stale year 2023, DRAFT marker, mixed date formats, "recievables"
-  misspelling, one Times-Roman line in a Helvetica document).
-- `test_fs_py.pdf` — the "issued" 2024 statement with the TRUE prior-year figures, so
-  the CY package's comparative column disagrees on three cascading lines.
-
-Expected results after any change to the scripts:
+1. Run `make_test_fs.py` (needs `reportlab`) to generate two fixtures:
+   - `test_fs.pdf` — a synthetic construction-contractor package with **five planted math
+     errors** (E1–E5, documented in the script docstring: $1 footing slip, $100 PY
+     fat-finger, $1,000 broken debt-note tie, bad WIP over/underbilling row, short-footed
+     WIP column) and **eleven planted proof errors** on the notes page (P1–P10 in the
+     script: skipped Note 3, out-of-order note headings, dangling "Note 9" reference,
+     mixed Auditor's/Auditors', mixed serial comma, capitalization drift on a repeated
+     heading, stale year 2023, DRAFT marker, mixed date formats, "recievables"
+     misspelling, one Times-Roman line in a Helvetica document).
+   - `test_fs_py.pdf` — the "issued" 2024 statement with the TRUE prior-year figures, so
+     the CY package's comparative column disagrees on three cascading lines.
+2. After any change to the scripts, run the pipeline below and confirm the expected result on each line:
 
 ```
 python make_test_fs.py
@@ -44,5 +42,4 @@ python ..\compare_py.py statements.json py_statements.json --py 2024 --cy 2025
                                                                   # 0 beginning-balance rows
 ```
 
-More failures = false positives introduced; fewer = a planted error slipped. Both are
-regressions.
+3. More failures than expected = false positives introduced. Fewer = a planted error slipped. Both are regressions — fix before merging.

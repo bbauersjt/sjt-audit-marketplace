@@ -61,22 +61,12 @@ ASB→Commercial, HOA→Commercial, CNS→Construction, EBP→Employee Benefit P
 | programs/cash.md + _conventions.md | Template + universal conventions (mechanics deferred to cch-axcess) |
 | programs/{other areas} | Stubs — incremental, captured one at a time |
 
-## Open items
+## Open / firm-tunable
 
-1. ✓ **KBA-502 writable surface.** KBA-502 OWNS the per-assertion IR/CR/RMM/approach
-   grid and is the WRITE target (collectionKey `.{AREA}.RelevantAssertion` against **KBA-502's wpId**); the
-   AUD-8xx program grid is DERIVED/read-through — program-targeted writes land in a working copy the
-   KBA-502-owned recompute discards on refresh. The bulk GET doesn't embed the RelevantAssertion child rows
-   (`childObjectList: []`) and `inventory_form` over-filters the form.
-2. ✓ **KBA-400's six scoping options** — per-area scoping row + relevant assertions selection (mechanics in cch-axcess).
-4. ✓ **Durable write pattern** — per-area writes → per-workpaper submit (KBA-502's wpId) → refresh before
-   the next area, from a parked non-target tab; verify via refresh → GetWorkpaperDiagnostics (never the
-   in-session echo). propertyType-5
-   (`…/ProgramSteps`, `…/plannedauditapproach`) stays linked/never-write; its "Unaddressed" diagnostics
-   resolve via program step-linkage/sign-off at section fan-out.
-
-**Still open:**
-3. **Firm-tunable significance parameters** — performance-materiality %, clearly-trivial %, the house always-significant list.
+Performance-materiality %, clearly-trivial %, and the house always-significant list — confirm with the firm;
+see `scoping/significance.md` "Firm-tunable parameters". (KBA-502 write-target mechanics, KBA-400 scoping
+options, and the durable write pattern are documented at `references/cascade/kba-502.md`,
+`references/cascade/kba-400.md`, and `programs/_conventions.md`.)
 
 ## Sibling skills
 

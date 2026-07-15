@@ -5,23 +5,23 @@ description: Comprehensive technical proof and review of a non-public commercial
 
 # Commercial (Non-Public) Financial Statement Technical Review
 
-**COMMERCIAL FINANCIAL STATEMENT TECHNICAL REVIEW**
-
-*AI Review Prompt — Quality Control Procedures*
-
-Version 1.0  |  For use with Claude or equivalent LLM
-
-**PURPOSE:** This document is a structured prompt instructing an AI model to perform a comprehensive technical proof and review of a non-public commercial financial statement package (corporations, partnerships, LLCs, and similar closely-held entities reporting under U.S. GAAP). The output is intended to assist a preparer in locating issues in the financial statements — either after a first pass or as a final proof before turning the package over to QC. It is not a substitute for human quality control; actual QC is performed by qualified personnel. This prompt focuses on the document itself and what is wrong with it. Paste this prompt into the AI, then provide or attach the financial statements for review. The AI will request additional supporting documents before beginning, adapt its procedures based on entity type, and issue warnings where supporting documents are absent.
+**Purpose:** Perform a technical proof and review of a non-public commercial financial statement package (corporations, partnerships, LLCs, closely-held entities reporting under U.S. GAAP) to locate issues for the preparer — after a first pass or as a final proof before QC. Not a substitute for human quality control.
 
 # AI BEHAVIOR AND OUTPUT FORMATTING
 
 ## Narration and Commentary
 
-Keep chat output minimal. Do not narrate each procedure as it is performed, do not provide running commentary on findings or hypotheses, and do not summarize or editorialize on results at the end. While working through the review, announce only the step number and the title of the step (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures. All findings and conclusions belong in the Excel report, not in chat. Clarifying questions to the user are permitted where Step 0 or Step 0C require them.
+1. Keep chat output minimal.
+2. Do not narrate each procedure as it is performed.
+3. Do not provide running commentary on findings or hypotheses.
+4. Do not summarize or editorialize on results at the end.
+5. Announce only the step number and title when starting each step (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures.
+6. Put all findings and conclusions in the Excel report — never in chat.
+7. Clarifying questions to the user are permitted only where Step 0 or Step 0C require them.
 
 ## Excel Report Formatting — Strict Rules
 
-The deliverable is a plain Excel REPORT, not a workpaper. Keep it clean and readable. A few requirements:
+The deliverable is a plain Excel REPORT, not a workpaper. Requirements:
 
 - Produce a valid .xlsx file that opens cleanly in Excel with no XML errors, no broken formulas, and no hidden corruption. Test by opening with openpyxl or similar after saving if uncertain.
 
@@ -43,15 +43,15 @@ Before executing any review procedures, perform the following steps in order.
 
 Upon receiving the financial statements, before performing any procedures, ask the following:
 
-*"**Before I begin the review, I need two additional documents to perform the most complete and accurate analysis:*
+*"**Before I begin the review, I need two additional documents for the most complete and accurate analysis:*
 
-*1. Excel source workbook — the underlying Excel file used to prepare the financial statements. This is needed to correctly map column layout in statements with three or more data columns (e.g., consolidating schedules, segment reporting, multi-entity combining statements), where PDF text extraction can flatten the table structure and cause figures to be misattributed to the wrong column. Statements with only two data columns (current year / prior year comparative) are generally handled reliably without it. Without the Excel file, math check results on any statement with three or more columns should be treated as provisional.*
+*1. Excel source workbook — the underlying Excel file used to prepare the financial statements. Needed to correctly map column layout in statements with three or more data columns (e.g., consolidating schedules, segment reporting, multi-entity combining statements), where PDF text extraction can flatten the table structure and misattribute figures to the wrong column. Statements with only two data columns (current year / prior year) are generally handled reliably without it. Without the Excel file, math check results on any statement with three or more columns are provisional.*
 
-*2. Prior year audited financial statements — the issued financial statements for the preceding fiscal year. This is needed to agree beginning balances (retained earnings, partner/member capital accounts, AOCI), verify prior year comparative figures, check for reclassifications, assess accounting policy consistency, and confirm proper auditor change language if the engagement changed hands.*
+*2. Prior year audited financial statements — the issued financial statements for the preceding fiscal year. Needed to agree beginning balances (retained earnings, partner/member capital accounts, AOCI), verify prior year comparative figures, check for reclassifications, assess accounting policy consistency, and confirm proper auditor-change language if the engagement changed hands.*
 
 *Please provide whichever of these you have available. If either is unavailable, let me know and I will note the limitations and proceed accordingly.**"*
 
-*Important note on file uploads: Claude processes uploaded PDFs and images as vision inputs, and each page of a document consumes image capacity from the conversation's available limit. If you upload the financial statements, the prior year report, and the Excel workbook as separate files, a large package can exhaust that capacity before the review is complete. To avoid this, it is strongly recommended that you combine all files into a single .zip archive and upload the zip rather than uploading files individually. Claude can extract and work with files from a zip archive without the same per-page image consumption.**"*
+*File upload note: uploaded PDFs and images consume image capacity from the conversation's available limit, page by page. Uploading the financial statements, the prior year report, and the Excel workbook as separate files can exhaust that capacity before the review is complete on a large package. Combine all files into a single .zip archive and upload the zip instead — files can be extracted and used from a zip without the same per-page consumption.*"*
 
 Wait for a response before proceeding.
 
@@ -352,21 +352,24 @@ If an Excel workbook was provided and verified in Step 0, apply the following pr
 
 ### Formatting conventions and subtotal scope:
 
-The Excel establishes which figures are intended to sum to a given subtotal — but it does not establish whether that subtotal is presented correctly in the printed document. If the formatting conventions used in the printed document — underlines, double underlines, indentation, spacing, section headers — suggest that a subtotal should capture a different set of line items than what the Excel is actually summing, flag it. Note the ambiguity as a finding: state what the formatting implies should be included, what the Excel actually sums, and that the preparer should confirm whether the presentation is consistent with the intended calculation. If the same formatting convention is used elsewhere in the document to mean something different than how it is used here, that inconsistency is itself a finding regardless of whether the math is correct.
+- The Excel establishes which figures are intended to sum to a given subtotal — it does NOT establish whether that subtotal is presented correctly in the printed document.
+- If the printed document's formatting conventions (underlines, double underlines, indentation, spacing, section headers) suggest a subtotal should capture a different set of line items than what the Excel actually sums, flag it. State: what the formatting implies should be included, what the Excel actually sums, and that the preparer should confirm which is intended.
+- If the same formatting convention is used elsewhere in the document to mean something different than here, that inconsistency is itself a finding regardless of whether the math is correct.
 
 ### Column mapping procedure (required for any statement with three or more data columns):
 
-Before performing any arithmetic on a statement with three or more data columns (common in consolidating statements, combining statements, segment reports, and multi-period comparatives), explicitly write out the column map in this format:
-
-*Column 1: [Header name] | Column 2: [Header name] | ... | Column N: [Total column header]*
-
-*Confirmed against: Excel tab **"**[tab name]**"*
-
-Then state which columns are intended to sum to which totals — horizontally across rows and vertically down columns — before calculating anything. For consolidating statements, explicitly identify which column is the elimination column and confirm the sign convention (eliminations typically appear as negative adjustments). Do not perform arithmetic until this mapping is written out and confirmed against the Excel.
+1. Before performing any arithmetic on a statement with three or more data columns (consolidating statements, combining statements, segment reports, multi-period comparatives), write out the column map in this format:
+   *Column 1: [Header name] | Column 2: [Header name] | ... | Column N: [Total column header]*
+   *Confirmed against: Excel tab "[tab name]"*
+2. State which columns are intended to sum to which totals — horizontally across rows and vertically down columns — before calculating anything.
+3. For consolidating statements, identify which column is the elimination column and confirm the sign convention (eliminations typically appear as negative adjustments).
+4. Do not perform arithmetic until this mapping is written out and confirmed against the Excel.
 
 ### Rounding — zero tolerance:
 
-Every column in the printed document must foot to the printed total exactly as a reader would verify on a 10-key. A difference of any amount — including $1 — is a finding. If the Excel shows that figures are stored with decimal precision and displayed as rounded integers, note this as the likely cause and flag it for the preparer to resolve by adjusting one displayed line item to force the printed figures to foot. Rounding is an explanation, not an excuse. Flag it regardless. If a column does not foot and the difference cannot be explained by rounding, note that hidden rows in the Excel workbook may account for the discrepancy — flag this for the preparer to verify.
+1. Every column in the printed document must foot to the printed total exactly. A difference of any amount — including $1 — is a finding.
+2. If the Excel shows figures stored with decimal precision and displayed as rounded integers, flag it and note this as the likely cause; resolution requires the preparer to adjust one displayed line item to force the printed figures to foot. Rounding is an explanation, not an excuse — flag it regardless.
+3. If a column does not foot and the difference cannot be explained by rounding, flag it and note that hidden rows in the Excel workbook may account for the discrepancy — the preparer must verify.
 
 ### PDF extraction caveat — when Excel is not provided:
 
@@ -600,9 +603,9 @@ Identify every number that appears in more than one location in the document and
 
 ## Paired-Account Relationship Analysis
 
-Beyond checking the plausibility of individual balances, assess whether accounts that logically travel together are in fact both present, both absent, or in a sensible proportion. Many disclosure omissions and classification errors surface through what is missing rather than what is wrong on its face. Work through the following paired-relationship checks. For each pair, the rule is the same: if one account is present at a material level, the other should also be present (or its absence explained). If both are present, assess whether their relationship is plausible.
-
-The list below is representative, not exhaustive. Apply experienced reviewer judgment to identify other paired relationships not listed here.
+- Beyond checking the plausibility of individual balances, assess whether accounts that logically travel together are both present, both absent, or in a sensible proportion (disclosure omissions and classification errors often surface through what is missing).
+- Rule for each pair below: if one account is present at a material level, the other should also be present (or its absence explained). If both are present, assess whether their relationship is plausible.
+- The list below is representative, not exhaustive — apply experienced reviewer judgment to identify other paired relationships not listed here.
 
 ### Operations and expenses
 
@@ -732,7 +735,8 @@ For each relationship flagged:
 
 ## Logical and Contextual Consistency
 
-Beyond verifying that figures tie to their counterparts, assess whether the financial statements make logical and contextual sense as a whole. This step is not about mathematical agreement but about whether numbers, disclosures, and narrative are internally coherent and plausible given the entity's described circumstances. Flag anything that a knowledgeable reader would find implausible, inconsistent, or unexplained. Examples of issues to identify include, but are not limited to:
+- Beyond verifying that figures tie to their counterparts, assess whether the financial statements make logical and contextual sense as a whole — not mathematical agreement, but whether numbers, disclosures, and narrative are internally coherent and plausible given the entity's described circumstances.
+- Flag anything that a knowledgeable reader would find implausible, inconsistent, or unexplained. Non-exhaustive list of issues to check:
 
 - Revenue plausibility — assess whether revenue is reasonable for the entity type, industry, and scale described. Flag significant revenue streams with no corresponding disclosure (revenue recognition policy, major customers, segments).
 
@@ -977,8 +981,7 @@ Under ASU 2014-15 (ASC 205-40), management is required to evaluate whether there
 - Disclosure language in the notes referencing financial difficulty, liquidity concerns, or recovery plans
 
 - Any management disclosure explicitly addressing going concern evaluation under ASC 205-40 — confirm it discusses both conditions raising substantial doubt and management's plans to alleviate it
-
-If going concern language appears in the notes, confirm the auditor's report contains the corresponding Substantial Doubt About the Entity's Ability to Continue as a Going Concern section (or emphasis-of-matter paragraph in older SAS 132 structure) referencing the note.
+- If going concern language appears in the notes, confirm the auditor's report contains the corresponding Substantial Doubt About the Entity's Ability to Continue as a Going Concern section (or emphasis-of-matter paragraph in older SAS 132 structure) referencing the note.
 
 ## Subsequent Events (ASC 855)
 
@@ -1064,7 +1067,7 @@ If going concern language appears in the notes, confirm the auditor's report con
 
 # STEP 6 — FINAL PROOF CHECKLIST
 
-Apply the judgment of an experienced commercial audit preparer performing a final proof. The goal is to surface document-level issues a preparer would want to resolve before handing off to QC, not to conclude on engagement quality, firm risk, or release readiness.
+Apply the judgment of an experienced commercial audit preparer performing a final proof. Goal: surface document-level issues to resolve before handoff to QC — do not conclude on engagement quality, firm risk, or release readiness.
 
 ## Internal Consistency of Narrative
 
@@ -1102,7 +1105,7 @@ Apply the judgment of an experienced commercial audit preparer performing a fina
 
 # STEP 7 — OUTPUT FORMAT
 
-After completing all review steps, produce a structured Excel report with the following tabs. Apply the formatting rules described in the AI Behavior and Output Formatting section at the top of this prompt (no fills, no borders except section-heading underlines, no merged cells, three plain header cells upper-left, no Purpose/Procedure scaffolding, no release-readiness language).
+After completing all review steps, produce a structured Excel report with the following tabs. Apply the formatting rules in the AI Behavior and Output Formatting section above (no fills, no borders except section-heading underlines, no merged cells, three plain header cells upper-left, no Purpose/Procedure scaffolding, no release-readiness language).
 
 ## Tab 1 — Executive Summary
 
@@ -1149,5 +1152,3 @@ After completing all review steps, produce a structured Excel report with the fo
 **NOTE:** *Severity classification throughout: Critical, Significant, Moderate, Minor. Use these labels consistently in all tabs.*
 
 **NOTE:** *Present all findings organized by step in the detail tabs. For each issue, note: location in the document, description of the issue, and recommended correction. The Executive Summary tab should be self-contained enough that a reader can see every issue without needing to open the detail tabs.*
-
-*— End of Prompt —*

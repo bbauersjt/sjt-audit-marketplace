@@ -17,5 +17,5 @@
     "401": "session expired / not logged in"
   },
   "script": "scripts/suralink.py :: file_proxy_url, download_file_js, fetch_file_b64_js",
-  "validated": "2026-05-22, audit 2774111 — returned an intact 717607-byte PDF"
+  "validated": true
 }

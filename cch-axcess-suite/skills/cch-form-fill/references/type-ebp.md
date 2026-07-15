@@ -1,6 +1,6 @@
 # EBP — Deltas vs. Core
 
-Mapped from live forms (pulled cross-title into the test binder). The machinery is identical to the governmental type: control cycles and programs use the same gate + walkthrough + (controls-N/A under substantive) + analytics + disclosure + WP-ref pattern. EBP's divergence is in the facts and toggles, not the form mechanics. The core spine + collapse levers all carry over; only the items below are new.
+The machinery is identical to the governmental type: control cycles and programs use the same gate + walkthrough + (controls-N/A under substantive) + analytics + disclosure + WP-ref pattern. EBP's divergence is in the facts and toggles, not the form mechanics. The core spine + collapse levers all carry over; only the items below are new.
 
 ---
 

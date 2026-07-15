@@ -23,5 +23,5 @@
   },
   "notes": "Enumerate everything by looping offset until offset + len(data) >= totalCount. This response does NOT include each client's engagements — use the getClientInfo gateway (gw_getClientInfo.json) for that.",
   "script": "scripts/suralink.py :: list_clients_page_js  (needs organizationId from get_org_id_js)",
-  "validated": "2026-05-23 — firm f65b4c53... returned totalCount 249, 100/page"
+  "validated": true
 }

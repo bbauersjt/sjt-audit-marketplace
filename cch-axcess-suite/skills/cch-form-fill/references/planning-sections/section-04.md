@@ -2,7 +2,7 @@
 
 **Forms:** KBA-401 (Entity-Level Controls), KBA-402 (General IT Controls), KBA-403/405/406/407/408 (Activity-Level Controls — cash receipts / disbursements / payroll / treasury / reporting-closing).
 
-Live counts (latent vs. live): KBA-401 = 1,353 fillable, KBA-402 = 937, the five cycle forms hold hundreds of latent fields each but read **only ~16–30 live** — they are cascade-gated and collapse under a substantive approach. **Never fill by latent size; only the live set matters.**
+**Rule: the five cycle forms hold far more latent fields than render** — they are cascade-gated and collapse under a substantive approach. Never fill by latent size; only the live set matters.
 
 ---
 

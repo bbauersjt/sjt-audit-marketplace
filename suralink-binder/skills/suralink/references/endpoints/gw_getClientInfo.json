@@ -28,5 +28,5 @@
   },
   "notes": "This is the client -> engagements map. Sibling auditIds under one clientId are the same client's different-year audits.",
   "script": "scripts/suralink.py :: get_client_engagements_js",
-  "validated": "2026-05-23 — client 1121161 returned 3 active engagements (Audit 2023/2024/2025)"
+  "validated": true
 }

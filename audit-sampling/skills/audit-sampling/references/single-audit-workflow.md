@@ -75,9 +75,7 @@ In the documentation file (`references/output.md` File 2), per program:
 - IDC selections counted
 - Cross-program totals: total payroll occurrences, total disbursement occurrences (confirm minimums met)
 
-## Future TODOs
-
-The user has flagged this workflow as evolving. Items pending:
+## Open items
 - Mixed RMM / controls scenarios — confirm sizing when one is yes and the other is no (currently 40)
 - Type A vs Type B program sizing nuances if any
 - Compliance Supplement-specific selection rules per requirement

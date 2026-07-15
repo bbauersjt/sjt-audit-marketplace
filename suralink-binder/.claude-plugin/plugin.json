@@ -1,7 +1,7 @@
 {
   "name": "suralink-binder",
   "description": "Pull files from the Suralink auditor portal, keep a local mirror in sync, and file audit documents into 4-digit indexed binder sections that match the firm's CCH Axcess binders.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "SJT Group CPA",
     "email": "bbauer@sjtgroupcpa.com"

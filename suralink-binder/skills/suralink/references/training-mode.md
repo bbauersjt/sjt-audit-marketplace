@@ -57,11 +57,11 @@ When a known unknown lands, run the ladder. Do not shortcut to a markdown how-to
   engagements" and `modules/clients-and-engagements.md`. (`list_clients_js`, the
   old best-effort `Clients.php` DOM scrape, is superseded — `Clients.php` is a
   React app and cannot be scraped as a roster.)
-- **Bulk-zip export endpoint** — investigated across multiple sessions. The
-  select-all → Download → zip trigger evaded every capture hook (fetch, XHR,
-  form-submit, anchor-click, window.open, iframe-src). Treat it as **UI-only,
-  not scriptable**; do not re-attempt without a genuinely new approach. Fully
-  scripted bulk pulls use the per-file `fileProxy` loop instead.
+- **Bulk-zip export endpoint** — the select-all → Download → zip trigger evades
+  every capture hook (fetch, XHR, form-submit, anchor-click, window.open,
+  iframe-src). Treat it as **UI-only, not scriptable**; do not re-attempt without
+  a genuinely new approach. Fully scripted bulk pulls use the per-file
+  `fileProxy` loop instead.
 
 ## Module template
 
@@ -82,8 +82,6 @@ js = suralink.<function>(...)
 <confirm the side effect>
 ## Known failure modes
 - <symptom> -> <cause> -> <fix>
-## Validated on
-- <audit / date>
 ```
 
 Hard rule: no JavaScript snippet longer than ~5 lines inside a module. Non-trivial JS lives in a script; the module shows the Python call that produces it.

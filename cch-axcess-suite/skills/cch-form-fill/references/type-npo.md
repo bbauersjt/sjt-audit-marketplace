@@ -1,6 +1,6 @@
 # Nonprofit (NPO) — Deltas vs. Core
 
-Mapped from live forms (pulled cross-title). Same finding as EBP: identical machinery; deltas are entity-profile facts + type-specific gating toggles. Framework = FASB **ASC 958**.
+Identical machinery to the other types (as EBP); deltas are entity-profile facts + type-specific gating toggles. Framework = FASB **ASC 958**.
 
 ---
 

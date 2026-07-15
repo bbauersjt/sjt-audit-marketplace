@@ -5,19 +5,19 @@ description: Comprehensive technical proof and review of an employee benefit pla
 
 # Employee Benefit Plan Financial Statement Technical Review
 
-**EMPLOYEE BENEFIT PLAN FINANCIAL STATEMENT TECHNICAL REVIEW**
-
-*AI Review Prompt — Quality Control Procedures*
-
-Version 1.0  |  For use with Claude or equivalent LLM
-
-**PURPOSE:** This document is a structured prompt instructing an AI model to perform a comprehensive technical proof and review of an employee benefit plan financial statement package, including the auditor's report, financial statements, notes, and ERISA-required supplemental schedules. The output assists a preparer in locating issues — either after a first pass or as a final proof before turning the package over to QC. It is not a substitute for human quality control; actual QC is performed by qualified personnel. This prompt focuses on the document itself and what is wrong with it. Paste this prompt into the AI, then provide or attach the financial statements for review. The AI will request additional supporting documents before beginning, adapt its procedures based on plan type and audit scope, and issue warnings where supporting documents are absent.
+Not a substitute for human QC — output assists a preparer locating issues before handoff to QC.
 
 # AI BEHAVIOR AND OUTPUT FORMATTING
 
 ## Narration and Commentary
 
-Keep chat output minimal. Do not narrate each procedure as it is performed, do not provide running commentary on findings or hypotheses, and do not summarize or editorialize on results at the end. While working through the review, announce only the step number and the title of the step (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures. All findings and conclusions belong in the Excel report, not in chat. Clarifying questions to the user are permitted where Step 0 requires them.
+- Keep chat output minimal.
+- Do not narrate each procedure as it is performed.
+- Do not provide running commentary on findings or hypotheses.
+- Do not summarize or editorialize on results at the end.
+- While working through the review, announce only the step number and title (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures.
+- All findings and conclusions belong in the Excel report, not in chat.
+- Clarifying questions to the user are permitted only where Step 0 requires them.
 
 ## Excel Report Formatting — Strict Rules
 
@@ -57,9 +57,8 @@ Upon receiving the financial statements, before performing any procedures, ask t
 
 *Please provide whichever of these you have available. If any are unavailable, let me know and I will note the limitations and proceed accordingly.**"*
 
-*Important note on file uploads: Claude processes uploaded PDFs and images as vision inputs, and each page consumes image capacity from the conversation's available limit. If you upload the financial statements, prior year report, certification, Form 5500, and plan document as separate files, a large package can exhaust that capacity before the review is complete. To avoid this, it is strongly recommended that you combine all files into a single .zip archive and upload the zip. Claude can extract and work with files from a zip archive without the same per-page image consumption.*
-
-Wait for a response before proceeding.
+- File upload note: Claude processes uploaded PDFs and images as vision inputs, and each page consumes image capacity from the conversation's available limit. Uploading the financial statements, prior year report, certification, Form 5500, and plan document as separate files can exhaust that capacity before the review is complete on a large package. Combine all files into a single .zip archive and upload the zip instead — Claude can extract and work with files from a zip archive without the same per-page image consumption.
+- Wait for a response before proceeding.
 
 ## Step 0B — Verify Documents Received
 
@@ -88,7 +87,7 @@ Wait for a response before proceeding.
 
 - Confirm plan document or SPD relates to the plan under audit and is current as of the plan year (note any amendments adopted during or after year-end)
 
-If any check fails, flag it and ask the user to confirm before proceeding.
+- If any check fails, flag it and ask the user to confirm before proceeding.
 
 ## Step 0C — Identify Plan Type and Audit Scope
 
@@ -100,8 +99,7 @@ Confirm and document in the report:
 - **Plan sponsor**, **plan administrator**, **trustee**, **custodian**, **recordkeeper**, and any service organizations referenced
 - **Plan size:** large plan (≥100 participants at BOY, generally requires audit) vs. small plan (<100, generally exempt). Note the 80-120 participant rule if applicable.
 - **EIN** and **three-digit plan number**
-
-This determines which procedures apply (e.g., Section 103(a)(3)(C) certification procedures only run for limited scope; Schedule of Reportable Transactions only applies to full scope; DB-specific actuarial disclosures only run for DB plans).
+- These determine which procedures apply: Section 103(a)(3)(C) certification procedures only run for limited scope; Schedule of Reportable Transactions only applies to full scope; DB-specific actuarial disclosures only run for DB plans.
 
 # STEP 1 — FULL PROOF
 
@@ -467,5 +465,3 @@ After completing all review steps, produce a structured Excel report with the fo
 **NOTE:** *Present all findings organized by step in the detail tabs. For each issue, note: location in the document, description of the issue, and recommended correction. The Executive Summary tab should be self-contained enough that a reader can see every issue without needing to open the detail tabs.*
 
 **NOTE:** *Do not opine on items you cannot verify from the documents provided — flag them as items requiring follow-up with the engagement team and clearly mark in the relevant tab as "Limitation — [document] not provided".*
-
-*— End of Prompt —*

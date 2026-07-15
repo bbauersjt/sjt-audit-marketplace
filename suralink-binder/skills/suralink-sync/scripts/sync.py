@@ -4,19 +4,22 @@ Pure functions + filesystem copies. The browser work (enumerate, download) is
 done by the `suralink` skill; this module decides WHAT is new, WHAT was
 deleted, and WHERE files go. See ../references/architecture.md.
 
-Mirror layout (note the engagement level - one client can have many):
-    {mirror}/{Client}/{Year} Suralink Folder/_raw/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Year} Suralink Folder/sorted/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Year} Suralink Folder/sorted/_unsorted/{NN Category}/{Request}/{file}
-    {mirror}/{Client}/{Year} Suralink Folder/_index.json
-The engagement folder name is derived from the active-clients.json label by
-engagement_folder_name() below - see its docstring.
+A "sync" is a FOLDER (the "sync root"). Everything for one engagement lives
+inside it, all paths below are relative to it:
+    {sync_root}/_suralink_sync.json                                  (state.py)
+    {sync_root}/_index.json                                          (index.py)
+    {sync_root}/_raw/{NN Category}/{Request}/{file}
+    {sync_root}/sorted/{NN Category}/{Request}/{file}
+    {sync_root}/sorted/_unsorted/{NN Category}/{Request}/{file}
+The sync root is the folder the user points at, or — on a first pull into a
+project folder — a `{Year} Suralink Folder` subfolder created inside it
+(default_sync_folder(); named by engagement_folder_name()).
 
-`sorted/` is seeded ONCE, on an engagement's first pull, as a faithful copy of
-`_raw/`. Every later sync routes genuinely-new files into `sorted/_unsorted/`
-instead - an inbox the user (or the `binder-organize` skill) files at leisure -
-so a `sorted/` the user has reorganized is never disturbed. See `is_seeding`
-and `plan_paths`, and ../references/architecture.md "The sorted folder".
+`sorted/` is seeded ONCE, on the first pull, as a faithful copy of `_raw/`.
+Every later sync routes genuinely-new files into `sorted/_unsorted/` instead -
+an inbox the user (or the `binder-organize` skill) files at leisure - so a
+`sorted/` the user has reorganized is never disturbed. See `is_seeding` and
+`plan_paths`, and ../references/architecture.md "The sorted folder".
 """
 import os
 import re
@@ -62,27 +65,26 @@ def normalize_file(raw_file, *, audit_id, request_id, request_name,
     }
 
 
-def diff_new_files(manifest, fetched):
-    """Return the subset of `fetched` whose `fmsId` is not in the manifest."""
-    known = manifest.get("files", {})
+def diff_new_files(state, fetched):
+    """Return the subset of `fetched` whose `fmsId` is not yet in the sync
+    state (state.py). These are the genuinely-new files to pull."""
+    known = (state or {}).get("files", {})
     return [f for f in fetched if not f.get("fmsId") or f["fmsId"] not in known]
 
 
-def detect_deletions(manifest, audit_id, current_fmsids):
-    """Files this machine pulled for an engagement that the portal no longer
-    holds. Returns a list of (fmsId, manifest_record) for every NON-tombstoned
-    manifest file under `audit_id` whose fmsId is absent from `current_fmsids`
-    (the set the portal currently serves - from index.fmsids()).
+def detect_deletions(state, current_fmsids):
+    """Files pulled into this sync folder that the portal no longer holds.
+    Returns [(fmsId, record)] for every NON-tombstoned state file whose fmsId is
+    absent from `current_fmsids` (what the portal serves now — index.fmsids()).
 
-    The caller tombstones each via manifest.mark_deleted; the local copy is
-    never removed. See ../references/architecture.md "Deleted files".
+    One sync folder mirrors one engagement, so every file in the state belongs
+    to it — no auditId filter needed. The caller tombstones each via
+    state.mark_deleted; the local copy is never removed. See
+    ../references/architecture.md "Deleted files".
     """
-    audit_id = str(audit_id)
     current = set(current_fmsids or [])
     gone = []
-    for fid, rec in manifest.get("files", {}).items():
-        if str(rec.get("auditId")) != audit_id:
-            continue
+    for fid, rec in (state or {}).get("files", {}).items():
         if rec.get("deletedInPortal"):
             continue
         if fid not in current:
@@ -116,14 +118,14 @@ _YEAR = re.compile(r'\b(20\d{2})\b')
 def engagement_folder_name(label):
     """Turn an engagement label into an explicit, self-describing folder name.
 
-    A bare label ("Audit 2025", "2024 audit", "NMBF FY25") reads fine in
-    active-clients.json but is ambiguous sitting next to a client's other
-    folders on disk - nothing marks it as the Suralink pull. So the folder
-    name always ends in "Suralink Folder", and leads with the engagement
-    year when one can be pulled out of the label (the common case):
+    The label (from the engagement binding — state.py) is fine as a name but is
+    ambiguous sitting next to a client's other folders on disk: nothing marks it
+    as the Suralink pull. So the folder name always ends in "Suralink Folder",
+    and leads with the engagement year when one can be pulled out of the label
+    (the common case):
         "Audit 2025"              -> "2025 Suralink Folder"
         "2024 audit"              -> "2024 Suralink Folder"
-        "SCDC 401(k) 2024 Audit"  -> "2024 Suralink Folder"
+        "Example 401(k) 2024 Audit"  -> "2024 Suralink Folder"
     No 4-digit year in the label -> fall back to the sanitized label itself:
         "NMBF FY25"               -> "NMBF FY25 Suralink Folder"
     """
@@ -132,58 +134,57 @@ def engagement_folder_name(label):
     return f"{stem} Suralink Folder"
 
 
-def engagement_dir(mirror_root, client, label):
-    """Absolute path of one engagement's folder: {mirror}/{Client}/{Label Suralink Folder}/.
-    This is where `_raw/`, `sorted/` and `_index.json` live. A label is
-    required so a client's several audits never collide."""
-    return os.path.join(os.path.abspath(mirror_root),
-                        safe_component(client),
+def default_sync_folder(parent_dir, label):
+    """The default sync-root folder for a FIRST pull into a folder the user
+    pointed at: a `{Year} Suralink Folder` subfolder inside `parent_dir`.
+
+    Putting the pull in its own named subfolder means it never collides with the
+    working files already in a project folder (e.g. engagements/<client>/), and
+    the name self-describes. `engagement_folder_name(label)` supplies the name
+    (year pulled from the label; sanitized-label fallback). If the user points
+    directly at a dedicated/empty folder they want to BE the sync root, use that
+    path as-is instead of calling this — see resolve-target.md."""
+    return os.path.join(os.path.abspath(parent_dir),
                         engagement_folder_name(label))
 
 
-def is_seeding(mirror_root, client, label):
-    """True if this engagement has no `sorted/` folder yet - i.e. this is its
-    FIRST pull.
+def is_seeding(sync_root):
+    """True if this sync has no `sorted/` folder yet — i.e. its FIRST pull.
 
-    Compute this ONCE per engagement, before any file is downloaded, and pass
-    the result to plan_paths for every file in that batch. A first run creates
+    Compute this ONCE per run, before any file is downloaded, and pass the
+    result to plan_paths for every file in that batch. A first run creates
     sorted/ partway through, but the whole batch must still be treated as a
-    seed - so decide up front, not per file.
+    seed — so decide up front, not per file.
 
-    First pull          -> seeding True  -> sorted/ mirrors _raw/ exactly.
-    Every later sync     -> seeding False -> new files land in sorted/_unsorted/.
+    First pull       -> seeding True  -> sorted/ mirrors _raw/ exactly.
+    Every later sync -> seeding False -> new files land in sorted/_unsorted/.
     """
-    sorted_dir = os.path.join(engagement_dir(mirror_root, client, label), "sorted")
-    return not os.path.isdir(sorted_dir)
+    return not os.path.isdir(os.path.join(sync_root, "sorted"))
 
 
-def plan_paths(client, label, request_name, orig_name, category="",
-               seeding=True):
-    """Return (raw_rel, sorted_rel): mirror-relative paths for one file.
+def plan_paths(request_name, orig_name, category="", seeding=True):
+    """Return (raw_rel, sorted_rel): paths for one file, relative to the SYNC
+    ROOT (join them against the sync folder — relocate/import_zip do this).
 
     `_raw/` is ALWAYS the byte-for-byte portal-layout chain-of-custody copy:
-        {client}/{label}/_raw/{NN Category}/{request}/{file}
+        _raw/{NN Category}/{request}/{file}
 
     `sorted/` depends on `seeding` (compute it once with is_seeding()):
-      seeding=True  - the engagement's first pull. sorted/ mirrors _raw/ so the
-                      working copy starts as a faithful portal snapshot:
-        {client}/{label}/sorted/{NN Category}/{request}/{file}
+      seeding=True  - first pull. sorted/ mirrors _raw/ so the working copy
+                      starts as a faithful portal snapshot:
+        sorted/{NN Category}/{request}/{file}
       seeding=False - every later sync. The file is a NEW arrival; it lands in
                       the sorted/_unsorted/ inbox, still in portal layout, so it
                       never collides with a sorted/ the user has reorganized:
-        {client}/{label}/sorted/_unsorted/{NN Category}/{request}/{file}
+        sorted/_unsorted/{NN Category}/{request}/{file}
 
-    `label` is the engagement label (e.g. 'Audit 2025') - it keeps a client's
-    different-year audits in separate trees. `category` should already be
-    numbered (use numbered_category_folder). Without a category the {NN
-    Category} segment is simply omitted from both paths.
+    `category` should already be numbered (use numbered_category_folder).
+    Without a category the {NN Category} segment is simply omitted.
     """
-    c = safe_component(client)
-    lb = engagement_folder_name(label)
     rq = safe_component(request_name, fallback="Uncategorized")
     fn = safe_name(orig_name)
-    parts_raw = [c, lb, "_raw"]
-    parts_sorted = [c, lb, "sorted"]
+    parts_raw = ["_raw"]
+    parts_sorted = ["sorted"]
     if not seeding:
         parts_sorted.append(UNSORTED)
     if category:
@@ -223,19 +224,23 @@ def newest_match(staging_dir, orig_name):
     return max(cands, key=lambda p: os.path.getmtime(p))
 
 
-def relocate(staged_path, mirror_root, raw_rel, sorted_rel):
-    """Copy a staged download into the mirror (_raw + sorted), then remove the
-    staged original (best-effort). Copy-based, cross-filesystem safe. Never
+def relocate(staged_path, sync_root, raw_rel, sorted_rel):
+    """Copy a staged download into the sync folder (_raw + sorted), then remove
+    the staged original (best-effort). Copy-based, cross-filesystem safe. Never
     overwrites in _raw.
+
+    `raw_rel` / `sorted_rel` are the sync-root-relative paths from plan_paths;
+    they are joined against `sync_root`.
 
     The sorted copy's filename is kept aligned with the (possibly de-duped)
     _raw name, then the sorted side is de-duped too - so a sorted/_unsorted/
     inbox never silently overwrites an earlier, not-yet-filed arrival.
 
     `sorted_rel` carries the _unsorted/ segment already when this is a post-seed
-    sync - see plan_paths. Returns {raw, sorted, bytes, stagedRemoved}."""
-    raw_abs = dedupe_path(os.path.join(mirror_root, raw_rel))
-    sorted_dir = os.path.dirname(os.path.join(mirror_root, sorted_rel))
+    sync - see plan_paths. Returns {raw, sorted, bytes, stagedRemoved}; `raw`
+    and `sorted` are paths relative to `sync_root`."""
+    raw_abs = dedupe_path(os.path.join(sync_root, raw_rel))
+    sorted_dir = os.path.dirname(os.path.join(sync_root, sorted_rel))
     sorted_abs = dedupe_path(os.path.join(sorted_dir, os.path.basename(raw_abs)))
     os.makedirs(os.path.dirname(raw_abs), exist_ok=True)
     os.makedirs(sorted_dir, exist_ok=True)
@@ -247,8 +252,8 @@ def relocate(staged_path, mirror_root, raw_rel, sorted_rel):
     except OSError:
         removed = False
     return {
-        "raw": os.path.relpath(raw_abs, mirror_root),
-        "sorted": os.path.relpath(sorted_abs, mirror_root),
+        "raw": os.path.relpath(raw_abs, sync_root),
+        "sorted": os.path.relpath(sorted_abs, sync_root),
         "bytes": os.path.getsize(raw_abs),
         "stagedRemoved": removed,
     }
@@ -438,24 +443,22 @@ def select_files(index, *, request_id=None, request_name=None,
 
 # --- bulk zip import ------------------------------------------------------
 
-def import_zip(zip_path, mirror_root, client, label, ordered_categories,
+def import_zip(zip_path, sync_root, ordered_categories,
                seeding=True, progress=None):
-    """Extract a Suralink bulk 'categories / requests' zip into the mirror.
+    """Extract a Suralink bulk 'categories / requests' zip into the sync folder.
 
     Suralink's bulk download (structure option: categories/requests) produces a
-    zip laid out  {Category}/{Request name}/{file}. This extracts it into the
-    mirror under the engagement folder, numbering each category by WEBSITE
-    order.
+    zip laid out  {Category}/{Request name}/{file}. This extracts it into
+    `sync_root`, numbering each category by WEBSITE order.
 
     `seeding` (compute with is_seeding()): the bulk zip is the fast FIRST-pull
     route, so this is normally True and the extracted files seed both _raw/ and
     sorted/ identically:
-        {client}/{label}/_raw/{NN Category}/{Request name}/{file}
-        {client}/{label}/sorted/{NN Category}/{Request name}/{file}
-    If a zip is ever imported into an engagement that already has a sorted/
-    folder, pass seeding=False and the files land in sorted/_unsorted/ instead.
+        {sync_root}/_raw/{NN Category}/{Request name}/{file}
+        {sync_root}/sorted/{NN Category}/{Request name}/{file}
+    If a zip is ever imported into a sync that already has a sorted/ folder,
+    pass seeding=False and the files land in sorted/_unsorted/ instead.
 
-    `label` is the engagement label so a client's several audits stay separate.
     `ordered_categories` is the category-name list in website order, from the
     `suralink` skill's list_categories_js().
 
@@ -474,9 +477,10 @@ def import_zip(zip_path, mirror_root, client, label, ordered_categories,
         {category, requestName, fileName, rawPath, bytes, skipped}
     `skipped` is True iff the file was already on disk at the right size.
     Records carry no fmsId - the caller reconciles fmsIds from a getRequest
-    enumeration so the manifest can dedup future syncs (see import-zip.md).
+    enumeration so the sync state can dedup future syncs (see import-zip.md).
     """
     number_map = number_categories(ordered_categories)
+    base_root = os.path.abspath(sync_root)
     records = []
     with zipfile.ZipFile(zip_path) as z:
         infos = [i for i in z.infolist() if not i.filename.endswith("/")]
@@ -491,11 +495,11 @@ def import_zip(zip_path, mirror_root, client, label, ordered_categories,
             else:
                 category, request, fname = "", "", parts[0]
             cat_folder = numbered_category_folder(category, number_map)
-            raw_rel, sorted_rel = plan_paths(client, label, request, fname,
+            raw_rel, sorted_rel = plan_paths(request, fname,
                                              category=cat_folder,
                                              seeding=seeding)
-            raw_abs = os.path.join(mirror_root, raw_rel)
-            sorted_abs = os.path.join(mirror_root, sorted_rel)
+            raw_abs = os.path.join(base_root, raw_rel)
+            sorted_abs = os.path.join(base_root, sorted_rel)
             os.makedirs(os.path.dirname(raw_abs), exist_ok=True)
             os.makedirs(os.path.dirname(sorted_abs), exist_ok=True)
             expected = info.file_size
@@ -521,7 +525,7 @@ def import_zip(zip_path, mirror_root, client, label, ordered_categories,
                 "category": cat_folder,
                 "requestName": request,
                 "fileName": fname,
-                "rawPath": os.path.relpath(raw_abs, mirror_root),
+                "rawPath": os.path.relpath(raw_abs, base_root),
                 "bytes": os.path.getsize(raw_abs),
                 "skipped": skipped_raw,
             })
@@ -533,22 +537,23 @@ def import_zip(zip_path, mirror_root, client, label, ordered_categories,
     return records
 
 
-def scan_raw_for_records(mirror_root, client, label):
+def scan_raw_for_records(sync_root):
     """Rebuild the import_zip record list FROM DISK, without touching any zip.
 
-    Walks `{mirror_root}/{client}/{label}/_raw/` and produces records in the
-    same shape as `import_zip` (minus the `skipped` flag — these are all
-    "discovered on disk"). Use this when an import_zip run was killed mid-way
-    and you want to keep going with reconciliation: scan_raw_for_records is
-    the source of truth, fmsId matching proceeds the same way.
+    Walks `{sync_root}/_raw/` and produces records in the same shape as
+    `import_zip` (minus the `skipped` flag — these are all "discovered on
+    disk"). Two uses: (1) recover a killed-mid-extract import and keep going
+    with reconciliation; (2) ADOPT a folder that already holds a `_raw/` tree
+    from the old (pre-folder-state) model — scan it, reconcile the records to
+    portal fmsIds, and write a fresh state file so no re-download is needed.
 
     Records:
         {category, requestName, fileName, rawPath, bytes}
     `category` is the numbered folder name (e.g. "01 Sample Files for Michael")
     and `requestName` is the unnumbered Suralink request label.
     """
-    eng_dir = engagement_dir(mirror_root, client, label)
-    raw_root = os.path.join(eng_dir, "_raw")
+    base_root = os.path.abspath(sync_root)
+    raw_root = os.path.join(base_root, "_raw")
     out = []
     if not os.path.isdir(raw_root):
         return out
@@ -565,7 +570,7 @@ def scan_raw_for_records(mirror_root, client, label):
                         "category": cat_folder,
                         "requestName": "",
                         "fileName": req_folder,
-                        "rawPath": os.path.relpath(req_path, mirror_root),
+                        "rawPath": os.path.relpath(req_path, base_root),
                         "bytes": os.path.getsize(req_path),
                     })
                 continue
@@ -577,7 +582,7 @@ def scan_raw_for_records(mirror_root, client, label):
                     "category": cat_folder,
                     "requestName": req_folder,
                     "fileName": fname,
-                    "rawPath": os.path.relpath(fpath, mirror_root),
+                    "rawPath": os.path.relpath(fpath, base_root),
                     "bytes": os.path.getsize(fpath),
                 })
     return out
@@ -610,9 +615,7 @@ def reconcile_to_fmsids(records, portal_files):
        sides; raw names will NOT byte-match), then on absolute size delta.
 
     This catches the same-filename-same-size case that naive
-    filename+size matching collapses to a single fmsId. Validated on
-    Santo Domingo Pueblo Audit 2025 (85 files, one filename collision
-    with identical sizes — both files bound to distinct fmsIds).
+    filename+size matching collapses to a single fmsId.
 
     Returns `(matched_pairs, unmatched_records)` where matched_pairs is a
     list of `(record, portal_record)` tuples.
@@ -648,7 +651,7 @@ def ian_files(ian_body):
     Returns a list of:
       {fmsId, fId, requestId, origFileName, fileSize, ts, stateChange, isRead}
     one per (non-deleted) file appearing in the timeline. Diff this against the
-    manifest with diff_new_files() to get the genuinely new uploads.
+    sync state with diff_new_files() to get the genuinely new uploads.
 
     NOTE: the timeline is a convenience feed, not a dependable whole-engagement
     source (see the `suralink` skill). For a reliable "what's new" use the

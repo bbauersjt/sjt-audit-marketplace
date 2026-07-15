@@ -23,11 +23,9 @@ status: validated
 
 ## What this does
 
-Produces a single low-token, greppable map of an entire engagement binder — every
-folder plus every filed item (KCForms / LeadSheet / Report / Workpaper) with its
-index, name, status and id — so this skill can resolve "where is X" by grepping a
-file instead of walking folders one-by-one and losing things. Structure is read
-live, so it adapts to any binder layout.
+- Produces a single low-token, greppable map of an entire engagement binder — every folder plus every filed item (KCForms / LeadSheet / Report / Workpaper) with its index, name, status and id.
+- Resolve "where is X" by grepping the file instead of walking folders one-by-one.
+- Structure is read live, so it adapts to any binder layout.
 
 ## Prerequisites
 

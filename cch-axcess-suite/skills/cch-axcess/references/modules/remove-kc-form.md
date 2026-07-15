@@ -24,9 +24,8 @@ status: validated
 
 ## What this does
 
-Moves unwanted KC forms (KBA/AUD/AID/COR/RPT/KCO) into a "User to delete" folder (index `9999`). The user reviews the folder in the UI and deletes from there when they're confident.
-
-**This skill does NOT hard-delete KC forms.** See `scripts/wpm.py` header and the incident note at the bottom for why.
+- Moves unwanted KC forms (KBA/AUD/AID/COR/RPT/KCO) into a "User to delete" folder (index `9999`). The user reviews the folder in the UI and deletes from there when confident.
+- **This skill does NOT hard-delete KC forms.** See `scripts/wpm.py` header and "Why no hard delete" below.
 
 ## Prerequisites
 
@@ -102,6 +101,7 @@ Tell the user the forms are staged in `9999 User to delete` for them to review a
 
 ## Why no hard delete
 
-Hard-deleting a KC form corrupts the binder and is unrecoverable, so this skill does not implement it — soft-delete is the only path (see `architecture.md` → KC-form hard delete, and the policy block atop `scripts/wpm.py`).
+- Hard-deleting a KC form corrupts the binder and is unrecoverable — this skill does not implement it. Soft-delete is the only path.
+- See `architecture.md` → KC-form hard delete, and the policy block atop `scripts/wpm.py`.
 
 <!-- END -->

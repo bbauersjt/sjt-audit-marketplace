@@ -27,11 +27,9 @@ status: validated
 
 ## What this does
 
-Adds, edits, or removes the annotation types on a **system-generated** CCH Axcess
-leadsheet: the top-level comment box, inline comments (account-level AND group-level), and
-tickmarks. All via `financialprep-api.cchaxcess.com`. (This is protocol A of the firm's two
-leadsheet-annotation protocols. Protocol B — the firm-default TB-report leadsheet, annotated
-via TWO editable Remarks columns — is a different API; see `annotate-tbreport.md`.)
+- Adds, edits, or removes annotations on a **system-generated** CCH Axcess leadsheet: the top-level comment box, inline comments (account-level and group-level), and tickmarks.
+- All calls go through `financialprep-api.cchaxcess.com`.
+- This is protocol A of the firm's two leadsheet-annotation protocols. Protocol B — the firm-default TB-report leadsheet, annotated via two editable Remarks columns — is a different API; see `annotate-tbreport.md`.
 
 ## Terminology + routing (firm-specific — prevents mis-routing)
 

@@ -2,7 +2,7 @@
 
 **Forms:** AUD-101 (Overall Audit Program), KBA-101 (Overall Audit Strategy), AUD-201 (Opening Balances — new engagements only). **Risk-assessment:** KBA-301 Materiality, KBA-400 Scoping. **COR-205** here = Successor Auditor Acknowledgment Letter (a letter document — 0 KC fields).
 
-Live counts: AUD-101 = 340 fillable (approximately 175 are sign-offs on standard program steps + 187 procedure texts), KBA-101 = 80, AUD-201 = 36 (new-engagement only). **Most of AUD-101/AUD-201 is standard procedures signed off with WP references — not questions.** The genuine inputs collapse to the engagement profile + team/timing + a few entity descriptors.
+**Most of AUD-101/AUD-201 is standard procedures signed off with WP references — not questions.** The genuine inputs collapse to the engagement profile + team/timing + a few entity descriptors.
 
 ---
 

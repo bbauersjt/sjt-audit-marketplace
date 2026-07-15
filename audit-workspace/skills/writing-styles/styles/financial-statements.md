@@ -26,10 +26,10 @@ Italics carry a convention here, so apply it deliberately:
 - In the findings schedule, the labeled parts of each finding (_Criteria_, _Condition_, _Cause and Effect_, _Auditor's Recommendation_, _Management's Response_, _Current Status_).
 
 ## Defined terms
-Name in full on first use, give the short form in parentheses, then use the short form. Legal-style defined terms take quotes (the "Company," the "Nation," the "Credit Agreement"); acronyms don't (PNNMEF, FDIC, IHS, SWM). Define once, then be consistent.
+Name in full on first use, give the short form in parentheses, then use the short form. Legal-style defined terms take quotes (the "Company," the "Nation," the "Credit Agreement"); acronyms don't (e.g., FDIC, IHS). Define once, then be consistent.
 
 ## Concision and level
-State the policy and the entity's facts, then stop. Standard boilerplate that the standard requires (use of estimates, subsequent events) stays, kept tight. Everything else earns its place: if a professional reader would infer it, cut it. Don't pad a disclosure to look thorough, and don't strip a required disclosure to a fragment. The SEC-examination disclosure and the supplemental-interest disclosure in the UCAIG set are the right depth: the facts, the amounts, the effect, and management's position, no narration.
+State the policy and the entity's facts, then stop. Standard boilerplate that the standard requires (use of estimates, subsequent events) stays, kept tight. Everything else earns its place: if a professional reader would infer it, cut it. Don't pad a disclosure to look thorough, and don't strip a required disclosure to a fragment. Target depth: the facts, the amounts, the effect, and management's position, no narration.
 
 ## Cross-references
 Point rather than repeat. "(see also Note 4)," "See Note 5," "as described above," "described in Note 7," "as discussed in Note 11." Disclose a fact once in its home note and reference it elsewhere.

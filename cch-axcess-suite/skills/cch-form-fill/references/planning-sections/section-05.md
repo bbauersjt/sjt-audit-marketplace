@@ -2,7 +2,7 @@
 
 **Form:** KBA-501 (Team Discussion / Fraud Brainstorming). **The risk-assessment process owns:** KBA-502 (Summary of Risk Assessments — IR/CR/RMM + approach), KBA-503 (Basis for Inherent Risk). The substantive risk content is handled by the risk-assessment process; only the team-discussion documentation is covered here.
 
-Live count: KBA-501 = 39 fillable (28 text + 11 sign-offs). Mostly standard discussion narrative.
+Mostly standard discussion narrative.
 
 ---
 

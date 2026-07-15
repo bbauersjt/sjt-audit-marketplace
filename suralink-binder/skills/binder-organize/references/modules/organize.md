@@ -12,12 +12,14 @@ Files audit documents into 4-digit indexed binder sections (see
 ## Phase 0 — mount and identify
 
 1. **Mount the folder.** If no folder is mounted, `request_cowork_directory`.
-   The user may point at a suralink-sync mirror root, a single engagement
-   folder, or a loose pile of documents.
+   The user may point at a suralink-sync sync folder (an engagement folder with
+   `_raw/` + `sorted/`), a project folder that contains one, or a loose pile of
+   documents.
 2. **Determine the mode** (`../architecture.md` "Three modes"):
-   - **Mode A — sister.** The path is (or contains) an engagement folder with
-     `_raw/` + `sorted/`, and a `_suralink_sync.json` exists at the mirror root.
-     This is the normal case.
+   - **Mode A — sister.** The path is (or contains) a suralink-sync sync folder:
+     `_raw/` + `sorted/` with a `_suralink_sync.json` at that folder's root (that
+     folder IS the sync — suralink-sync keeps no separate mirror root). This is
+     the normal case.
    - **Mode B — warn.** Suralink-shaped files, but no `_suralink_sync.json` and
      no `_raw/`. STOP. Tell the user the folder was not built by `suralink-sync`,
      so there is no chain-of-custody `_raw/` and traceability is degraded. Offer
@@ -27,8 +29,9 @@ Files audit documents into 4-digit indexed binder sections (see
      `suralink-sync` cannot help here. Offer to first snapshot a `_raw/`
      canonical copy inside the folder, then build a `sorted/`. Get an explicit
      OK before copying anything.
-3. **Pick the engagement.** In Mode A, if the mount is the mirror root, list the
-   engagement folders and ask which to organize (or do each in turn).
+3. **Pick the engagement.** In Mode A, if the mount is a parent folder that
+   contains one or more sync folders (rather than a single sync folder itself),
+   list them and ask which to organize (or do each in turn).
 
 ```python
 import sys; sys.path.insert(0, "<skill>/scripts")
@@ -103,12 +106,13 @@ dest_parts = O.plan_destination(tx, c, sample_flag=is_sample,
 14. Load the crosswalk and (Mode A) the manifest:
 ```python
 xw = X.load(engagement_dir, engagement_label)
-manifest = json.load(open(os.path.join(mirror_root, "_suralink_sync.json")))  # Mode A
+# Mode A: the sync state sits at the sync-folder root, which IS engagement_dir.
+state = json.load(open(os.path.join(engagement_dir, "_suralink_sync.json")))
 ```
 15. For each approved file:
 ```python
 raw_abs = O.raw_counterpart(engagement_dir, file_abs)        # before the move
-fms_id, _rec = X.fms_for_raw(manifest, raw_abs, mirror_root) # Mode A; else None
+fms_id, _rec = X.fms_for_raw(state, raw_abs, engagement_dir) # Mode A; else None
 dest_dir = os.path.join(engagement_dir, "sorted", *dest_parts)
 final = O.move_into(file_abs, dest_dir)
 X.record(xw, X.make_entry(

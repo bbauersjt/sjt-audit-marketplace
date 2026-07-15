@@ -15,7 +15,7 @@
       "purpose": "Reassign one account to a different group.",
       "script_function": "scripts.groups.assign_account_to_group(client_id, account_row, target_group, headers)",
       "bulk": "scripts.groups.build_bulk_assign_js(client_id, patch_bodies, headers) - one browser call, N PATCHes, order-independent",
-      "verification_status": "PATCH WORKS and sticks. The earlier 'silent no-op' warning was a FALSE ALARM caused by a read-back bug - the new group reads back at row.account.group, NOT top-level row.group."
+      "verification_status": "PATCH WORKS and sticks. Read back the new group at row.account.group, NOT top-level row.group."
     },
     "patch_subgroup": {
       "method": "PATCH",
@@ -46,7 +46,7 @@
     "note": "The wire body sent by the UI carries ~30 fields. scripts.groups.assign_account_to_group preserves whatever row you read via GET and just swaps the group; build_patch_body() is the minimal hand-rolled version."
   },
   "semantics": {
-    "order_must_be_integer": "The FinancialGroup GET can emit group.order as a FLOAT ('order': 5.0); the PATCH endpoint 400s 'Input string 5.0 is not a valid integer' if you pass the row through unmodified. Coerce order (top-level and type.order) to int before PATCHing — 17/17 400s before the coercion, 17/17 200s after.",
+    "order_must_be_integer": "The FinancialGroup GET can emit group.order as a FLOAT ('order': 5.0); the PATCH endpoint 400s 'Input string 5.0 is not a valid integer' if you pass the row through unmodified. Coerce order (top-level and type.order) to int before PATCHing.",
     "no_unassign_state": "Every account is always in SOME group per list. There is no null group. To 'remove' from a custom group, reassign to whatever Global group fits.",
     "autosaves_immediately": "Every reassignment fires its own PATCH; no batch save button on the TB tab.",
     "incremental_per_account": "Each PATCH touches one account. Bulk reassignment = N PATCHes (use build_bulk_assign_js for one browser call).",

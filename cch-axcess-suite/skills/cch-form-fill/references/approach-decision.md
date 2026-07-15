@@ -1,14 +1,14 @@
 # Audit-approach decision model — coverage of RMM
 
-How the firm decides and justifies the approach per financial-statement (FS) area, and produces the terse, defensible one-liner the checklists require. The objective on these large checklists is to defensibly express that the required work was performed.
+Produces the terse, defensible one-liner the checklists require: defensibly express that the required work was performed.
 
-## The one question (everything else is downstream)
-> Did the **pool of procedures** address every reasonably-possible way this area could be **materially misstated** — giving reasonable assurance no material misstatement remains — either by substantively absorbing the full inherent risk (controls assumed absent) **or** by adequately testing controls?
+## The test to apply
+Did the **pool of procedures** address every reasonably-possible way this area could be **materially misstated** — giving reasonable assurance no material misstatement remains — either by substantively absorbing the full inherent risk (controls assumed absent) **or** by adequately testing controls?
 
-The question is **not** "are analytics effective / are substantive procedures effective." Tool choice (substantive detail, analytics, controls reliance) is just *how* coverage is achieved. The justification expresses the **coverage**, not the tool. Cash is justified not because analytics add little, but because the substantive work already covers every way cash could go materially wrong — nothing material is left for another procedure to catch.
+**Rule:** justify via **coverage**, never via tool efficacy ("analytics are/aren't effective"). Tool choice (substantive detail, analytics, controls reliance) is just *how* coverage is achieved. Cash is justified not because analytics add little, but because the substantive work already covers every way cash could go materially wrong.
 
-## "What could go wrong" — the assertion model in plain terms
-Inherent risk = the risk of material misstatement **in the complete absence of controls.** If controls are not tested, controls are assumed absent, so substantive procedures must cover the **whole** risk. The "assertions" are simply the ways a balance/class goes wrong, stated plainly rather than as IR×CR machinery:
+## "What could go wrong" — the assertion model
+Rule: if controls are not tested, controls are assumed absent, so substantive procedures must cover the **whole** inherent risk (risk of material misstatement in the complete absence of controls). The ways a balance/class goes wrong:
 
 - **Recorded but wrong / should not be there** — existence/occurrence, accuracy, cutoff, classification.
 - **Should be recorded but is not** — **completeness.** The one easiest to miss: testing recorded expenses proves the recorded ones are correct; it does **not** prove that all expenses were recorded.

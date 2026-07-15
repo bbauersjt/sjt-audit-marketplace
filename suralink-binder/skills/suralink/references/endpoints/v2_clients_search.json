@@ -21,5 +21,5 @@
   },
   "notes": "Use to resolve a client the user named. `engagements` comes back EMPTY here — engagementCounts gives totals only; use getClientInfo for the actual engagement list. To enumerate the whole roster use v2_clients.json instead.",
   "script": "scripts/suralink.py :: search_clients_js",
-  "validated": "2026-05-23 — searchTerm 'a' returned 217 hits"
+  "validated": true
 }

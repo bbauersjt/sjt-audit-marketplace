@@ -29,7 +29,7 @@ firm_files   = suralink.extract_files(body, side="firm")    # firm-posted files
 ```
 Each file dict: `id` (fId), `fmsId`, `origFileName`, `fileType`, `fileSize`, `ts`.
 
-**Run `getRequest` calls sequentially** — one fetch in flight at a time. Suralink's session serializes gateway calls; parallel calls collide on the session, not the CSRF token. On read-only commands like `getRequest` the token does NOT observably rotate, so a whole-engagement sweep of 28+ requests can run inside ONE `javascript_exec` using an `await`-in-`for-loop` pattern. See `architecture.md` and `browser.py:js_gateway`.
+Run `getRequest` calls sequentially — one fetch in flight at a time. Suralink's session serializes gateway calls; parallel calls collide on the session, not the CSRF token. On read-only commands like `getRequest` the token does NOT observably rotate, so a whole-engagement sweep can run inside ONE `javascript_exec` using an `await`-in-`for-loop` pattern. See `architecture.md` and `browser.py:js_gateway`.
 
 ### 2. Download each file
 Bytes must NOT travel through Claude's context for a bulk pull. Use the blob method — the file lands in the browser's Downloads folder:
@@ -37,7 +37,7 @@ Bytes must NOT travel through Claude's context for a bulk pull. Use the blob met
 js = suralink.download_file_js(file["id"], audit_id, request_id, file["origFileName"])
 # run js in the tab -> {ok:true, bytes, filename}
 ```
-For a single small file whose bytes Claude must write itself, `suralink.fetch_file_b64_js(...)` returns base64 instead — do not use it for bulk.
+For a single small file whose bytes Claude must write itself, use `suralink.fetch_file_b64_js(...)` instead — do not use it for bulk.
 
 ### 3. Verify
 Check each result's `ok` and that `bytes` matches the file's `fileSize` (±a few hundred bytes is normal). A `403` with "User has no access to this engagement" means the `rId` did not match the file's request — recheck the request `id`.
@@ -48,7 +48,3 @@ Check each result's `ok` and that `bytes` matches the file's `fileSize` (±a few
 - `{"success":true}` instead of bytes → `fId` was `-1` (a UI ping), not a real file id.
 - `401` → the Suralink session expired. The user must log in again.
 - Browser blocks repeated downloads → space the calls out, or download in smaller batches.
-
-## Validated on
-
-- Audit 2774111 — fileProxy returned an intact 717,607-byte PDF, 2026-05-22.

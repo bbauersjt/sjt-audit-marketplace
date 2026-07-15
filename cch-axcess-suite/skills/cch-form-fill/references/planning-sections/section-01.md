@@ -2,7 +2,7 @@
 
 **Forms:** KBA-200 (Entity Info), KBA-201 (Acceptance & Continuance), COR-203 (Predecessor, new-engagement only), AID-201 (Nonattest Independence). AUD-100 tailoring is handled by the risk-assessment process.
 
-**Purpose of this file:** the complete, deduplicated list of the facts needed to answer every question in this section accurately. Approximately 265 fillable boxes across these forms reduce to the ~19 facts below. (Live-read counts: KBA-200 = 24 boxes, KBA-201 = 217, COR-203 = 0 until activated, AID-201 absent in the test binder.)
+**Purpose of this file:** the complete, deduplicated list of the facts needed to answer every question in this section accurately. The forms' fillable boxes reduce to the ~19 facts below. (COR-203 stays empty until the new-engagement driver activates it.)
 
 ---
 
@@ -45,13 +45,3 @@ Governing-body name (#7) · key management names/titles (#19) · FS date / repor
 
 ## The genuinely variable inputs (everything else is default or fact-lookup)
 New-vs-continuing (#11) · management names (#19) · nonattest designated individual (#17) · predecessor contact + responses (#18, if new) · any real acceptance/independence **exception** (#12–15). That is the short list to extract; the rest is entity facts or default answers.
-
----
-
-## Worked illustration — how a 90-box form reduces (AUD-901, concluding section, live-read)
-AUD-901 Subsequent Events = 90 fillable boxes (53 procedure rows + 53 sign-offs + 2 findings). What you need to know:
-1. **Were there subsequent events** through the report date? *(default No)*
-2. **If yes** — what were they, **where in the file** are they documented, and **adjustment vs. disclosure-only**?
-3. The **procedure block is performed every time** with standard responses — read interim FS, scan the GL/journals/JEs, inquire of named management, review subsequent governing-body minutes/agendas. The named-management and minutes values come straight from Section 01's constants (#19, #7).
-
-Two facts plus reused constants fill the whole form. This is the model for every section.

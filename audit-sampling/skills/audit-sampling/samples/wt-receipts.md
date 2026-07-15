@@ -32,5 +32,3 @@ Static sample, **n = 5**.
 - Revenue (`fs-revenue`) is being tested substantively at meaningful coverage — i.e., `60-percent-coverage` or `test-to-below-tm` wins the substantive comparison.
 
 The principle: if you're already going deep on revenue — whether through controls testing, controls fallback, or substantial substantive coverage — the audit team will apply walkthrough-style procedures in that work, and this separate n=5 receipts walkthrough becomes redundant. When in doubt, confirm with the engagement team before omitting.
-
-<!-- [recovery 2026-06-01: trailing text reconstructed from context after a write-truncation; verify] -->

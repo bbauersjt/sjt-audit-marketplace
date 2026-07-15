@@ -46,19 +46,21 @@ status: validated
 
 ## Field detection: DOM-first, API side-check
 
-Two doctrine facts are canonical in `architecture.md` — do not re-derive them here: the DOM
-is the fillable-field detector for a rendered form (the GET over-reports fillable ~2:1) while
-the API GET is the write substrate, and an in-page GET reads the **uncommitted working copy**
-(false state-3), never proof of persistence. Applied to filling: enumerate fillable controls
-via `scripts/kc_dom_parser.js` (`window.kcDom`), side-check empty `objectList:[]` add-grids via
-`inventory_form()['addable_grids']` (a passive DOM parse can't see them), write via the builders,
-then **submit → reload → verify via the diagnostics endpoint**. The DOM does NOT re-render
-out-of-band API writes without a reload, so use it for the initial enumeration and the
-post-reload check.
+Doctrine facts canonical in `architecture.md` (do not re-derive):
+- The DOM is the fillable-field detector for a rendered form (the GET over-reports fillable ~2:1); the API GET is the write substrate.
+- An in-page GET reads the **uncommitted working copy** (false state-3) — never proof of persistence.
+
+Applied to filling:
+1. Enumerate fillable controls via `scripts/kc_dom_parser.js` (`window.kcDom`).
+2. Side-check empty `objectList:[]` add-grids via `inventory_form()['addable_grids']` (a passive DOM parse can't see them).
+3. Write via the builders.
+4. **Submit → reload → verify via the diagnostics endpoint.**
+5. The DOM does NOT re-render out-of-band API writes without a reload — use it for the initial enumeration and the post-reload check only.
 
 ## Read in JS, analyze in Python
 
-One read → analyze in Python → one batch of writes back through JS. Token-bearing calls run in the browser; JSON parsing, classification, content composition, and verification live in Python so the analysis is scripted and re-runnable.
+1. One read → analyze in Python → one batch of writes back through JS.
+2. Token-bearing calls run in the browser; JSON parsing, classification, content composition, and verification live in Python so the analysis is scripted and re-runnable.
 
 ```python
 from scripts import kc
@@ -69,26 +71,18 @@ payloads = [...]                               # built from inv['writable'] via 
 js = kc.update_properties_sequential(eng_guid, wp_id, payloads, headers)
 ```
 
-**Data channel — bridge vs linked-tab.** On the **bridge** (`chrome_api_call`), KC reads come back as
-**real JSON, NOT DLP-filtered** — `kc.read_form`'s payload returns inline (or
-auto-saves to the tool-results tree if very large; read it from disk there). Only on the **linked-tab
-fallback** is the channel DLP-filtered (`[BLOCKED...]` on the probe): there, read by download-to-disk —
-bundle the response into a Blob and trigger a native browser download (pattern: `bulk-capture-forms.md`
-Step 2), then **immediately call `request_cowork_directory` on the browser's Downloads folder** (resolve
-the user from the session env, e.g. `C:\Users\<user>\Downloads`) and Read the file. Don't ask the user to
-save-and-report — mounting Downloads is the skill's job.
+**Data channel — bridge vs linked-tab.**
+- Bridge (`chrome_api_call`): KC reads come back as **real JSON, NOT DLP-filtered** — `kc.read_form`'s payload returns inline (or auto-saves to the tool-results tree if very large; read it from disk there).
+- Linked-tab fallback: the channel IS DLP-filtered (`[BLOCKED...]` on the probe) — read by download-to-disk: bundle the response into a Blob and trigger a native browser download (pattern: `bulk-capture-forms.md` Step 2), then **immediately call `request_cowork_directory` on the browser's Downloads folder** (resolve the user from the session env, e.g. `C:\Users\<user>\Downloads`) and Read the file.
+- Do not ask the user to save-and-report — mounting Downloads is the skill's job.
 
-`inventory_form()` replaces the old `walk_fields()` planning flow. `walk_fields()` still exists (untyped) but you should not hand-roll payloads from it anymore — `inventory_form()` classifies every field and `build_write_payload()` emits the correct shape per kind.
+`inventory_form()` replaces the old `walk_fields()` planning flow. `walk_fields()` still exists (untyped) — do not hand-roll payloads from it; `inventory_form()` classifies every field and `build_write_payload()` emits the correct shape per kind.
 
-## Field-kind taxonomy (the thing that used to break per-form)
+## Field-kind taxonomy
 
-> **The authoritative field/valueKey registry is `references/config/field-conventions.md`.** There is no
-> `field-conventions.json`; the same conventions are hard-coded in `scripts/kc.py` (`classify_property` +
-> `build_write_payload`), so a convention change must land in BOTH the registry and kc.py. It is the ONE
-> canonical map of every field-kind, valueKey convention, option-set/enum, per-prop convention, and
-> collection-targeting rule. **valueKey conventions are DATA, not discoverable from the form GET** —
-> `floatieItemList` is EMPTY on convention-driven props, so the code/registry must carry them. Look up
-> the convention by prop key in the registry; do NOT guess a valueKey from the floatie.
+- **The authoritative field/valueKey registry is `references/config/field-conventions.md`.** There is no `field-conventions.json`; the same conventions are hard-coded in `scripts/kc.py` (`classify_property` + `build_write_payload`) — a convention change must land in BOTH the registry and kc.py.
+- It is the ONE canonical map of every field-kind, valueKey convention, option-set/enum, per-prop convention, and collection-targeting rule.
+- **valueKey conventions are DATA, not discoverable from the form GET** — `floatieItemList` is EMPTY on convention-driven props, so the code/registry must carry them. Look up the convention by prop key in the registry; do NOT guess a valueKey from the floatie.
 
 Every field's kind comes from `propertyType` (int), refined by `floatieType` + the option-list length. `classify_property()` owns this; `inventory_form()` applies it.
 
@@ -179,11 +173,10 @@ isn't (KBA-103 deficiency/noncompliance grids; watch KBA-400 scoping). Check
 `inventory_form()['addable_grids']` (and `stats['addable_grids']`): a non-empty
 list means "this form has add-row grids you have NOT filled." **Warn the user;
 do not silently report complete** — but you CAN now fill them on request.
-**Filling (SOLVED):** spawn IS REST. CREATE a row with
+**Filling:** spawn IS REST. CREATE a row with
 `kc.build_spawn_payload(collection_path, value)` — UpdateProperty with empty
-identity keys + the collection path in `dataEntryExpression` (the old "SignalR-only
-/ NOT REST / non-existent objectKey no-ops" belief was a misdiagnosis; SignalR is a
-recalc backchannel only). Then re-read the form to get the new GUID and fill
+identity keys + the collection path in `dataEntryExpression`. SignalR is a
+recalc backchannel only, not the write path. Then re-read the form to get the new GUID and fill
 remaining columns with `build_write_payload` keyed by it. One spawn == one row; loop
 by a known target count (the trailing UI add-box has no collection object and never
 disappears, so "until no add-row remains" never terminates). **Seeded-template
@@ -205,7 +198,8 @@ Unresolved → ask the user once (add / skip / not-used), persist the decision i
 
 ### 3. Fill choices to a fixed point, THEN text/sign-offs — order is critical
 
-Gating is recursive: a select can reveal another select, and a multiselect's options can stay **empty until a gating answer populates them** (e.g. AUD-100 `OperatingAuditAreas` — controls-testing areas — populates only after audit areas/operating-effectiveness are set). A single "TQs first, then the rest" pass MISSES these — the second wave of revealed choices never gets written. You must **loop to a fixed point**:
+- Gating is recursive: a select can reveal another select, and a multiselect's options can stay **empty until a gating answer populates them** (e.g. AUD-100 `OperatingAuditAreas` — controls-testing areas — populates only after audit areas/operating-effectiveness are set).
+- A single "TQs first, then the rest" pass MISSES these — the second wave of revealed choices never gets written. **Loop to a fixed point**: 
 
 ```
 repeat (cap ~8 iterations):
@@ -238,11 +232,11 @@ js = kc.submit(eng_guid, wp_id, headers)   # per-workpaper — NEVER empty wpId 
 ```
 **Why sequential?** Parallel POSTs to the same form drop writes (server race).
 
-**Expect silent drops even when everything is right — CONVERGE, don't count retries.** KC drops a
-**rotating subset** of rapid sequential UpdateProperty writes: every write echoes state 3, but the
-commit loses some of them — ~30–50% of write→submit pairs with convention-correct payloads;
-inter-write sleeps (1–2s) reduce but do NOT eliminate the loss. The per-write echo is NEVER proof; only the committed read is. The standard
-fill procedure for every write set is the **converge loop**:
+**Expect silent drops even when everything is right — CONVERGE, don't count retries.**
+- KC drops a **rotating subset** of rapid sequential UpdateProperty writes: every write echoes state 3, but the commit loses some of them — ~30–50% of write→submit pairs with convention-correct payloads.
+- Inter-write sleeps (1–2s) reduce but do NOT eliminate the loss.
+- The per-write echo is NEVER proof; only the committed read is.
+- Standard fill procedure for every write set is the **converge loop**:
 
 ```
 repeat (2–4 rounds converges in practice):
@@ -258,12 +252,7 @@ verified state-3-after-reload was NOT made. Because the drop set ROTATES between
 "retry the misses ≤3×" pass under-delivers on large write sets — converge to match-intent instead.
 (field-conventions.md §5 3a.)
 
-**The dominant KC-write failure was 415, not a body-drop.** Every KC write went out without a
-`Content-Type: application/json` header (`build_batch_xhr` omitted it; the single-call builders inject
-it) → the server returned **415 Unsupported Media Type** and the write never landed. The fix is to set
-`Content-Type: application/json` on every body-bearing write, NOT a body-drop retry loop. (The old
-"stick fix = retry on `non-empty request body|Bad Request`" framing chased the wrong signal — a 415
-has an empty body, so that regex never matched it.) Always supply the Content-Type header.
+**Always set `Content-Type: application/json` on every body-bearing KC write.** Without it (`build_batch_xhr` omits it; the single-call builders inject it), the server returns **415 Unsupported Media Type** and the write never lands — this is a missing-header failure, not a body-drop; do not chase it with a body-drop retry loop.
 
 **Why submit?** Submit **COMMITS** the pending working copy. Writes sit in a pending working copy and
 are **DISCARDED on reload** if you never submit. The immediate re-GET shows `state==3` because it
@@ -297,6 +286,36 @@ use the diagnostics ENDPOINT (refresh → GetWorkpaperDiagnostics → `result.di
 KBA-4xx and AUD-8xx forms. A `type:"Missing KnowledgeCoach Form"` diagnostic means a Yes-answer needs
 a dependent form — flip it to No or add the form.
 
+**Diagnostics are a completion CHECK, not the fill spec — zero diagnostics ≠ complete.** KC emits
+"Question Unanswered" for only a SUBSET of the fields a form expects; drive the fill off the rendered
+form's `elements`/labels, then use diagnostics as the backstop. Field classes that produce NO
+diagnostic yet are required in substance — walk every form for them before calling it done:
+
+1. **"Procedures performed to obtain the above understanding (include workpaper reference):"** —
+   on every understanding-memo form (KBA-302/401 and their S-form counterparts). Silent; always
+   required.
+2. **"Did any factors or understanding above significantly change from the prior year? If 'yes',
+   describe the change here:"** — same forms; describe-only boxes with no yes/no toggle. Silent;
+   answer even when the answer is "no significant change."
+3. **Memo-format TQ reveals** — a "…document his or her understanding in a memorandum format?" TQ
+   answered Yes REVEALS per-area/per-principle description fields that then become required
+   (e.g. 8 area memos on KBA-302S; 17 principle memos on KBA-401S). Sequence: answer the TQs →
+   submit → **RE-READ the form** → fill the revealed set → submit → verify. Stopping at the first
+   diagnostics-clean read leaves every revealed field blank.
+4. **Add-row grids / per-program add buttons** (e.g. KBA-503S per-major-program
+   compliance-requirement tables) — no diagnostic exists until the row/table is spawned; the
+   required content is invisible to the oracle. Spawn from the form's add-controls, then fill.
+
+**valueKey resolution — from the form's OWN template, never a registry/other-form default.**
+Option valueKeys vary by form family (S-forms use lowercase `yes`/`no` and
+`yesnona-yes`/`-no`/`-na`; FS-side forms differ). `build_write_payload` refuses an empty-option
+choice — pass `decoded_form=` so it resolves from the form's rowTemplates
+(`resolve_choice_options_from_templates`), or enrich first. One reset-reject (state 2 /
+`resetanswer`) means the key was guessed — resolve from the template; never guess twice. A choice
+still empty after template resolution is a **dynamic cross-form multiselect** (options rendered by
+the SPA from another container, e.g. a major-program list): resolve via the DOM (`kc_dom_parser`)
+or leave it for a UI fill — it cannot be written blind through the API.
+
 **Detect silent rejection.** `UpdateProperty` returns HTTP 200 even when CCH rejects the value/valueKey. The signature is `state` regressing to 2 with `valueKey=='resetanswer'` — use `kc.was_rejected(before, after)`. Selects rarely reject when the `valueKey` is taken straight from the field's own `options` (the floatie `key`); they reject when you guess a code or wrong case.
 
 ## Multi-value / multiselect
@@ -320,7 +339,7 @@ a dependent form — flip it to No or add the form.
 
 - **Custom multiselect value (add-custom) uses a server-derived key** — NOT the free-text string. The server derives it as `"KEY_" + value.upper().replace(non-alnum, "_")`. Pass `build_write_payload(field, None, valueKey=[<option_keys>], custom="My Value")` and let `custom_value_key()` do the derivation. An invented key is accepted into the working copy, survives the immediate GET, but is DROPPED on the next refresh/reload — confirm persistence only after `POST /api/Workpaper/refresh`, not by the immediate re-read.
 
-- **Per-area risk sub-grids — WRITABLE via UpdateProperty (no longer undocumented).** Write to the
+- **Per-area risk sub-grids — WRITABLE via UpdateProperty.** Write to the
   **`*Findings` / `*TQ` flow collections** with UPPERCASE / YESNONA valueKeys (`YES`/`NO`,
   `YESNONA-YES/-NO/-NA`) — NOT the `EntityEnv*` DISPLAY collections (those reject with `resetanswer`).
   These render from `elements` as Generic nodes bound `<parent>[current].<child>` (e.g.
@@ -328,7 +347,7 @@ a dependent form — flip it to No or add the form.
   display rollup. **KBA-502 OWNS the IR/CR/RMM/PlannedAuditApproach grid and is its WRITE target.** Write
   `collectionKey ".{AREA}.RelevantAssertion"` against **KBA-502's wpId**; the AUD-8xx program's grid is
   the DERIVED view — writes aimed at the program's wpId land in a working copy the KBA-502-owned
-  recompute discards on refresh (the historical "reverts / unwritable" symptom). See
+  recompute discards on refresh (reverts / appears unwritable). See
   `references/config/field-conventions.md` §3 (per-prop conventions) and §4 (INPUT vs DISPLAY).
 
 <!-- END -->

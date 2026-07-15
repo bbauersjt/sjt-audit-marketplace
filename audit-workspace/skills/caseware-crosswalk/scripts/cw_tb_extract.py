@@ -20,8 +20,8 @@ Reads the engagement's FoxPro DBF tables:
   <Client>gl.dbf - current-year journal entry detail lines
   <Client>MP.dbf - grouping/mapping definitions: ID '1' rows carry the L/S
                    (SCHEDULE) legend - MAP_NO is the grouping code, AC_DESC its
-                   name. Verified 100% L/S coverage across six firm files; the
-                   GROUP2..GROUP9 structures (ID '2'+) exist but are unnamed.
+                   name. The GROUP2..GROUP9 structures (ID '2'+) exist but are
+                   unnamed.
 
 Usage:
   python cw_tb_extract.py "<engagement folder>" [--out DIR]

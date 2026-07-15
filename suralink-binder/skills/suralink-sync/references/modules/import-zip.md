@@ -7,12 +7,12 @@ Suralink zip", "bulk download", "grab the whole engagement at once"
 
 For a first / whole-engagement sync, importing one bulk zip is faster than
 pulling files one by one. Suralink hands the whole selection over as a single
-zip; this module imports that zip into the mirror under the engagement's
-`{Client}/{Label}/` folder, with numbered category folders, and reconciles the
-manifest.
+zip; this module imports that zip into the **sync folder** (`sync_root`), with
+numbered category folders, and reconciles the sync state.
 
 `run-sync.md` is the general workhorse; on a **fresh full pull it offers this
-zip route first**, because the bulk zip is much faster.
+zip route first**, because the bulk zip is much faster. It resolves the target
+(`resolve-target.md`) and hands this module the `sync_root`, `st`, and binding.
 
 ## Step 0 — make sure Claude can SEE the zip  ← REQUIRED FIRST
 
@@ -22,9 +22,7 @@ up front, no questions asked.** Chrome's default download location is the
 user's Downloads folder; assume that's where the zip will land. Mounting
 costs nothing on a re-run (the user approves once and Cowork remembers).
 Do NOT ask the user "did you redirect Chrome's downloads?" — just mount
-Downloads. If, by chance, the user actually redirected Chrome at the
-mirror's `_inbox/`, the zip will be reachable through the already-mounted
-mirror anyway; Step 3 reads from whichever path the zip is at.
+Downloads. Step 3 reads the zip from whichever mounted folder it landed in.
 
 ## Step 1 — trigger the bulk zip — CLAUDE DRIVES THE UI
 
@@ -64,8 +62,7 @@ downloads it — total time is a minute or more for a 100+ MB engagement.
 **DO NOT poll on "filename present + no `.crdownload` sibling".** Cowork's
 mount caches directory metadata; a naive poll routinely sees a stale,
 half-written size, no `.crdownload`, and false-positives a truncated zip
-as complete. This bit a real session on Animal Protection NM Audit 2025
-(twice — a 7 MB and a 111 MB snapshot of what was actually a 261 MB zip).
+as complete.
 **Use `sync.wait_for_zip` instead** — it forces `os.sync()` each tick,
 validates the end-of-central-directory by calling `zipfile.ZipFile()`, and
 requires the size to be stable for several consecutive checks. Truncated
@@ -120,33 +117,32 @@ ordered = json.loads(run(suralink.list_categories_js()))   # category names, in 
 Resolve the zip's path inside the folder connected in Step 0 (newest matching
 `.zip`), then:
 ```python
-from scripts import sync, manifest, location
-mirror_root = location.ensure_structure(mounted_path)
-seeding = sync.is_seeding(mirror_root, client, label)   # True for a first pull
-records = sync.import_zip(zip_path, mirror_root, client, label, ordered,
-                          seeding=seeding)
+from scripts import sync, state
+seeding = sync.is_seeding(sync_root)   # True for a first pull
+records = sync.import_zip(zip_path, sync_root, ordered, seeding=seeding)
 ```
-`import_zip` is **re-entrant** — files already at the right path with the
-right uncompressed size are skipped, so a killed-mid-extract run (large
-zip + bash timeout) is recovered by simply calling `import_zip` again with
-the same arguments. The returned record list is correct either way.
+`sync_root`, `st` and the binding come from `resolve-target.md` (via
+`run-sync.md`). `import_zip` is **re-entrant** — files already at the right path
+with the right uncompressed size are skipped, so a killed-mid-extract run (large
+zip + bash timeout) is recovered by simply calling `import_zip` again with the
+same arguments. The returned record list is correct either way.
 
 If the original return value was lost (e.g. process killed before it could
 serialize) and you don't want to re-run the extract, rebuild the record list
 from disk:
 ```python
-records = sync.scan_raw_for_records(mirror_root, client, label)
+records = sync.scan_raw_for_records(sync_root)
 ```
 Then proceed with reconciliation in Step 4 — the records have the same
 shape `import_zip` returns (minus the `skipped` flag).
 
 `import_zip` extracts every file to
-`{client}/{label}/_raw/{NN Category}/{Request}/{file}`. The `sorted/` copy
-follows `seeding`: a first pull (the normal case) seeds `sorted/` proper; if the
-engagement already has a `sorted/` folder, the files land in
-`sorted/_unsorted/` instead (see `../architecture.md` "The sorted folder").
+`{sync_root}/_raw/{NN Category}/{Request}/{file}`. The `sorted/` copy follows
+`seeding`: a first pull (the normal case) seeds `sorted/` proper; if the folder
+already has a `sorted/` folder, the files land in `sorted/_unsorted/` instead
+(see `../architecture.md` "The sorted folder").
 
-## Step 4 — reconcile the manifest + build the index
+## Step 4 — reconcile the state + build the index
 
 `import_zip` records carry no `fmsId` (zip filenames omit it). To keep future
 incremental syncs deduping correctly, enumerate the engagement and bind each
@@ -162,22 +158,21 @@ imported file to its portal `fmsId`:
   matching correctly: greedy fmsId-uniqueness, tiebreak by sanitized request
   folder name, then size delta. Returns `(matched_pairs, unmatched_records)`.
 
-  Why a helper instead of inline filename+size matching: when two files in an
-  engagement share a filename AND size (real case, observed on Santo Domingo
-  Pueblo Audit 2025), naive filename matching collapses both to one fmsId,
-  leaving the manifest one entry short. `reconcile_to_fmsids` claims each
-  fmsId at most once and uses the request-folder context to break ties.
+  Why a helper instead of inline filename+size matching: two files in an
+  engagement can share a filename AND size, which naive filename matching
+  collapses both to one fmsId, leaving the state one entry short.
+  `reconcile_to_fmsids` claims each fmsId at most once and uses the
+  request-folder context to break ties.
 
-  Note on request names: the **raw** portal `requestName` does NOT byte-match
-  the request folder Suralink writes into the zip — on Santo Domingo Pueblo,
-  17 of 85 raw names disagreed. But after `safe_component()` sanitization
-  (which both `import_zip` and the helper apply), they DO align — that's
-  why `reconcile_to_fmsids` works.
-- For each matched pair: `manifest.record_file(m, portal["fmsId"], {…, "rawPath": <matched _raw/ path>, …})`.
+  Note on request names: the **raw** portal `requestName` does NOT always
+  byte-match the request folder Suralink writes into the zip. But after
+  `safe_component()` sanitization (which both `import_zip` and the helper
+  apply), they DO align — that's why `reconcile_to_fmsids` works.
+- For each matched pair: `state.record_file(st, portal["fmsId"], {…, "rawPath": <matched _raw/ path>, …})`.
 - Build the index from the same enumeration (`index.build(...)` →
-  `index.save(sync.engagement_dir(...), idx)`), so the next `run-sync.md` has a
-  fresh reference list.
-- `manifest.stamp_sync(m)`, `manifest.save(mirror_root, m)`.
+  `index.save(sync_root, idx)`), so the next `run-sync.md` has a fresh reference
+  list.
+- `state.stamp_sync(st)`, `state.save(sync_root, st)`.
 
 ## Known failure modes
 
@@ -196,15 +191,3 @@ imported file to its portal `fmsId`:
 - Reconciliation leaves files with no `fmsId` → the match was attempted on
   request name. Re-match on filename + size (Step 4).
 - Bytes never reach Claude's context — `import_zip` reads the zip on disk.
-
-## Validated on
-
-- Kymera 401(k), Audit 2025 — 35-file / 121 MB zip, 7 numbered category folders.
-- Santo Domingo Pueblo, Audit 2025 — 85-file / 141 MB zip, 9 numbered category
-  folders. Claude-driven UI trigger (select-all -> Download -> Categories/
-  Requests); 45 requests enumerated in one sequential sweep; filename+size
-  reconciliation (request-name match failed 17/85). 2026-05-23.
-- Animal Protection NM, Audit 2025 — 163-file / 261 MB zip, 11 numbered
-  category folders. First run polled too early on a stale mount and
-  false-positived a truncated 7 MB / 111 MB snapshot as complete; the real
-  zip was 261 MB. That's the failure `wait_for_zip` now prevents. 2026-05-25.

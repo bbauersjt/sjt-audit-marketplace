@@ -55,7 +55,9 @@ status: validated
 
 ## What this does
 
-Manages the Fund Accounting hierarchy on a CCH engagement: Fund Types (top tier), Fund Sub-Types (optional middle tier), Funds (the records), and the Account-to-Fund assignment map. Applies to governmental and NFP engagements where the TB is segmented by fund. Not the same feature as the firm's 4-digit grouping index — that's a separate workpaper-side concept.
+- Manages the Fund Accounting hierarchy on a CCH engagement: Fund Types (top tier), Fund Sub-Types (optional middle tier), Funds (the records), and the Account-to-Fund assignment map.
+- Applies to governmental and NFP engagements where the TB is segmented by fund.
+- Not the same feature as the firm's 4-digit grouping index — that's a separate workpaper-side concept.
 
 ## Prerequisites
 

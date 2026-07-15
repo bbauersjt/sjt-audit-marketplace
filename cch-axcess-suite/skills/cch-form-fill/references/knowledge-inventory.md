@@ -75,6 +75,3 @@ SEFA facts [L] (programs/ALN/expenditures/clusters/pass-through/de-minimis) · m
 
 ## The defaults set
 **[D] generic** (sections 1, 7-COSO, 8, 12, 13 + control/SA affirmations) → auto-filled silently. **[C] confirm-default** (the rare-yes-material items in sections 4, 7-deficiencies, 11) → surfaced once in the gather-phase confirm batch, default applied, before write. **[A]/[L]** → gathered from the file or asked. The user reviews the completed binder; only [C] items and genuine [A] knowns interrupt the fill.
-
-## Distillation check
-Whole-engagement knowledge reduces to: ~15 profile toggles + ~12 entity facts + ~6 people + ~7 understanding/narrative items + the per-area TB toggles + ~8 default-none findings + the type/SA add-ons. The forms' thousands of boxes collapse onto this list via the seven levers. No form mechanics remain in the inventory — it is purely what must be known.

@@ -98,14 +98,14 @@ REFERENCE DATA NEEDED:
 
 When a known unknown lands, run the ladder. Don't take shortcuts.
 
-### Workpaper FILE UPLOAD — resolved
+### Workpaper FILE UPLOAD
 
 The `file-io` upload leg (`chrome_upload` → `POST /v1/Documents/{clientId}`) fails with
-browser-level "Failed to fetch" from an engagement-origin tab (CORS). The fix: park a tab on
-the WPM-origin root and POST via `chrome_upload` — works end-to-end. Codified in
+browser-level "Failed to fetch" from an engagement-origin tab (CORS). Fix: park a tab on
+the WPM-origin root and POST via `chrome_upload`. Codified in
 `modules/file-io.md` as BRIDGE PRIMARY (see also transport.md "Uploads").
 
-### Document-level sign-off REMOVAL — done
+### Document-level sign-off REMOVAL
 
 `POST /v1/signoff/removeSignOff`, keyed by (objectId, signatureType), a POST state-change not a
 DELETE (No-Hard-Delete rule cleared). Shipped as `scripts.wpm.remove_signoff` +

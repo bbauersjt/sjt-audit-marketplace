@@ -1,11 +1,12 @@
-"""The per-engagement file index - `_index.json` inside each engagement folder.
+"""The per-sync file index - `_index.json` inside each sync folder.
 
 A parseable local SNAPSHOT of the portal's current file list for one
 engagement: every category, every request, every file (fmsId, fId, name, size,
 timestamp). It is the reference list other operations run against - download
 scripts, group pulls, the sync diff - so they do not each re-crawl the portal.
 
-  - The manifest (`manifest.py`) records what has been PULLED to disk.
+  - The sync state (`state.py`, `_suralink_sync.json`) records what has been
+    PULLED to disk (and the engagement binding).
   - This index records what the PORTAL currently HOLDS.
   Diffing the two is how "what's new" and "what was deleted" are computed.
 
@@ -31,25 +32,24 @@ def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def index_path(engagement_dir):
-    """`_index.json` lives at the root of one engagement folder
-    ({mirror}/{Client}/{Label}/)."""
-    return os.path.join(engagement_dir, INDEX_NAME)
+def index_path(sync_root):
+    """`_index.json` lives at the root of one sync folder."""
+    return os.path.join(sync_root, INDEX_NAME)
 
 
-def load(engagement_dir):
-    """Load an engagement's index, or None if it has never been built."""
-    p = index_path(engagement_dir)
+def load(sync_root):
+    """Load a sync's index, or None if it has never been built."""
+    p = index_path(sync_root)
     if not os.path.exists(p):
         return None
     with open(p, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save(engagement_dir, index):
+def save(sync_root, index):
     """Write `_index.json` atomically."""
-    os.makedirs(engagement_dir, exist_ok=True)
-    p = index_path(engagement_dir)
+    os.makedirs(sync_root, exist_ok=True)
+    p = index_path(sync_root)
     tmp = p + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(index, f, indent=2)
@@ -150,6 +150,6 @@ def all_files(index):
 
 def fmsids(index):
     """The set of every fmsId the portal currently holds for this engagement.
-    Diff against the manifest to find new files (in index, not manifest) and
-    deletions (in manifest for this auditId, not in index)."""
+    Diff against the sync state to find new files (in index, not state) and
+    deletions (in state, not in index)."""
     return {f.get("fmsId") for f in all_files(index) if f.get("fmsId")}

@@ -22,16 +22,17 @@ Prerequisite: a Chrome tab logged into Suralink. If a call returns `401`, the se
 
 ### Session verification — assert the auditId, not just "a page loaded"
 
-The cheap verification read after navigating to an audit MUST assert that the page reflects the **requested** `auditId` — both the URL `auditId=` param and `window.auditId` must equal it. "A Suralink page loaded" is NOT a pass. Use `scripts/suralink.py :: verify_audit_js(audit_id)` before any real work on an audit.
-
-Why (observed 2026-07-09, SCDC 401k): a **reused stale tab's** login bounce carried a `returnTo` pointing at a *different* auditId (2871416) than the one requested (2852254) — the tab's last-visited audit, not the target. Logging back in through that bounce lands on the wrong audit, and a naive liveness check green-lights it. After any login bounce, re-navigate to the requested `Audit.php?auditId={X}` explicitly; never trust the bounce's `returnTo`.
+1. After navigating to an audit, run `scripts/suralink.py :: verify_audit_js(audit_id)` before any real work on that audit.
+2. Require it asserts that the page reflects the **requested** `auditId` — both the URL `auditId=` param and `window.auditId` must equal it. "A Suralink page loaded" is NOT a pass.
+3. After any login bounce, re-navigate to the requested `Audit.php?auditId={X}` explicitly; never trust the bounce's `returnTo`.
+   - Warning: a **reused stale tab's** login bounce carries a `returnTo` pointing at whatever auditId that tab was LAST on, not the one requested. Logging back in through that bounce lands on the wrong audit, and a naive liveness check green-lights it.
 
 **Login-bounce signatures** (tab lands on `accounts.suralink.com/login`):
 - `...&logout=true` in the query = the session was **invalidated** (explicit logout / server-side kill) — distinct from an idle-timeout bounce, which lacks `logout=true`. Either way the user must log in again; the skill cannot.
 - The bounce's `returnTo` param encodes the tab's stale prior location — parse it only to *detect* the mismatch (`verify_audit_js` surfaces it as `returnToAuditId`), never to navigate.
-- Expired-session transient (observed 2026-07-09): navigating an expired tab to `Audit.php` can bounce through `app.suralink.com/logout.php?...&sessionExpired=true&returnTo=...` — on the APP host, not `accounts.`. It resolves to the logged-in `Audit.php` once the session cookie lands. `verify_audit_js` correctly returns `ok:false` for it, but does NOT tag it `logoutBounce` (that flag keys off the non-app host). Treat any `ok:false` as "not ready" and re-check after the user logs in — don't special-case this transient.
+- Expired-session transient: navigating an expired tab to `Audit.php` can bounce through `app.suralink.com/logout.php?...&sessionExpired=true&returnTo=...` — on the APP host, not `accounts.`. It resolves to the logged-in `Audit.php` once the session cookie lands. `verify_audit_js` correctly returns `ok:false` for it, but does NOT tag it `logoutBounce` (that flag keys off the non-app host). Treat any `ok:false` as "not ready" and re-check after the user logs in — don't special-case this transient.
 
-**Validated live 2026-07-09** (chrome-bridge browser, auditId 2871416): `verify_audit_js(2871416)` → `{ok:true, urlAuditId 2871416, pageAuditId 2871416, path /auditors/views/Audit.php}` on a freshly logged-in Audit.php tab; before login the expired-session navigation returned `ok:false` as designed. (Note: the fleet's live session lives in the **chrome-bridge** browser — logging into Suralink on another browser surface does NOT make the bridge session live.)
+**Note:** the fleet's live session lives in the **chrome-bridge** browser — logging into Suralink on another browser surface does NOT make the bridge session live.
 
 ## Transport — bridge PRIMARY, linked tab FALLBACK
 
@@ -55,10 +56,10 @@ Suralink uses several IDs that look interchangeable but are not. Mixing them pro
 
 | ID | What | Source | Used as |
 |---|---|---|---|
-| `auditId` | Per-engagement integer (e.g. `2774111`). The "audit". | URL `Audit.php?auditId={X}`; JS global `window.auditId` | `aId` in fileProxy; `requestListId` in v2 calls; path slot in v2 paths |
+| `auditId` | Per-engagement integer (e.g. `9990001`). The "audit". | URL `Audit.php?auditId={X}`; JS global `window.auditId` | `aId` in fileProxy; `requestListId` in v2 calls; path slot in v2 paths |
 | `organizationId` | Per-firm GUID (the CPA firm). Stable across all that firm's engagements. | inline `<script>` var `organizationId` (regex it out — see below); v2 query param; `data.organizationId` on responses | `organizationId` query param; org-scoped v2 paths (`/v2/organization/{organizationId}/...`) |
-| `clientId` | Per-client integer (e.g. `1126793`). One client owns many engagements (audits). | `Clients.php` DOM `clientRow_{clientId}`; v2 `/clients` object field `id`; client dropdown `topMenuClient_{clientId}` | gateway `getClientInfo` param `clientId` — the key that maps a client to its engagements |
-| request `id` | **The canonical request identifier** — 8-digit integer (e.g. `91772336`, `93605893`). | DOM `<li id="request_{id}_min">`; gateway `getRequest` response field `id`; gateway `getRequest` *input* param `requestId` | `rId` in fileProxy; `{requestId}` path slot in `/v2/request/{id}/...` |
+| `clientId` | Per-client integer (e.g. `9990004`). One client owns many engagements (audits). | `Clients.php` DOM `clientRow_{clientId}`; v2 `/clients` object field `id`; client dropdown `topMenuClient_{clientId}` | gateway `getClientInfo` param `clientId` — the key that maps a client to its engagements |
+| request `id` | **The canonical request identifier** — 8-digit integer (e.g. `91772336`, `9990006`). | DOM `<li id="request_{id}_min">`; gateway `getRequest` response field `id`; gateway `getRequest` *input* param `requestId` | `rId` in fileProxy; `{requestId}` path slot in `/v2/request/{id}/...` |
 | request `requestId` (response field) | A short 2-char internal display index. **NOT a real id.** | `data.requestId` on a `getRequest` response | nothing — ignore it |
 | file `id` | Per-file integer (e.g. `198983476`). | `getRequest` response `files.firm[].id` / `files.client[].id` | `fId` in fileProxy |
 | file `fmsId` | Per-file GUID (file-management-system id). | `getRequest` response file objects | identity / dedup key |
@@ -83,7 +84,7 @@ Confirmed live. JSON responses are usually `{success, data}` or a bare object/ar
 
 `GET https://api.suralink.com/v2/fileProxy?fId={fileId}&aId={auditId}&rId={requestId}`
 
-- Returns the **raw file bytes** with the file's real content-type (e.g. `application/pdf`). Verified: a 717,607-byte PDF came back intact.
+- Returns the **raw file bytes** with the file's real content-type (e.g. `application/pdf`).
 - `rId` **must** be the canonical 8-digit request `id` that the file belongs to. A wrong `rId` → `403 {"error":"forbidden","message":"User has no access to this engagement"}`.
 - `fId=-1` is a no-op ping that returns `{"success":true}` — the UI fires it before a real download. The skill does not need it.
 - No `Content-Disposition: attachment` header — the URL alone displays inline. To save to disk, fetch as a blob (see `scripts/suralink.py`).
@@ -155,7 +156,7 @@ The roster does **not** carry engagements. For one client, gateway `getClientInf
 This is how the same client's prior-year and current-year audits are told apart — they are sibling `auditId`s under one `clientId`. `scripts/suralink.py :: get_client_engagements_js()`.
 
 ### Bulk-zip download — UI-only (not scripted)
-Suralink can hand a whole selection over as one zip: select-all → `Download` → the "Download Multiple" popup → `#multiDownloadCategory_Btn` (the `Categories / Requests` option; siblings `#multiDownloadCategoryOnly_Btn`, `#multiDownloadFolder_Btn`). It is driven by page globals `downloadArchivedFilesFromPortal` / `getClientArchiveDownloadUrl` and the endpoint family `/v2/client/client-archive/.../requestItem/.../downloadZip`, delivered through a hidden iframe. **The trigger evaded every capture hook** (fetch, XHR, form-submit, anchor-click, window.open, iframe-src) across multiple sessions — it cannot currently be scripted. The bulk zip stays a user-initiated fast path (`suralink-sync` `import-zip.md`); for fully-scripted bulk pulls use the per-file `fileProxy` loop (`download-files.md`).
+Suralink can hand a whole selection over as one zip: select-all → `Download` → the "Download Multiple" popup → `#multiDownloadCategory_Btn` (the `Categories / Requests` option; siblings `#multiDownloadCategoryOnly_Btn`, `#multiDownloadFolder_Btn`). It is driven by page globals `downloadArchivedFilesFromPortal` / `getClientArchiveDownloadUrl` and the endpoint family `/v2/client/client-archive/.../requestItem/.../downloadZip`, delivered through a hidden iframe. **The trigger evades every capture hook** (fetch, XHR, form-submit, anchor-click, window.open, iframe-src) — it cannot currently be scripted. The bulk zip stays a user-initiated fast path (`suralink-sync` `import-zip.md`); for fully-scripted bulk pulls use the per-file `fileProxy` loop (`download-files.md`).
 
 ## Deep-link URL patterns
 
@@ -175,7 +176,7 @@ Navigating between requests with `&requestId=` is a client-side `pushState` — 
 - **`read_network_requests` (linked-tab tool) is unreliable here.** Its buffer clears on the `pushState` request-id changes. Use the capture monkey-patch in `scripts/capture.py` instead, and never have the user do a full page reload mid-capture (a reload wipes the patch). On the bridge, `chrome_network_recent` is an additional option that survives pushState.
 - **The Cowork content filter blocks raw URLs/tokens** in tool output. When surfacing captured data, emit sanitized derivatives (paths with IDs masked, param names not values) — see `training-mode.md`.
 - A full browser reload kills any installed monkey-patch. Re-install after any reload.
-- **Gateway calls run sequentially** (one fetch in flight at a time). Suralink's session serializes them; two in flight collide on the session, not the CSRF token. `window.csrf` is read LIVE per call so any rotation is harmless. Note: on read-only commands like `getRequest` the token does NOT observably rotate — a whole-engagement sweep of 28+ requests uses a single `window.csrf` snapshot. The older lore here ("CSRF rotates per call") was overstated. Keep the sequential rule anyway — it's correct for the right reason.
+- **Gateway calls run sequentially** (one fetch in flight at a time) — Suralink's session serializes them; two in flight collide on the session, not the CSRF token. `window.csrf` is read LIVE per call, so rotation is harmless. Read-only commands like `getRequest` do not observably rotate the token.
 
 ## Getting large data out of the tab
 

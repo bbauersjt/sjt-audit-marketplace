@@ -5,25 +5,26 @@ description: Comprehensive technical proof and review of ANY financial statement
 
 # Financial Statement Technical Review — Orchestrator
 
-You are the orchestrator. You do not perform review procedures yourself — you run the
-deterministic pipeline, dispatch focused subagents that each load only their module, and
-merge their findings into one Excel report. All module paths below are relative to this
+As orchestrator: run the deterministic pipeline yourself, dispatch focused subagents
+that each load only their module, and merge their findings into one Excel report. Do
+not perform review procedures yourself. All module paths below are relative to this
 skill's plugin root (`skills/fs-review/`).
 
 ## Phase 0 — Intake and identification (you)
 
-Read `shared/steps/intake.md` and follow it: locate the package, note limitations
-(non-blocking), and identify:
-- **framework** ∈ commercial | nonprofit | govt | ebp → selects `shared/frameworks/<f>/`
-- **industry overlays** → every matching module in `shared/industries/`
-  (construction signals → `construction.md` and plan to run `tie_wip.py`)
-- read the framework's `identify.md` and record the entity profile (entity type,
-  consolidation, PCC elections / plan type / audit scope, etc.) — pass this profile to
-  every subagent.
+1. Read `shared/steps/intake.md` and follow it.
+2. Locate the package; note limitations (non-blocking).
+3. Identify **framework** ∈ commercial | nonprofit | govt | ebp → selects `shared/frameworks/<f>/`.
+4. Identify **industry overlays** → every matching module in `shared/industries/`
+   (construction signals → `construction.md` and plan to run `tie_wip.py`).
+5. Read the framework's `identify.md` and record the entity profile (entity type,
+   consolidation, PCC elections / plan type / audit scope, etc.).
+6. Pass this profile to every subagent.
 
 ## Phase 1 — Deterministic pipeline (you; zero model arithmetic)
 
-Read `shared/steps/math-protocol.md`. In a scratch folder:
+1. Read `shared/steps/math-protocol.md`.
+2. In a scratch folder, run:
 
 ```
 python <plugin>/scripts/extract_tables.py "<package.pdf>" -o statements.json
@@ -37,15 +38,16 @@ python <plugin>/scripts/extract_tables.py "<py.pdf>" -o py_statements.json
 python <plugin>/scripts/compare_py.py statements.json py_statements.json --py <PY> --cy <FY> -o py_compare.json
 ```
 
-Resolve extraction warnings (verify flagged lines visually, correct statements.json,
-re-run) BEFORE dispatching reviewers. Never hand a reviewer unverified extraction.
+3. Resolve extraction warnings (verify flagged lines visually, correct statements.json,
+   re-run) BEFORE dispatching reviewers.
+3.1. Never hand a reviewer unverified extraction.
 
 ## Phase 2 — Parallel review fan-out (subagents)
 
-Launch ALL applicable reviewers in ONE message (general-purpose agents). Every prompt
-includes: the package path, the engagement profile from Phase 0, the scratch-folder
-paths, an instruction to read `shared/core.md` first, and: "Return ONLY the findings
-JSON defined in core.md, plus a procedures list for your tab."
+1. Launch ALL applicable reviewers in ONE message (general-purpose agents).
+2. Every prompt includes: the package path, the engagement profile from Phase 0, the
+   scratch-folder paths, an instruction to read `shared/core.md` first, and: "Return
+   ONLY the findings JSON defined in core.md, plus a procedures list for your tab."
 
 | Reviewer | Loads | Also gets |
 |---|---|---|
@@ -57,8 +59,8 @@ JSON defined in core.md, plus a procedures list for your tab."
 | Industry (per overlay) | `shared/industries/<i>.md` | `wip_report.json` for construction |
 | EBP supplemental (ebp only) | `frameworks/ebp/supplemental.md` | supplemental schedules, Form 5500 if provided |
 
-Subagents adjudicate script output; they never do arithmetic on PDF text. If a reviewer
-reports a numeric discrepancy that did not come from a script report, send it back.
+3. Subagents adjudicate script output; they never do arithmetic on PDF text.
+3.1. If a reviewer reports a numeric discrepancy that did not come from a script report, send it back.
 
 ## Phase 3 — Final checklist, merge, render (you)
 
@@ -69,15 +71,15 @@ reports a numeric discrepancy that did not come from a script report, send it ba
    severity. Build `findings.json` per `shared/core.md` (include `meta.limitations`
    from intake).
 3. Render: `python <plugin>/scripts/report.py findings.json -o "<Client> FS Review.xlsx"`
-   — the spec is `references/output-spec.md`; report.py conforms to it. Verify it
-   reopened cleanly (report.py self-checks).
+   — the spec is `references/output-spec.md`; report.py conforms to it.
+4. Verify it reopened cleanly (report.py self-checks).
 
 ## Behavior
 
-- Chat output stays minimal (see `shared/core.md`): announce phases, not procedures;
-  findings live in the Excel report, not chat.
-- Findings must be verified against the printed document — an extraction artifact is
-  never a finding. Zero tolerance on footing differences ($1 is a finding).
-- If the package is a review/compilation/preparation engagement or a non-GAAP
-  framework, flag scope per `intake.md` and confirm before running report-language
-  procedures.
+1. Chat output stays minimal (see `shared/core.md`): announce phases, not procedures;
+   findings live in the Excel report, not chat.
+2. Findings must be verified against the printed document — an extraction artifact is
+   never a finding. Zero tolerance on footing differences ($1 is a finding).
+3. If the package is a review/compilation/preparation engagement or a non-GAAP
+   framework, flag scope per `intake.md` and confirm before running report-language
+   procedures.

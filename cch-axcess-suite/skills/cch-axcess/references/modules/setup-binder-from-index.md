@@ -46,7 +46,10 @@ Building a binder one call per object is the known runaway failure. Chunk per
 
 ## What this does
 
-Wrapper folder (client name, NO index) with section folders directly beneath — **two levels is the default**. The section list comes from `binder-template.xlsx` when the user wants the default, from the user verbatim when they bring their own, or is co-developed with the user. Deeper nesting remains fully supported via `parent_folder_id` chains — but ONLY when the user asks for it. Files BS leadsheets from `Unfiled Leadsheets` into their matching section folders with explicit per-folder moves (no auto-cascade exists).
+- Builds a wrapper folder (client name, NO index) with section folders directly beneath — **two levels is the default**.
+- The section list comes from `binder-template.xlsx` when the user wants the default, from the user verbatim when they bring their own, or is co-developed with the user.
+- Deeper nesting remains fully supported via `parent_folder_id` chains — but ONLY when the user asks for it.
+- Files BS leadsheets from `Unfiled Leadsheets` into their matching section folders with explicit per-folder moves (no auto-cascade exists).
 
 ## Prerequisites
 

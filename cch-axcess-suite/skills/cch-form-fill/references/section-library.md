@@ -20,7 +20,7 @@ See `approach-decision.md` for the reasoning model.
 ## Cash & Equivalents (1000) — all types ✓
 **What could go wrong (all that is relevant):** recorded cash balance correct (existence/accuracy); reconciling items valid and complete; **classification** (cash equivalents vs. investments — e.g., money markets); **restrictions** (contractual/legal minimums recorded and disclosed as restricted cash); **disclosure** of FDIC / custodial-credit-risk / uncollateralized deposits. No estimates, no valuation. Low-risk area.
 
-> **Not a fraud account.** Theft of cash is a *disbursements* misstatement, not a cash one — the cash the entity holds is still stated correctly; the error is in how the reduction was recorded. Cash is not the area for finding fraud.
+> **Rule: not a fraud account.** Test theft of cash under disbursements, not cash — the recorded cash balance is still stated correctly; the error is in how the reduction was recorded.
 
 - **Mandatory:**
   - Obtain all bank reconciliations plus statements (every account).
@@ -308,43 +308,43 @@ Concluding review steps (FS review, final analytical review, review/approval and
 ## Back-of-file checklist — STANDARD (Commercial / Nonprofit / Government)
 Cash is approximately the same across all four types; most areas are shared com/npo/govt with govt-specific items flagged. Work top to bottom.
 
-| Sec | Area | Status | Type notes |
-|---|---|---|---|
-| 1000 | Cash & Equivalents | ✓ done | same across all 4 types |
-| 1100 | Investments | ✓ done (standard) | ~same com/npo/govt; **EBP separate** |
-| 1200 | Receivables, net | ✓ done (AR) | govt: nonexchange / grants receivable nuance |
-| 1300 | Inventory | ✓ done | commercial main; rare govt/npo |
-| 1400 | Prepaid Expenses | ✓ done | w/ Other Assets; ROU→leases, goodwill rare |
-| 1500 | Property, Plant & Equipment | ✓ done | govt: capital assets + depreciation |
-| 1600 | Other Assets | ✓ done | with Prepaids |
-| 1900 | Interfund — Asset | ✓ done | govt; agree to other side |
-| 2000 | Payables | ✓ done | completeness; never confirm |
-| 2100 | Accrued Expenses | ✓ done | incl. **payroll**; completeness from other areas |
-| 2200 | Deferred Revenue | ✓ done | **grant/SEFA rollforward** (govt/npo) |
-| 2300 | Other Current Liabilities | ✓ done | catch-all (w/ Other Liab) |
-| 2400 | Long-Term Debt | ✓ done | + leases/ROU; covenants are the work |
-| 2500 | Other Liabilities | ✓ done | catch-all |
-| 2900 | Interfund — Liability | ✓ done | govt; agree to other side |
-| 3000 | Equity / Net Assets / Fund Balance | ✓ done | EBP trivial; **commercial complex = defer-to-user** |
-| 4000 | Revenue | ✓ done | NPO pledge completeness = headline; fraud-presumption rebutted exc. commercial pressure |
-| 5000 | Expense | ✓ done | mostly tested in BS areas; payroll + analytics |
-| 6000 | Other Income & Expense | ✓ done | catch-all / partner judgment |
-| 7000 | Transfers | ✓ done | govt — tie out / confirm other side |
-| — | Govt OPEB/Pensions + Deferred Outflows/Inflows | ⚠ defer-to-user | actuarial; prompt user |
+| Sec | Area | Type notes |
+|---|---|---|
+| 1000 | Cash & Equivalents | same across all 4 types |
+| 1100 | Investments | ~same com/npo/govt; **EBP separate** |
+| 1200 | Receivables, net (AR) | govt: nonexchange / grants receivable nuance |
+| 1300 | Inventory | commercial main; rare govt/npo |
+| 1400 | Prepaid Expenses | w/ Other Assets; ROU→leases, goodwill rare |
+| 1500 | Property, Plant & Equipment | govt: capital assets + depreciation |
+| 1600 | Other Assets | with Prepaids |
+| 1900 | Interfund — Asset | govt; agree to other side |
+| 2000 | Payables | completeness; never confirm |
+| 2100 | Accrued Expenses | incl. **payroll**; completeness from other areas |
+| 2200 | Deferred Revenue | **grant/SEFA rollforward** (govt/npo) |
+| 2300 | Other Current Liabilities | catch-all (w/ Other Liab) |
+| 2400 | Long-Term Debt | + leases/ROU; covenants are the work |
+| 2500 | Other Liabilities | catch-all |
+| 2900 | Interfund — Liability | govt; agree to other side |
+| 3000 | Equity / Net Assets / Fund Balance | EBP trivial; **commercial complex = defer-to-user** |
+| 4000 | Revenue | NPO pledge completeness = headline; fraud-presumption rebutted exc. commercial pressure |
+| 5000 | Expense | mostly tested in BS areas; payroll + analytics |
+| 6000 | Other Income & Expense | catch-all / partner judgment |
+| 7000 | Transfers | govt — tie out / confirm other side |
+| — | Govt OPEB/Pensions + Deferred Outflows/Inflows | **⚠ defer-to-user** — actuarial; prompt user, do not auto-fill |
 
 ## Back-of-file checklist — EBP
-| Sec | Area | Status | Notes |
-|---|---|---|---|
-| 1000 | Cash | ✓ (=standard) | mirrors standard |
-| 1100 | Investments | ✓ done | certified (103(a)(3)(C)) = trust cert; full-scope = standard |
-| 1200 | Notes Receivable from Participants | ✓ done | rollforward + distributions-style; IRS loan rules |
-| 1300 | Contributions Receivable | ✓ done | cash-basis cert → always an unrecorded receivable; usually immaterial |
-| 1400 | Other Assets | ✓ (=standard) | mirrors standard |
-| 2000 | Accrued Liabilities & Amounts Payable | ✓ (=standard) | mirrors standard |
-| 2100 | Participant Accounts | ✓ done | "TB made of individual accounts"; allocation testing |
-| 3000 | Net Assets Available for Benefits | ✓ done | trivial — no equity transactions |
-| 4000 | Contributions | ✓ done | timeliness/late-remittance is the major test |
-| 4100 | Investment Income | ✓ done | limited=tie to cert; full=standard |
-| 5000 | Benefit Payments | ✓ done | controls+substantive sample (≥25/10%); off the census |
-| 5100 | Administrative Expenses | ✓ done | usually immaterial; analytics/cert |
-| 6000 | Participant Data | ✓ done | **THE CRUX** — controls test (≥25/40); baseline for all EBP tests |
+| Sec | Area | Notes |
+|---|---|---|
+| 1000 | Cash | mirrors standard |
+| 1100 | Investments | certified (103(a)(3)(C)) = trust cert; full-scope = standard |
+| 1200 | Notes Receivable from Participants | rollforward + distributions-style; IRS loan rules |
+| 1300 | Contributions Receivable | cash-basis cert → always an unrecorded receivable; usually immaterial |
+| 1400 | Other Assets | mirrors standard |
+| 2000 | Accrued Liabilities & Amounts Payable | mirrors standard |
+| 2100 | Participant Accounts | "TB made of individual accounts"; allocation testing |
+| 3000 | Net Assets Available for Benefits | trivial — no equity transactions |
+| 4000 | Contributions | timeliness/late-remittance is the major test |
+| 4100 | Investment Income | limited=tie to cert; full=standard |
+| 5000 | Benefit Payments | controls+substantive sample (≥25/10%); off the census |
+| 5100 | Administrative Expenses | usually immaterial; analytics/cert |
+| 6000 | Participant Data | **THE CRUX** — controls test (≥25/40); baseline for all EBP tests |

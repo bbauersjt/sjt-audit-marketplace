@@ -1,6 +1,6 @@
 # Commercial — Deltas vs. Core
 
-Mapped from live forms (pulled cross-title). Same finding: identical machinery; deltas = entity-profile facts + type-specific gating toggles. Framework = FASB ASC.
+Identical machinery to the other types; deltas = entity-profile facts + type-specific gating toggles. Framework = FASB ASC.
 
 ---
 

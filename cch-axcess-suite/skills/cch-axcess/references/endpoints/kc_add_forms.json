@@ -27,12 +27,12 @@
     "updateSettings"
   ],
   "form_object_fields_constant_or_placeholder": "Documented in scripts/kc.py:DEFAULT_FORM_BODY. Server populates real GUIDs in response.",
-  "response_shape": "{\"result\": [...], \"statusCode\": ..., \"message\": ...}. `result` is an array that ECHOES every SUCCESSFULLY-added form, each with its server-assigned `workpaperId`/`id`/`wState` - it is NOT failures-only and it is NOT empty on full success. (The earlier doc claim that `result` lists only failed/flagged forms and that successful adds are silent is FALSE - do not reintroduce it.)",
+  "response_shape": "{\"result\": [...], \"statusCode\": ..., \"message\": ...}. `result` is an array that ECHOES every SUCCESSFULLY-added form, each with its server-assigned `workpaperId`/`id`/`wState` - it is NOT failures-only and it is NOT empty on full success.",
   "success_check": "Match each planned form's `referenceTag` to a `result[]` entry; that entry's `workpaperId` is the new form's id. Success is DIRECTLY VISIBLE in `result[]` - you do not need a separate GetBinder to confirm an add succeeded (though a re-GET still satisfies the universal re-GET-after-write doctrine and catches referenceTag mismatches).",
   "gotchas": [
     "The `index` field in the body is SILENTLY IGNORED. Set indexes via wpm_set_index endpoint after move.",
     "A form whose `referenceTag` is unrecognized simply will NOT appear in `result[]` - diff your planned referenceTags against the echoed ones to spot any that were skipped.",
-    "NEVER blind-retry the POST. Rationale is NOT 'successes are invisible' (they are visible in `result[]`) - it is that re-POSTing creates DUPLICATE forms (e.g. 3 POSTs = duplicate COR-216/KBA-303). If a parse looked confusing, read `result[]` for the echoed adds before retrying; on any genuine retry, pre-POST dedup-diff against the already-added referenceTags."
+    "NEVER blind-retry the POST — re-POSTing creates DUPLICATE forms (e.g. 3 POSTs = duplicate COR-216/KBA-303). If a parse looked confusing, read `result[]` for the echoed adds before retrying; on any genuine retry, pre-POST dedup-diff against the already-added referenceTags."
   ],
   "script_function": "scripts.kc.add_forms(eng_guid, forms, headers)"
 }

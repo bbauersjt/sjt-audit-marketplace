@@ -9,9 +9,8 @@
 # cch-axcess/references/architecture.md "Transport by origin".
 """Re-runnable capture of AUD-8xx program TAILORING QUESTIONS into program_question.
 
-WHY THIS EXISTS: the CCH tailoring-question set changes every year (new title
-release). This module makes the yearly re-capture reproducible and auditable
-instead of a pile of ad-hoc snippets. The seed it produces is data/seed/
+Rule: the CCH tailoring-question set changes every year (new title release) — re-run this
+capture each year rather than hand-patching the seed. The seed it produces is data/seed/
 program_question.csv, queried at runtime by program.py (NOT by reading MDs).
 
 SPLIT: the auth'd HTTP half runs in the user's Chrome tab (JS below); the parse/

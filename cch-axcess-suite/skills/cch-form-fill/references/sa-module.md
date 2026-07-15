@@ -1,6 +1,6 @@
 # Single Audit (8000) — Cross-Cutting Module
 
-Mapped from live forms (S-form series pulled cross-title). **A module, not a type** — it bolts onto a Govt or NPO engagement with federal awards. Same machinery as the FS audit (profile cluster, memo-format understanding/controls, default-Yes checklists, program pattern), driven by federal-awards facts.
+**A module, not a type** — it bolts onto a Govt or NPO engagement with federal awards. Same machinery as the FS audit (profile cluster, memo-format understanding/controls, default-Yes checklists, program pattern), driven by federal-awards facts.
 
 Trigger: scan the TB/SEFA for federal awards. None → skip the whole 8000 section. Any → open AUD-100S and the cascade.
 

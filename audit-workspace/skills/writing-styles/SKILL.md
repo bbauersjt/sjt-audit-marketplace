@@ -22,8 +22,6 @@ The firm's writing voice, one module per kind of deliverable. Governs how someth
 | Client or staff facing materials that aren't FS or formal letters: slides, presentations, training, resource docs, skill documentation, and internal how-to or reference write-ups | styles/client-facing.md |
 | The written parts of a financial statement set: footnotes and disclosures, accounting policy notes, MD&A type narrative, findings and responses | styles/financial-statements.md |
 
-Completed: workpapers; memos-emails (both halves); client-facing (presentations and staff-facing docs); financial-statements (notes across commercial/nonprofit/governmental, plus the findings schedule). All four style modules are built.
-
 ## Scope guardrails (all modules)
 
 Voice only. Apply wording and tone. Leave file format, pagination, table structure, and house formatting to the format skill that owns the document.
@@ -53,4 +51,7 @@ Cold, direct, concise. Say it once, in as few words as carry the meaning.
 
 ## Adding a style
 
-Create styles/<name>.md following the structure the existing modules use, then add a menu row. Keep each module to voice and wording, no formatting mechanics. Keep colons out of the description line in frontmatter or the YAML breaks.
+1. Create styles/<name>.md following the structure the existing modules use.
+2. Add a menu row.
+3. Keep the module to voice and wording only, no formatting mechanics.
+4. Keep colons out of the description line in frontmatter, or the YAML breaks.

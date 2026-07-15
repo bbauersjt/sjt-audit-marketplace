@@ -1,9 +1,10 @@
 # Math Protocol — the deterministic pipeline
 
-All arithmetic is done by scripts, never by the model. Do not mentally foot, cross-foot,
-or recompute anything from PDF text — run the pipeline and adjudicate its output.
-Rounding tolerance on footings is ZERO: a $1 difference is a finding. Rounding is an
-explanation, not an excuse.
+1. All arithmetic is done by scripts, never by the model — do not mentally foot,
+   cross-foot, or recompute anything from PDF text. Run the pipeline and adjudicate its
+   output.
+2. Rounding tolerance on footings is ZERO: a $1 difference is a finding. Rounding is an
+   explanation, not an excuse.
 
 ## Pipeline
 
@@ -43,25 +44,27 @@ For each `FAIL`:
 
 ## Adjudicating xref_report.json
 
-- `near_misses` are candidate broken ties (same caption, different amount, different
-  page). Verify each against the document; a confirmed mismatch is a finding with both
-  locations and both figures.
-- Use `amounts_index` to execute the tie list in `steps/xref.md` and the framework's
-  cross-reference additions: for each required tie, look the amount up in the index and
-  confirm it appears in both expected locations. An amount that should tie but appears
-  with different values in the two locations is a finding; an expected disclosure amount
-  that appears nowhere else may be a completeness question.
+1. `near_misses` are candidate broken ties (same caption, different amount, different
+   page). Verify each against the document; a confirmed mismatch is a finding with both
+   locations and both figures.
+2. Use `amounts_index` to execute the tie list in `steps/xref.md` and the framework's
+   cross-reference additions: for each required tie, look the amount up in the index and
+   confirm it appears in both expected locations. An amount that should tie but appears
+   with different values in the two locations is a finding; an expected disclosure amount
+   that appears nowhere else may be a completeness question.
 
 ## Multi-column statements (consolidating / combining / segment / WIP)
 
-Column mapping is geometric (right-edge clustering) and no longer needs the source
-Excel. Before relying on results for a 3+ column statement, sanity-check the printed
-column headers against `columns` in statements.json for that table. If extraction
-emitted warnings for the table, resolve them visually first.
+1. Column mapping is geometric (right-edge clustering) and does not need the source
+   Excel. Before relying on results for a 3+ column statement, sanity-check the printed
+   column headers against `columns` in statements.json for that table.
+1.1. If extraction emitted warnings for the table, resolve them visually first.
 
 ## When extraction fails a page
 
-If a page produces garbage (scanned image, unusual layout), do NOT fall back to mental
-math on raw text. Render the page, read the figures visually, hand-build that table in
-statements.json (or a small CSV), and re-run foot.py. The zero-tolerance rule only means
-something if every number that gets compared came through a deterministic path.
+1. If a page produces garbage (scanned image, unusual layout), do NOT fall back to
+   mental math on raw text.
+2. Render the page, read the figures visually, hand-build that table in statements.json
+   (or a small CSV), and re-run foot.py.
+2.1. The zero-tolerance rule only means something if every number that gets compared
+     came through a deterministic path.

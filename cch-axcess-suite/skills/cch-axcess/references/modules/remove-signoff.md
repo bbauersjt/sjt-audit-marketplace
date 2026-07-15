@@ -21,17 +21,10 @@ status: validated
 # Module — Remove Sign-Off (document-level, WPM)
 
 ## What this does
-Removes ONE document-level sign-off (preparer or reviewer) from a workpaper or KC form via
-`POST /v1/signoff/removeSignOff`. This is the operation behind the rule that when a form is
-modified, the prior sign-off is stale and comes off (KC's modified-after-signoff
-diagnostic already flags the form; removing the sign-off is the clean resolution).
-
-**Applying sign-offs is HUMAN-ONLY.** There is no add path in this module or in `wpm.py` by
-design. The add endpoints (`POST /v1/signoff/preparer`, `POST /v1/signoff/reviewer`) are recorded
-in `references/endpoints/signoff_remove.json` for completeness only.
-
-**In-form program-STEP sign-offs are a DIFFERENT thing** — those are KC UpdateProperty pt=3 cells
-(the `kc.py` leg), not this WPM document-level sign-off. Don't cross them.
+- Removes ONE document-level sign-off (preparer or reviewer) from a workpaper or KC form via `POST /v1/signoff/removeSignOff`.
+- Rule: when a form is modified, the prior sign-off is stale and comes off (KC's modified-after-signoff diagnostic already flags the form; removing the sign-off is the clean resolution).
+- **Applying sign-offs is HUMAN-ONLY.** There is no add path in this module or in `wpm.py` by design. The add endpoints (`POST /v1/signoff/preparer`, `POST /v1/signoff/reviewer`) are recorded in `references/endpoints/signoff_remove.json` for completeness only.
+- **In-form program-STEP sign-offs are a DIFFERENT thing** — those are KC UpdateProperty pt=3 cells (the `kc.py` leg), not this WPM document-level sign-off. Don't cross them.
 
 ## Prerequisites
 - Leg: `wpm` warm (Step 0). Rules 0–3 apply (SKILL.md).

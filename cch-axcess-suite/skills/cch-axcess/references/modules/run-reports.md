@@ -33,7 +33,8 @@ status: validated
 
 ## What this does
 
-Creates Trial Balance or Journal Entry reports via `workbench-api.cchaxcess.com` and files them into Unfiled Reports. Moving them into the correct binder folder and assigning a final workpaper index is a separate step using `scripts.wpm.move` + `scripts.wpm.set_index`.
+- Creates Trial Balance or Journal Entry reports via `workbench-api.cchaxcess.com` and files them into Unfiled Reports.
+- Moving them into the correct binder folder and assigning a final workpaper index is a separate step using `scripts.wpm.move` + `scripts.wpm.set_index`.
 
 Two report families:
 
@@ -210,13 +211,13 @@ sections = reports.group_by_leadsheet(all_groups)
 
 # 3. Build the firm-standard leadsheet columns (6, or 7 with comparative;
 #    TWO Remarks columns: REF + Notes)
-# current_period_id = engagement_id (e.g. 387698)
-# prior_period_id   = PY engagement_id (e.g. 381325)
+# current_period_id = engagement_id (e.g. 9900001)
+# prior_period_id   = PY engagement_id (e.g. 9900002)
 cols = reports.build_leadsheet_columns(
-    current_period_id=387698,
+    current_period_id=9900001,
     current_end_date="2025-12-31",
-    client_id=99286,
-    prior_period_id=381325,      # OMIT prior_* when no comparative TB is imported
+    client_id=9900003,
+    prior_period_id=9900002,      # OMIT prior_* when no comparative TB is imported
     prior_end_date="2024-12-31",
 )
 

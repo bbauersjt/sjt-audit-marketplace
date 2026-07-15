@@ -1,16 +1,18 @@
 # Industry Overlay — Construction Contractors
 
-Load whenever the package shows contractor signals: contract receivables, costs and
-estimated earnings in excess of billings (underbillings) or billings in excess of costs
-and estimated earnings (overbillings), retainage, a schedule of contracts in progress /
-completed contracts, percentage-of-completion or cost-to-cost language, backlog, surety
-or bonding references. Applies on top of the framework modules (usually commercial).
+1. Load this module whenever the package shows contractor signals: contract receivables,
+   costs and estimated earnings in excess of billings (underbillings) or billings in
+   excess of costs and estimated earnings (overbillings), retainage, a schedule of
+   contracts in progress / completed contracts, percentage-of-completion or
+   cost-to-cost language, backlog, surety or bonding references.
+2. Apply it on top of the framework modules (usually commercial).
 
 ## Job schedules (supplementary information)
 
-Contractor packages typically present two supplemental schedules. Both are in scope and
-both run through the deterministic pipeline — run `tie_wip.py` against the contracts-in-
-progress schedule and VERIFY its printed column mapping before trusting results.
+1. Contractor packages typically present two supplemental schedules. Both are in scope.
+2. Run both through the deterministic pipeline: run `tie_wip.py` against the
+   contracts-in-progress schedule and VERIFY its printed column mapping before trusting
+   results.
 
 ### Schedule of contracts in progress (WIP)
 
@@ -23,9 +25,10 @@ progress schedule and VERIFY its printed column mapping before trusting results.
 - gross profit to date = revenues earned − costs incurred to date
 - over/(under)billings = billings to date − revenues earned
 
-Adjudication: recompute diffs ≤ $2 are percent-rounding artifacts — note, don't flag
-unless pervasive. Anything larger is a finding (wrong percent, stale estimate, or a
-hand-keyed cell). Column footings are zero tolerance like everything else.
+Adjudication:
+- Recompute diffs ≤ $2 are percent-rounding artifacts — note, don't flag unless pervasive.
+- Anything larger is a finding (wrong percent, stale estimate, or a hand-keyed cell).
+- Column footings are zero tolerance like everything else.
 
 Then tie the schedule to the statements:
 

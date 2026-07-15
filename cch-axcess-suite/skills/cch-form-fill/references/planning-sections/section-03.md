@@ -2,7 +2,7 @@
 
 **Forms:** KBA-302 (Understanding the Entity & Environment), KBA-303 (Fraud/Noncompliance Inquiries), AID-837 (Governance Minutes Review). Risk-factor outputs feed the risk-assessment process (KBA-502/503).
 
-Live counts: KBA-302 = **690 fillable** (222 selects + 468 texts, in ~7 categories), KBA-303 = 117, AID-837 = 12. KBA-302's size is an illusion — the **memo-format toggle** (see below) collapses each category's line-items to one narrative.
+**Rule: KBA-302's box count is an illusion** — the **memo-format toggle** (see below) collapses each category's line-items to one narrative.
 
 ---
 

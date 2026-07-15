@@ -1,7 +1,7 @@
 {
   "name": "audit-sampling",
   "description": "Identify, plan, and pull audit samples — FS substantive (fs-*), walkthrough/static (wt-*), employee benefit plan (ebp-*), single audit (sa-*), and other compliance (other-*) methods. Picks the smallest defensible sample, runs standard population cleanup, delivers Excel output.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "SJT Group CPA",
     "email": "bbauer@sjtgroupcpa.com"

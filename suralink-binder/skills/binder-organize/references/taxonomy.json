@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "_comment": "Binder taxonomy for the binder-organize skill. Conformed to the cch-axcess skill's binder templates (binder-template.xlsx standard / binder-program-template-ebp.xlsx EBP) — those templates are the ruled index; fix drift HERE to the template, never the other way (BB 2026-07-08). Section folders use 4-digit indexes so the organized folder matches the firm's CCH Axcess binders. Folder labels may be shortened versions of the template group names; the index is the identity. Edit this file to retune categories, keywords, or naming WITHOUT touching skill code. Folder name = '<index> <name>'.",
+  "_comment": "Binder taxonomy for the binder-organize skill. Conformed to the cch-axcess skill's binder templates (binder-template.xlsx standard / binder-program-template-ebp.xlsx EBP) — those templates are the ruled index; fix drift HERE to the template, never the other way. Section folders use 4-digit indexes so the organized folder matches the firm's CCH Axcess binders. Folder labels may be shortened versions of the template group names; the index is the identity. Edit this file to retune categories, keywords, or naming WITHOUT touching skill code. Folder name = '<index> <name>'.",
 
   "folder_name_format": "{index} {name}",
 

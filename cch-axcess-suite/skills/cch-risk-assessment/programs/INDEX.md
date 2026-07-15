@@ -90,13 +90,4 @@ The AUD-8xx **numbers below are the NPO (Not-for-Profit) title's numbering** and
 
 The skeletons above cover the common cross-title program set. Add new MDs as industry-specific forms are encountered.
 
-## Why this matters
-
-The skill's long-term value comes from these program MDs being filled out completely. When complete, Claude can:
-
-- Apply firm-standard default step selection to a new engagement's programs in one pass
-- Suggest typical responses to tailoring questions per audit type
-- Pre-fill the typical workpaper reference for each step
-- Verify step→assertion linkages match the firm's norm
-
-Until then, each MD is partial. Use what's there; flag what isn't.
+Each MD is partial until captured. Use what's there; flag what isn't.

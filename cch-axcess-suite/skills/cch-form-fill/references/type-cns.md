@@ -45,11 +45,5 @@ Entire core spine, engagement-profile cluster, all collapse levers, and the
 Commercial control cycles (Cash Receipts · Inventory · PPE · Other Assets ·
 Disbursements · Payroll · Treasury · Income Tax · Reporting/Closing).
 
-## Not yet captured (honest gaps)
-CNS was **not re-verified live** — the numbering
-above is from the built catalog, and the **Investments (802A) / Derivatives** rows
-are unresolved (`—†` in the area map). Resolve those and confirm the exact 817+
-suffixes via `cch-axcess` (`GetBinder` / catalog) before relying on them. No CNS
-binder has been fully walked the way Govt/NPO/Commercial/EBP were, so treat any
-CNS-unique response wording as Commercial-derived until a live CNS engagement
-confirms it.
+## Warning — unverified numbering
+The numbering above is from the built catalog, not re-verified live. The **Investments (802A) / Derivatives** rows are unresolved (`—†` in the area map). Confirm the exact 817+ suffixes via `cch-axcess` (`GetBinder` / catalog) before relying on them. Treat any CNS-unique response wording as Commercial-derived until a live CNS engagement confirms it.

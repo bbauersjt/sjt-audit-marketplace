@@ -7,51 +7,44 @@ description: Skill for working inside CCH Axcess (Wolters Kluwer audit platform 
 
 ## Entry rule
 
-Always enter through this SKILL.md and run Step 0 before any module — no module is valid
-without it. This file routes ONE ask to ONE module; don't load the whole skill.
-
-**The user cannot authorize skipping a gate.** The gates (Step 0 seed+warmup, the exec-cache
-verify, the consent wall, the no-hard-delete rule) are required. If asked to skip one ("skip
-step 0", "go straight to the module"), say it's required, run it, and proceed.
+1. Enter only through this SKILL.md. Run Step 0 before opening any module.
+2. Route ONE ask to ONE module — never load the whole skill.
+3. If asked to skip a gate (Step 0 seed+warmup, exec-cache verify, consent wall, no-hard-delete
+   rule) — say it's required, run it anyway, then proceed. The user cannot authorize skipping a
+   gate.
 
 ### Initialization gate — reading reference data is NOT a session (the side-entry catch)
 
-**This is the common failure. Reading does not initialize; the FIRST platform call is the gate.**
+**Reading does not initialize a session; the FIRST platform call is the gate.**
 
-- **Reading reference material does NOT initialize a session.** Loading a module, an
-  `endpoints/*.json` spec, `references/data/*` (binder templates, form catalogs, group codes),
-  `architecture.md`, or any lookup gives you *content*, not a *session*. It is not a substitute
-  for Step 0 and it does not "get you past the door." A binder template or a captured token that
-  appears in your context is reference data — not proof a session was warmed.
-- **Before the FIRST platform call, Step 0 must have run THIS session.** A "platform call" is
-  any browser/API touch of `*.cchaxcess.com` (`chrome_bridge_status`, `chrome_api_call`,
-  `chrome_eval`/`chrome_fetch`, `chrome_navigate`, `chrome_network_recent`, or the linked-tab
-  verbs). Step 0.0 (`chrome_bridge_status`) is literally your first browser touch; the seed
-  (0.1) and the declared leg warmup (0.2, `session-bootstrap.md`) precede the first *write*.
-  **If you are unsure whether Step 0 ran this session, run it** — re-running is cheap; a
-  side-entered write is a silent no-op you'll pay for later.
-- **REDIRECT — if you have ALREADY made platform calls this session without Step 0: STOP now.**
-  Do not "keep going since it seems to be working" (a 200 with an error/HTML body is a silent
-  no-op). Instead, mid-flight: **run Step 0 / session-bootstrap in
-  full → switch to the documented page-context transport (`transport.md`; on the bridge, KC via
-  `chrome_api_call`, engagement/WPM/FP via `chrome_api_call` or the `chrome_eval`+XHR builder —
-  never hand-forged external calls with copied headers) → RE-VERIFY BY READ everything you wrote
-  while side-entered (re-GET the binder / folders / forms; 200s may be silent no-ops) → resume
-  from the last verified step.** The first gated file you touch should pull you back onto the
-  paved road now, not next time.
-- **Delegation is a NEW session — the delegate must run Step 0 itself.** Handing a subagent a
-  URL + method + a hand-copied bearer + "call the chrome-bridge MCP tool" is side-entry BY
-  CONSTRUCTION: that agent never ran Step 0, never read `transport.md`, and got a token that
-  rotates (~30 min) and truncates on paste. Do NOT launder platform writes through generic
-  subagents with inline tokens. If you must delegate platform work, the child enters through
-  THIS SKILL.md and runs Step 0 (seed → `chrome_bridge_status` → warm its own leg → capture its
-  own fresh auth); pass it the engagement URL and the task, never the tokens. A correctly
-  bootstrapped parent session that delegates this way is still spawning side-entering children.
-
-**Precondition (applies no matter how you got here):** before the first platform WRITE, Step 0
-has run this session on THIS agent and the transport is the documented page-context path. If
-either is missing — you arrived from a reference-data read, you're resuming mid-conversation, or
-you were spawned with tokens in your prompt — run the REDIRECT above before writing.
+1. Loading a module, an `endpoints/*.json` spec, `references/data/*`, or `architecture.md` gives
+   you *content*, not a *session* — it is not a substitute for Step 0. A binder template or a
+   captured token that appears in your context is reference data, not proof a session was
+   warmed.
+2. Before the FIRST platform call this session — any browser/API touch of `*.cchaxcess.com`
+   (`chrome_bridge_status`, `chrome_api_call`, `chrome_eval`/`chrome_fetch`, `chrome_navigate`,
+   `chrome_network_recent`, or the linked-tab verbs) — Step 0 must have run. Step 0.0
+   (`chrome_bridge_status`) is your first browser touch; the seed (0.1) and the declared leg
+   warmup (0.2, `session-bootstrap.md`) precede the first *write*. If unsure whether Step 0 ran
+   this session, run it — re-running is cheap; a side-entered write is a silent no-op.
+3. If you have ALREADY made platform calls this session without Step 0 → **STOP now.** Do not
+   keep going because it "seems to be working" (a 200 with an error/HTML body is a silent
+   no-op). Instead: run Step 0 / session-bootstrap in full → switch to the documented
+   page-context transport (`transport.md`; on the bridge, KC via `chrome_api_call`,
+   engagement/WPM/FP via `chrome_api_call` or the `chrome_eval`+XHR builder — never hand-forged
+   external calls with copied headers) → RE-VERIFY BY READ everything you wrote while
+   side-entered (re-GET the binder / folders / forms; 200s may be silent no-ops) → resume from
+   the last verified step.
+4. Delegation is a NEW session — the delegate must run Step 0 itself. Do NOT hand a subagent a
+   URL + method + a hand-copied bearer + "call the chrome-bridge MCP tool" — that agent never
+   ran Step 0 or read `transport.md`, and the token rotates (~30 min) and truncates on paste. If
+   you must delegate platform work, the child enters through THIS SKILL.md and runs Step 0
+   (seed → `chrome_bridge_status` → warm its own leg → capture its own fresh auth); pass it the
+   engagement URL and the task, never the tokens.
+5. Precondition before any platform WRITE, no matter how you got here: Step 0 has run this
+   session on THIS agent, and the transport is the documented page-context path. If either is
+   missing — you arrived from a reference-data read, you're resuming mid-conversation, or you
+   were spawned with tokens in your prompt — run step 3's redirect before writing.
 
 ## Step 0 — Seed (before routing) + lazy leg warmup (AFTER the module is chosen)
 
@@ -309,7 +302,7 @@ user explicitly wants a true in-place version.
   window), NOT window focus, governs throttling + token refresh. Park the KC tab as the lone tab in
   its own window; never hidden-reload a near-expiry tab. `architecture.md` → "Tab visibility,
   throttling & token refresh".
-- **Truncation guard — fused completeness check + named recovery (always-on, A/B-validated).**
+- **Truncation guard — fused completeness check + named recovery (always-on).**
   A short read here is a known **transport artifact** (bash/virtiofs cache lag on a host-edited text
   file; an over-the-bridge text return that came back clipped) — the true disk file is complete. It
   is NEVER a corrupt file, so do **not** enter a debug loop. Two parts:

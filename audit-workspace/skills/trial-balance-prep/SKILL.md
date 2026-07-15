@@ -6,7 +6,7 @@ description: Prepare any client trial balance for the firm's grouping index and 
 # Trial Balance Prep
 
 Takes whatever TB a client (or a prior system) hands you and prepares it for the
-firm's 4-digit grouping index and for CCH Axcess import. It does four jobs; a run
+firm's 4-digit grouping index and for CCH Axcess import. Four jobs; a run
 usually chains a couple of them.
 
 - **A — Import / roll forward** a current-year TB against a prior-year reference:
@@ -19,76 +19,70 @@ usually chains a couple of them.
 - **D — Funds** — build a fund TB (type › fund) from a Caseware or pasted grouped
   TB, and, if the engagement needs it, a standalone fund import.
 
-## Figure out which jobs this run needs
+## 1. Pick which jobs this run needs
 
-Read what the user gave you before asking much:
+1. A QuickBooks TB + a prior-year firm TB → **A**, usually finished with **C**.
+2. A TB whose grouping/leadsheet column holds old letter/number codes → **B**.
+3. "Make this importable / format for CCH" → **C** (preceded by A or B if the TB
+   isn't mapped/grouped yet).
+4. Multiple funds, or a governmental / multi-fund client, or a Caseware export →
+   **D**, layered onto B/C.
+5. Confirm the plan in one line before doing the work. When the request is
+   unambiguous (a lone QB TB + PY reference "to import"), proceed without asking.
 
-- A QuickBooks TB + a prior-year firm TB → **A**, usually finished with **C**.
-- A TB whose grouping/leadsheet column holds old letter/number codes → **B**.
-- "Make this importable / format for CCH" → **C** (preceded by A or B if the TB
-  isn't mapped/grouped yet).
-- Multiple funds, or a governmental / multi-fund client, or a Caseware export →
-  **D**, layered onto B/C.
-
-Confirm the plan in one line before doing the work. When the request is
-unambiguous (a lone QB TB + PY reference "to import"), just proceed.
-
-## CaseWare source? Extract first — don't ask
+## 2. CaseWare source? Extract first — don't ask
 
 If the prior year (or the TB itself) lives in a **CaseWare Working Papers folder
 copy** — the user points at one, mentions "the CaseWare file", or a folder in play
 contains `*SH.dbf`/`*am.dbf` — do **not** ask for pasted grouped TBs, leadsheet
-legends, folder-tree screenshots, or exports. Run the **`caseware-crosswalk`
-skill's TB extract** against that folder:
+legends, folder-tree screenshots, or exports.
 
+1. Run the **`caseware-crosswalk` skill's TB extract** against that folder:
 ```
 python <skills>/caseware-crosswalk/scripts/cw_tb_extract.py "<caseware folder>" [--out DIR]
 ```
+   (If `_tb_extract.json` already sits in the folder, just read it.)
+2. It supplies, per account: number, name, L/S code (`leadsheet`), extra groupings
+   (`group2` is the firm 4-digit index where the file was already converted), fund
+   + fund name, BS/IS type, and final balances for the file year + 4 prior
+   (`cy_final`, `py1_final`…), plus a `funds` list (number, name, master/child) and
+   AJE detail. Credits are negative — already the CCH sign convention.
+3. Feed it into the jobs:
+   - **Job A** — the extract *is* the PY reference: match on `account`/`description`,
+     inherit `leadsheet`, use `cy_final` as the PY balance column.
+   - **Job B** — the extract *is* the legend: each unique `leadsheet` code with the
+     account names carrying it gives the code's meaning for this client. The
+     engagement's `_crosswalk.json` (crosswalk mode of the same skill) names the
+     lead documents too — `<code>-LEAD` → "Revenue lead schedule" etc. — use those
+     as the code labels when present. If `group2` is already 4-digit, job B may be
+     a no-op; verify against the firm index instead of converting.
+   - **Job D** — the extract's `funds` list is the fund set; account `fund` prefixes
+     give the Fund Index. No screenshot needed. Fund *type* layering (general /
+     special revenue / enterprise…) is not in the extract — still confirm types
+     with the user or the prior FS.
+4. Only fall back to asking when no CaseWare folder copy (with its DBF files) is
+   available.
 
-(If `_tb_extract.json` already sits in the folder, just read it.) It supplies,
-per account: number, name, L/S code (`leadsheet`), extra groupings (`group2` is
-the firm 4-digit index where the file was already converted), fund + fund name,
-BS/IS type, and final balances for the file year + 4 prior (`cy_final`,
-`py1_final`…). Plus a `funds` list (number, name, master/child) and AJE detail.
-Credits are negative — already the CCH sign convention.
-
-Feed it into the jobs:
-- **Job A** — the extract *is* the PY reference: match on `account`/`description`,
-  inherit `leadsheet`, use `cy_final` as the PY balance column.
-- **Job B** — the extract *is* the legend: each unique `leadsheet` code with the
-  account names carrying it gives the code's meaning for this client. The
-  engagement's `_crosswalk.json` (crosswalk mode of the same skill) names the
-  lead documents too — `<code>-LEAD` → "Revenue lead schedule" etc. — use those
-  as the code labels when present. If `group2` is already 4-digit, job B may be
-  a no-op; verify against the firm index instead of converting.
-- **Job D** — the extract's `funds` list is the fund set; account `fund` prefixes
-  give the Fund Index. No screenshot needed. Fund *type* layering (general /
-  special revenue / enterprise…) is not in the extract — still confirm types
-  with the user or the prior FS.
-
-Only fall back to asking when no CaseWare folder copy (with its DBF files) is
-available.
-
-## Inputs
+## 3. Inputs
 
 1. **The TB to work on** — Excel, `.xlsm`, CSV, TSV, or pasted. Any source system.
 2. **A prior-year reference TB** (for job A) — the firm-format structure to match
    against. Used for leadsheet inheritance, rename detection, number recovery.
    The PY balance need not appear in the output. If the user asks to import/roll
    and gives only the CY TB, check for a CaseWare folder copy to extract from
-   (see above) before asking for the PY reference.
+   (§2) before asking for the PY reference.
 3. **The legend** (for job B) — a grouped or summary TB for the same client where
    each group row reads `<old code>  <group name>`, or a copied leadsheet group.
    This is how the skill learns what each old code means *for this client*. A
-   CaseWare TB extract serves as the legend (see above); otherwise ask for it
+   CaseWare TB extract serves as the legend (§2); otherwise ask for it
    before converting if only the account-level TB was given.
 4. **Entity type** — EBP (defined-contribution plan) vs standard (commercial /
    nonprofit / governmental). Drives which grouping index and which sheet.
    Propose from the TB if obvious; confirm before converting.
 5. **Fund info** (for job D) — often inferable from the TB or a CaseWare TB
-   extract; only ask for a folder-tree screenshot when neither exists (see job D).
+   extract; only ask for a folder-tree screenshot when neither exists (§ D1).
 
-## Upfront questions — batch once
+## 4. Upfront questions — batch once
 
 Ask only what this run needs, in a single prompt:
 
@@ -107,24 +101,22 @@ Ask only what this run needs, in a single prompt:
 ## Job A — Import / roll forward against a prior-year reference
 
 ### A1. Inspect both TBs
-Read both files first and report a compact structure summary before writing
-anything. For each: account numbers present? numbering ranges by type? a
-leadsheet column (`Leadsheet`/`L/S`/`Lead`/`LS`)? grouping? single balance vs
-Dr/Cr? sign convention (are liab/equity/revenue negative or positive)? subtotal
-/ header / footer rows mixed in?
-
-**QuickBooks specifics:**
-- Numbers are often embedded in the name string (`11111 BkAm Checking`, or
-  `11100 BANK ACCOUNTS:11111 BkAm Checking`). Parse the leaf with
-  `^(\d{4,6})\s+(.*)$`.
-- Rows are nested colon paths (`Parent:Child:Leaf`). Zero-balance rollup parents
-  are display artifacts — drop them. A parent row *with* a balance is either a
-  legit sub-account parent (PY had it too — normal) or a true misposting to a
-  rollup (new — concerning). Tell them apart by whether PY had that account with
-  a balance.
-- QB TBs usually have separate Dr/Cr columns → signed balance = `debit - credit`.
-
-Flag any imbalance immediately (does the balance column sum to zero?).
+1. Read both files first and report a compact structure summary before writing
+   anything. For each: account numbers present? numbering ranges by type? a
+   leadsheet column (`Leadsheet`/`L/S`/`Lead`/`LS`)? grouping? single balance vs
+   Dr/Cr? sign convention (are liab/equity/revenue negative or positive)? subtotal
+   / header / footer rows mixed in?
+2. **QuickBooks specifics:**
+   - Numbers are often embedded in the name string (`11111 BkAm Checking`, or
+     `11100 BANK ACCOUNTS:11111 BkAm Checking`). Parse the leaf with
+     `^(\d{4,6})\s+(.*)$`.
+   - Rows are nested colon paths (`Parent:Child:Leaf`). Zero-balance rollup parents
+     are display artifacts — drop them. A parent row *with* a balance is either a
+     legit sub-account parent (PY had it too — normal) or a true misposting to a
+     rollup (new — concerning). Tell them apart by whether PY had that account with
+     a balance.
+   - QB TBs usually have separate Dr/Cr columns → signed balance = `debit - credit`.
+3. Flag any imbalance immediately (does the balance column sum to zero?).
 
 ### A2. Map accounts (priority order)
 1. Exact account-number match (highest confidence even if names differ).
@@ -132,33 +124,32 @@ Flag any imbalance immediately (does the balance column sum to zero?).
 3. High-confidence fuzzy name match ("Accts Receivable" ↔ "Accounts Receivable").
 4. Amount-based disambiguation via a PY client-format TB, if provided.
 5. Name match for unnumbered CY rows → recover the PY number.
-
-Record for each: source row, matched PY # and name, method, confidence.
-Unmatched → new-accounts list (A3).
-
-**Renames — defer to CY, flag only category jumps.** When CY matches PY by number
-but names differ, use the CY name silently. Flag only renames that cross
-Asset / Liability / Equity / Revenue / Expense / Payroll boundaries given the
-number's range (e.g. a 59xxx payroll account renamed to "Professional Fees").
-Within-type renames are silent.
-
-**Absurdly nested names — ask.** If the CY QB path is 4+ levels deep and PY had a
-clean single-level name, pause and ask: keep full path / use CY leaf / use PY
-name. For 1–3 level paths that de-path cleanly, just take the leaf.
+6. Record for each: source row, matched PY # and name, method, confidence.
+   Unmatched → new-accounts list (A3).
+7. **Renames — defer to CY, flag only category jumps.** When CY matches PY by number
+   but names differ, use the CY name silently. Flag only renames that cross
+   Asset / Liability / Equity / Revenue / Expense / Payroll boundaries given the
+   number's range (e.g. a 59xxx payroll account renamed to "Professional Fees").
+   Within-type renames are silent.
+8. **Absurdly nested names — ask.** If the CY QB path is 4+ levels deep and PY had a
+   clean single-level name, pause and ask: keep full path / use CY leaf / use PY
+   name. For 1–3 level paths that de-path cleanly, just take the leaf.
 
 ### A3. Assign account numbers to new accounts
-For truly-unnumbered CY accounts (no embedded number, no PY name match): infer the
-type from the name, find the best sub-range, assign the next free number, log the
-rationale. If no sub-range fits or it's full, pause and propose. A CY account that
-arrived *with* a number but has no PY match is a new client-numbered account — use
-their number, log as client-provided.
+1. For truly-unnumbered CY accounts (no embedded number, no PY name match): infer the
+   type from the name, find the best sub-range, assign the next free number, log the
+   rationale.
+2. If no sub-range fits or it's full, pause and propose.
+3. A CY account that arrived *with* a number but has no PY match is a new client-numbered
+   account — use their number, log as client-provided.
 
 ### A4. Assign leadsheets (if opted in)
-Mapped accounts inherit the matched PY leadsheet. New accounts take the leadsheet
-of neighbors in the same sub-range (±100 / ±500): unanimous → silent; dominant
-(≥67%) → propose with rationale; mixed → propose the plurality and surface it.
-If PY had no leadsheet column but the user wants leadsheets, ask for a mapping.
-Log every assignment.
+1. Mapped accounts inherit the matched PY leadsheet.
+2. New accounts take the leadsheet of neighbors in the same sub-range (±100 / ±500):
+   unanimous → silent; dominant (≥67%) → propose with rationale; mixed → propose the
+   plurality and surface it.
+3. If PY had no leadsheet column but the user wants leadsheets, ask for a mapping.
+4. Log every assignment.
 
 ---
 
@@ -171,68 +162,63 @@ were 1–2 digit numbers (`10` revenue, `40` expenses), sometimes with sub-codes
 
 **Context-driven, never a fixed table.** The old codes were never applied
 consistently across clients — the same letter means different things on different
-engagements. Every run is grounded in *this client's own legend*. There is no
-master old→new table and you must never build one as if permanent. The convention
+engagements. Ground every run in *this client's own legend*. There is no
+master old→new table; never build one as if permanent. The convention
 table at the end is only a weak fallback for when no legend exists.
 
 ### B1. Detect the code format
-`python scripts/tb_io.py inspect "<TB>" ["<legend>"]` lists the unique codes and
-classifies the column:
-- **new** — all 4-digit → already converted; say so and stop.
-- **legacy** — letters / 1–2 digit / sub-codes → proceed.
-- **mixed** — both styles or unrecognized values → do not auto-resolve; list the
-  offending rows and ask how to proceed.
-- **empty** — nothing to convert.
+1. Run `python scripts/tb_io.py inspect "<TB>" ["<legend>"]` — it lists the unique
+   codes and classifies the column:
+   - **new** — all 4-digit → already converted; say so and stop.
+   - **legacy** — letters / 1–2 digit / sub-codes → proceed.
+   - **mixed** — both styles or unrecognized values → do not auto-resolve; list the
+     offending rows and ask how to proceed.
+   - **empty** — nothing to convert.
 
 ### B2. Build the legend (old code → meaning)
-The script parses the grouped/summary TB into `{old_code: label}` best-effort.
-**Always open the legend yourself and confirm it** — a mislabelled code poisons the
-match. Per unique code, take the meaning from: the parsed label → else the account
-names carrying that code → else mark unresolved.
+1. Run the script to parse the grouped/summary TB into `{old_code: label}` best-effort.
+2. **Always open the legend yourself and confirm it** — a mislabelled code poisons the
+   match. Per unique code, take the meaning from: the parsed label → else the account
+   names carrying that code → else mark unresolved.
 
 ### B3. Convert by code (not by row)
-Every account sharing an old code gets the same new index. Load the right index
-(`load_index()`; for EBP drop the `6000`/`9000` audit rows; for standard pick
-`Natural` or `Governmental`). For each unique code, match its meaning against the
-index `Group Name`:
-- single clear winner → assign it (high);
-- several plausible → pick closest, record alternatives (medium, surface);
-- none fit but the meaning clearly sits in a range → generate the next free code
-  in that range (medium, surface);
-- meaning/range unclear → unresolved (low, surface).
-
-The matched Group Name is **sticky** — it becomes the new index's description.
-Sub-codes (`B.1`) each expand to their own 4-digit code within the parent's range.
-Never reuse a 4-digit code for two meanings in one run.
+1. Every account sharing an old code gets the same new index.
+2. Load the right index (`load_index()`; for EBP drop the `6000`/`9000` audit rows; for
+   standard pick `Natural` or `Governmental`).
+3. For each unique code, match its meaning against the index `Group Name`:
+   - single clear winner → assign it (high);
+   - several plausible → pick closest, record alternatives (medium, surface);
+   - none fit but the meaning clearly sits in a range → generate the next free code
+     in that range (medium, surface);
+   - meaning/range unclear → unresolved (low, surface).
+4. The matched Group Name is **sticky** — it becomes the new index's description.
+5. Sub-codes (`B.1`) each expand to their own 4-digit code within the parent's range.
+6. Never reuse a 4-digit code for two meanings in one run.
 
 ---
 
 ## Job C — Build the CCH import file
 
 Read `references/cch-import-formats.md` for the full column specs and constraints.
-Summary:
 
-**Pick the tier:** **Basic** (account #, name, balance), **Grouped** (+ PY, group
-& subgroup index/name, classification), or **Fund** (+ Fund Index). Each is a
-superset of the one above.
-
-**Classification** — the 10-way column (`CA NA CL NL EQ REV COR OI OPX OE` from
-`default-classes.xlsx`). The grouping index only carries a coarse class, so
-resolving it needs two judgment calls it does not store: **current vs non-current**
-(every asset & liability) and **operating vs cost-of-revenue vs other** (every
-income-statement line). `tb_io.guess_class(coarse, group_name, account_name)`
-returns a `(abbrev, confidence, note)` hint; confirm anything below `high`. Never
-write a value that isn't in `default-classes.xlsx`.
-
-**Hard constraints** (violate one and the import fails):
-- No freeze panes (silent reject). Header in row 1, nothing above it.
-- Single balance column; **debits positive, credits negative**.
-- Unique account names; account number stays text (leading zeros / dash prefixes).
-- Accounting number format on balances; balances net to zero (per fund too).
-
-`tb_io.write_cch_import(out_path, tier, rows)` bakes every constraint in and
-returns `{tier, rows, total, by_fund}` — check `total` (and each `by_fund`) is
-`0.00` before delivery.
+1. **Pick the tier:** **Basic** (account #, name, balance), **Grouped** (+ PY, group
+   & subgroup index/name, classification), or **Fund** (+ Fund Index). Each is a
+   superset of the one above.
+2. **Classify each row** — the 10-way column (`CA NA CL NL EQ REV COR OI OPX OE` from
+   `default-classes.xlsx`). The grouping index only carries a coarse class, so
+   resolving it needs two judgment calls it does not store: **current vs non-current**
+   (every asset & liability) and **operating vs cost-of-revenue vs other** (every
+   income-statement line). Call `tb_io.guess_class(coarse, group_name, account_name)`;
+   it returns a `(abbrev, confidence, note)` hint — confirm anything below `high`. Never
+   write a value that isn't in `default-classes.xlsx`.
+3. **Hard constraints** (violate one and the import fails):
+   - No freeze panes (silent reject). Header in row 1, nothing above it.
+   - Single balance column; **debits positive, credits negative**.
+   - Unique account names; account number stays text (leading zeros / dash prefixes).
+   - Accounting number format on balances; balances net to zero (per fund too).
+4. Call `tb_io.write_cch_import(out_path, tier, rows)` — it bakes every constraint in and
+   returns `{tier, rows, total, by_fund}`. Check `total` (and each `by_fund`) is
+   `0.00` before delivery.
 
 ---
 
@@ -242,51 +228,50 @@ Produce the **Fund** tier when the engagement has multiple funds. The two Casewa
 grouping layers map to **type › fund** (outer folder = fund type, inner = fund).
 
 ### D1. Determine the Fund Index — infer, then confirm
-`tb_io.scan_fund_patterns(accounts)` reports the dominant pattern, fund set, and
-coverage. Sources, in order of what you were given:
-1. **CaseWare TB extract** — if a CaseWare folder copy exists, the extract's
-   `funds` list (number + name) and per-account `fund` column ARE the fund set
-   and Fund Index. Use them; don't ask.
-2. **Account-number pattern** — `100-10000` (prefix) or `10000-100` (suffix). High
-   coverage + one consistent pattern → proceed, stating what you inferred.
-3. **Fund names on the TB** — some client TBs name the fund in a column or in the
-   account name instead of the number. Map each name to an index with the user.
-4. **Comparative / pasted Caseware TB** — if the user gave a grouped or pasted
-   Caseware TB, infer the fund from it too.
-5. **Caseware folder tree screenshot** — last resort, only when no folder copy
-   with DBFs exists: ask the user for a screenshot of the tree, then read the
-   two layers as type › fund.
-
-Match confidence to behavior: confident → state the inference and proceed;
-uncertain → confirm; no signal → ask upfront. Don't invent a fund silently.
+1. Run `tb_io.scan_fund_patterns(accounts)` — it reports the dominant pattern, fund set, and
+   coverage.
+2. Sources, in order of what you were given:
+   - **CaseWare TB extract** — if a CaseWare folder copy exists, the extract's
+     `funds` list (number + name) and per-account `fund` column ARE the fund set
+     and Fund Index. Use them; don't ask.
+   - **Account-number pattern** — `100-10000` (prefix) or `10000-100` (suffix). High
+     coverage + one consistent pattern → proceed, stating what you inferred.
+   - **Fund names on the TB** — some client TBs name the fund in a column or in the
+     account name instead of the number. Map each name to an index with the user.
+   - **Comparative / pasted Caseware TB** — if the user gave a grouped or pasted
+     Caseware TB, infer the fund from it too.
+   - **Caseware folder tree screenshot** — last resort, only when no folder copy
+     with DBFs exists: ask the user for a screenshot of the tree, then read the
+     two layers as type › fund.
+3. Match confidence to behavior: confident → state the inference and proceed;
+   uncertain → confirm; no signal → ask upfront. Don't invent a fund silently.
 
 ### D1a. Drop dormant funds — always, for anything imported into CCH
-Legacy files (CaseWare especially) carry years of dead funds. Before writing any
-CCH deliverable, run `tb_io.drop_dormant_funds(rows)`: it drops every fund whose
-accounts are **all zero in both the CY balance and the PY balance**, and returns
-the dropped fund indexes. A fund with zero CY but real PY amounts survives — its
-comparative is live. Dormant funds also stay out of the standalone fund import
-(D2). Don't ask permission; just report the dropped funds in one line of the run
-summary ("dropped N dormant funds: 003, 016, …") so nothing vanishes silently.
-This is an import rule only — extracts, crosswalks, and review workbooks still
-show everything.
+1. Before writing any CCH deliverable, run `tb_io.drop_dormant_funds(rows)`: it drops
+   every fund whose accounts are **all zero in both the CY balance and the PY
+   balance**, and returns the dropped fund indexes. A fund with zero CY but real PY
+   amounts survives — its comparative is live.
+2. Dormant funds also stay out of the standalone fund import (D2).
+3. Don't ask permission; report the dropped funds in one line of the run
+   summary ("dropped N dormant funds: 003, 016, …") so nothing vanishes silently.
+4. This is an import rule only — extracts, crosswalks, and review workbooks still
+   show everything.
 
 ### D2. Standalone fund import (ask)
-Always ask whether the engagement also needs a **fund import** — 4 required columns:
-Fund Type Index / Fund Type Name / Fund Index / Fund Name. From a CaseWare TB
-extract this builds itself: the `funds` list carries the consolidation hierarchy
-(root/master/child + `fund_type`), and CaseWare's two layers map onto CCH's two —
-masters → fund types, children → funds:
-
+1. Always ask whether the engagement also needs a **fund import** — 4 required columns:
+   Fund Type Index / Fund Type Name / Fund Index / Fund Name.
+2. From a CaseWare TB extract this builds itself: the `funds` list carries the
+   consolidation hierarchy (root/master/child + `fund_type`), and CaseWare's two
+   layers map onto CCH's two — masters → fund types, children → funds:
 ```python
 conv = tb_io.funds_from_cw_extract(extract["funds"])
 tb_io.write_fund_list(out_path, conv["rows"])
 ```
-
-Surface `conv["warnings"]` — orphan funds (no master in CaseWare) get promoted to
-their own fund type; ask whether to re-home them (e.g. several special-revenue
-funds under one type). Without a CaseWare extract, gather types/funds from the TB
-or prior FS and build the rows by hand.
+3. Surface `conv["warnings"]` — orphan funds (no master in CaseWare) get promoted to
+   their own fund type; ask whether to re-home them (e.g. several special-revenue
+   funds under one type).
+4. Without a CaseWare extract, gather types/funds from the TB or prior FS and build
+   the rows by hand.
 
 ---
 

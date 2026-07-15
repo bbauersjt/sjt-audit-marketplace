@@ -5,19 +5,19 @@ description: Comprehensive technical proof and review of a governmental financia
 
 # Governmental Financial Statement Technical Review
 
-**GOVERNMENTAL FINANCIAL STATEMENT TECHNICAL REVIEW**
-
-*AI Review Prompt — Quality Control Procedures*
-
-Version 2.0  |  For use with Claude or equivalent LLM
-
-**PURPOSE:** This document is a structured prompt instructing an AI model to perform a comprehensive technical proof and review of a governmental financial statement package. The output is intended to assist a preparer in locating issues in the financial statements — either after a first pass or as a final proof before turning the package over to QC. It is not a substitute for human quality control; actual QC is performed by qualified personnel. This prompt focuses on the document itself and what is wrong with it. Paste this prompt into the AI, then provide or attach the financial statements for review. The AI will request additional supporting documents before beginning, adapt its procedures based on entity type and audit type, and issue warnings where supporting documents are absent.
+Not a substitute for human QC — output assists a preparer locating issues before handoff to QC.
 
 # AI BEHAVIOR AND OUTPUT FORMATTING
 
 ## Narration and Commentary
 
-Keep chat output minimal. Do not narrate each procedure as it is performed, do not provide running commentary on findings or hypotheses, and do not summarize or editorialize on results at the end. While working through the review, announce only the step number and the title of the step (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures. All findings and conclusions belong in the Excel report, not in chat. Clarifying questions to the user are permitted where Step 0 or Step 0C require them.
+- Keep chat output minimal.
+- Do not narrate each procedure as it is performed.
+- Do not provide running commentary on findings or hypotheses.
+- Do not summarize or editorialize on results at the end.
+- While working through the review, announce only the step number and title (e.g., "Step 1 — Proof Review", "Step 3 — Math Check"). Do not announce sub-steps or internal procedures.
+- All findings and conclusions belong in the Excel report, not in chat.
+- Clarifying questions to the user are permitted only where Step 0 or Step 0C require them.
 
 ## Excel Report Formatting — Strict Rules
 
@@ -51,9 +51,8 @@ Upon receiving the financial statements, before performing any procedures, ask t
 
 *Please provide whichever of these you have available. If either is unavailable, let me know and I will note the limitations and proceed accordingly.**"*
 
-*Important note on file uploads: Claude processes uploaded PDFs and images as vision inputs, and each page of a document consumes image capacity from the conversation's available limit. If you upload the financial statements, the prior year report, and the Excel workbook as separate files, a large package can exhaust that capacity before the review is complete. To avoid this, it is strongly recommended that you combine all files into a single .zip archive and upload the zip rather than uploading files individually. Claude can extract and work with files from a zip archive without the same per-page image consumption.**"*
-
-Wait for a response before proceeding.
+- File upload note: Claude processes uploaded PDFs and images as vision inputs, and each page of a document consumes image capacity from the conversation's available limit. Uploading the financial statements, prior year report, and Excel workbook as separate files can exhaust that capacity before the review is complete on a large package. Combine all files into a single .zip archive and upload the zip instead — Claude can extract and work with files from a zip archive without the same per-page image consumption.
+- Wait for a response before proceeding.
 
 ## Step 0B — Verify Documents Received
 
@@ -85,29 +84,26 @@ Wait for a response before proceeding.
 
 **⚠ WARNING:** *EXCEL WORKBOOK NOT PROVIDED: Math checks on financial statements with three or more data columns are subject to column attribution error. PDF text extraction can flatten table layouts in these statements, making it unreliable to confirm which figures belong to which columns. Statements with only two data columns are generally handled correctly without the Excel file. Math check results on the following statements (three or more columns) should be treated as provisional and independently verified by the reviewer: [list all statements present with three or more data columns]. All other procedures are unaffected.*
 
-Then proceed with the review, noting "PROVISIONAL — Excel not provided" on any math check result involving a statement with three or more data columns.
+- Proceed with the review, noting "PROVISIONAL — Excel not provided" on any math check result involving a statement with three or more data columns.
 
 ### If the prior year financial statements were not provided:
 
-Ask the following before proceeding:
+- Ask the following before proceeding:
 
 *"**Prior year financial statements were not provided. Before I proceed, can you tell me: Is this a first-year or first-time audit engagement — i.e., no prior year audited financials exist? Or are prior year audited financials available but not provided at this time?**"*
 
 ### If first-year audit or no prior audited financials exist:
 
 - Note this and do not flag missing prior year tie-outs as findings
-
 - Note that beginning balances cannot be agreed to a prior audited report as none exists — expected for a first-year engagement
-
 - Review opening balance disclosures and any predecessor auditor or compilation report language that may be present
-
 - Proceed with all other procedures normally
 
 ### If prior year financials exist but were not provided:
 
 **⚠ WARNING:** *PRIOR YEAR FINANCIALS NOT PROVIDED: The following procedures cannot be completed and should be treated as incomplete pending receipt of the prior year report: beginning balance tie-out; prior year comparative figure verification; accounting policy consistency check; reclassification disclosure verification; auditor change language verification. All other procedures will execute normally.*
 
-Proceed with the review, noting "INCOMPLETE — Prior year report not provided" on any procedure that cannot be performed.
+- Proceed with the review, noting "INCOMPLETE — Prior year report not provided" on any procedure that cannot be performed.
 
 # PRELIMINARY: IDENTIFY AUDIT TYPE AND ENTITY
 
@@ -463,32 +459,34 @@ If an Excel workbook was provided and verified in Step 0, apply the following pr
 
 ### Formatting conventions and subtotal scope:
 
-The Excel establishes which figures are intended to sum to a given subtotal — but it does not establish whether that subtotal is presented correctly in the printed document. If the formatting conventions used in the printed document — underlines, double underlines, indentation, spacing, section headers — suggest that a subtotal should capture a different set of line items than what the Excel is actually summing, flag it. Note the ambiguity as a finding: state what the formatting implies should be included, what the Excel actually sums, and that the preparer should confirm whether the presentation is consistent with the intended calculation. If the same formatting convention is used elsewhere in the document to mean something different than how it is used here, that inconsistency is itself a finding regardless of whether the math is correct.
+- The Excel establishes which figures are intended to sum to a given subtotal — it does not establish whether that subtotal is presented correctly in the printed document.
+- If the printed document's formatting conventions (underlines, double underlines, indentation, spacing, section headers) suggest a subtotal should capture a different set of line items than what the Excel is actually summing, flag it as a finding: state what the formatting implies should be included, what the Excel actually sums, and that the preparer should confirm whether the presentation matches the intended calculation.
+- If the same formatting convention is used elsewhere in the document to mean something different than how it is used here, flag that inconsistency as a finding regardless of whether the math is correct.
 
 ### Column mapping procedure (required for any statement with three or more data columns):
 
-Before performing any arithmetic on a statement with three or more data columns, explicitly write out the column map in this format:
+1. Before performing any arithmetic on a statement with three or more data columns, explicitly write out the column map in this format:
 
 *Column 1: [Header name] | Column 2: [Header name] | ... | Column N: [Total column header]*
 
 *Confirmed against: Excel tab **"**[tab name]**"*
 
-Then state which columns are intended to sum to which totals — horizontally across rows and vertically down columns — before calculating anything. Do not perform arithmetic until this mapping is written out and confirmed against the Excel.
+2. State which columns are intended to sum to which totals — horizontally across rows and vertically down columns — before calculating anything.
+3. Do not perform arithmetic until the mapping is written out and confirmed against the Excel.
 
 ### Rounding — zero tolerance:
 
-Every column in the printed document must foot to the printed total exactly as a reader would verify on a 10-key. A difference of any amount — including $1 — is a finding. If the Excel shows that figures are stored with decimal precision and displayed as rounded integers, note this as the likely cause and flag it for the preparer to resolve by adjusting one displayed line item to force the printed figures to foot. Rounding is an explanation, not an excuse. Flag it regardless. If a column does not foot and the difference cannot be explained by rounding, note that hidden rows in the Excel workbook may account for the discrepancy — flag this for the preparer to verify.
+- Every column in the printed document must foot to the printed total exactly as a reader would verify on a 10-key. A difference of any amount — including $1 — is a finding.
+- If the Excel shows figures stored with decimal precision and displayed as rounded integers, note this as the likely cause and flag it for the preparer to resolve by adjusting one displayed line item to force the printed figures to foot. Rounding is an explanation, not an excuse — flag it regardless.
+- If a column does not foot and the difference cannot be explained by rounding, note that hidden rows in the Excel workbook may account for the discrepancy and flag this for the preparer to verify.
 
 ### PDF extraction caveat — when Excel is not provided:
 
-When the Excel workbook has NOT been provided and a math finding arises on a statement with three or more data columns, the finding MAY be an artifact of PDF extraction rather than a real error in the document. PDF text extraction can flatten table layouts, misattribute figures to adjacent columns, or drop values entirely — especially on dense multi-column combining schedules. Before flagging a multi-column math finding as a document error in this situation, do the following:
-
-- Re-extract using layout-preserving methods (e.g., pdftotext -layout) and, where available, render the page to an image and visually confirm the figures in the affected rows and columns.
-
-- If after visual confirmation the figures still do not foot, flag the finding — but include a note that it was confirmed visually and recommend the preparer verify against the Excel source.
-
-- If visual confirmation cannot be performed or is inconclusive, flag the finding as POTENTIAL and add a standard note: "This finding arose on a multi-column statement; Excel source was not provided for column mapping verification. May reflect a PDF extraction limitation rather than an error in the document. Recommend providing the Excel workbook to confirm." Do NOT report a potential-extraction finding with the same certainty as a verified finding.
-
+- Applies only when the Excel workbook has NOT been provided and a math finding arises on a statement with three or more data columns — the finding MAY be an artifact of PDF extraction rather than a real error, since PDF text extraction can flatten table layouts, misattribute figures to adjacent columns, or drop values entirely, especially on dense multi-column combining schedules.
+- Before flagging a multi-column math finding as a document error in this situation:
+  1. Re-extract using layout-preserving methods (e.g., pdftotext -layout) and, where available, render the page to an image and visually confirm the figures in the affected rows and columns.
+  2. If after visual confirmation the figures still do not foot, flag the finding — but include a note that it was confirmed visually and recommend the preparer verify against the Excel source.
+  3. If visual confirmation cannot be performed or is inconclusive, flag the finding as POTENTIAL and add a standard note: "This finding arose on a multi-column statement; Excel source was not provided for column mapping verification. May reflect a PDF extraction limitation rather than an error in the document. Recommend providing the Excel workbook to confirm." Do NOT report a potential-extraction finding with the same certainty as a verified finding.
 - This caveat applies ONLY to statements with three or more data columns and ONLY when Excel was not provided. Findings on two-column statements, single-column schedules, note disclosures, and cross-references are not subject to this caveat and should be flagged normally.
 
 ## Math Check Procedures
@@ -603,9 +601,9 @@ Identify every number that appears in more than one location in the document and
 
 ## Paired-Account Relationship Analysis
 
-Beyond checking the plausibility of individual balances, assess whether accounts that logically travel together are in fact both present, both absent, or in a sensible proportion. Many disclosure omissions and classification errors surface through what is missing rather than what is wrong on its face. Work through the following paired-relationship checks. For each pair, the rule is the same: if one account is present at a material level, the other should also be present (or its absence explained). If both are present, assess whether their relationship is plausible.
-
-The list below is representative, not exhaustive. Apply experienced reviewer judgment to identify other paired relationships not listed here.
+- Beyond checking the plausibility of individual balances, assess whether accounts that logically travel together are in fact both present, both absent, or in a sensible proportion — many disclosure omissions and classification errors surface through what is missing rather than what is wrong on its face.
+- Rule for each pair below: if one account is present at a material level, the other should also be present (or its absence explained). If both are present, assess whether their relationship is plausible.
+- The list below is representative, not exhaustive — apply experienced reviewer judgment to identify other paired relationships not listed here.
 
 ### Operations and expenses
 
@@ -739,7 +737,8 @@ For each relationship flagged:
 
 ## Logical and Contextual Consistency
 
-Beyond verifying that figures tie to their counterparts, assess whether the financial statements make logical and contextual sense as a whole. This step is not about mathematical agreement but about whether numbers, disclosures, and narrative are internally coherent and plausible given the entity's described circumstances. Flag anything that a knowledgeable reader would find implausible, inconsistent, or unexplained. Examples of issues to identify include, but are not limited to:
+- Beyond verifying that figures tie to their counterparts, assess whether the financial statements make logical and contextual sense as a whole — not mathematical agreement, but whether numbers, disclosures, and narrative are internally coherent and plausible given the entity's described circumstances.
+- Flag anything a knowledgeable reader would find implausible, inconsistent, or unexplained. Examples of issues to identify include, but are not limited to:
 
 - Cash and bank balance reasonableness — where a footnote discloses bank balances (e.g., for collateralization or FDIC coverage purposes) and the financial statements present a reconciled cash balance, the two figures are not expected to agree; however, they should be in a plausible relationship. A bank balance that is materially higher than the reconciled book balance (e.g., bank balance of $20 million against a reconciled cash balance of $10 million) warrants a flag for the preparer to confirm the relationship is explained and reasonable — unreconciled items of that magnitude are unusual without explanation. Apply similar scrutiny to any footnote disclosure of a gross figure that appears implausibly disproportionate to the related statement balance.
 
@@ -1000,5 +999,3 @@ After completing all review steps, produce a structured Excel report with the fo
 **NOTE:** *Severity classification throughout: Critical, Significant, Moderate, Minor. Use these labels consistently in all tabs.*
 
 **NOTE:** *Present all findings organized by step in the detail tabs. For each issue, note: location in the document, description of the issue, and recommended correction. The Executive Summary tab should be self-contained enough that a reader can see every issue without needing to open the detail tabs.*
-
-*— End of Prompt —*

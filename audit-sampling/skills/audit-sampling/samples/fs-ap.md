@@ -18,5 +18,3 @@ Default approach: completeness via `progressive-subsequent` — the search for u
 ## Population cleanup — payroll funding
 
 Subsequent disbursements registers contain recurring payroll funding events (transfers to a third-party payroll provider — ADP, Paychex, QuickBooks Payroll Service, Gusto, OnPay, Rippling, etc.). These are not unrecorded-liability candidates; they're scheduled cash outflows for ongoing payroll cycles, not liabilities left unrecorded at year-end. Remove them from the subsequent-disbursements population before sizing the search for unrecorded liabilities, and document the removed amount.
-
-<!-- [recovery 2026-06-01: trailing text reconstructed from context after a write-truncation; verify] -->

@@ -72,16 +72,19 @@ In CCH, a "Significant Risk" is **not** a risk level in this 4-level matrix. It 
 5. High subjectivity in measurement (wide estimate range).
 6. Significant non-routine transactions outside normal course.
 
-When one of these is identified, mark the risk Significant on the Identified Risks table (surfaced on KBA-502 and the area's AUD-8xx program) and address it with a substantive response (targeted response steps). **Do NOT push the grid IR up to "match" the flag** — IR stays at the `defaults/{CODE}.md` value (never MAX); the Significant flag and its response carry the elevated treatment, and any true IR deviation is a firm-principal call.
+When one of these is identified:
+1. Mark the risk Significant on the Identified Risks table (surfaced on KBA-502 and the area's AUD-8xx program).
+2. Address it with a substantive response (targeted response steps).
+3. Do NOT push the grid IR up to "match" the flag — IR stays at the `defaults/{CODE}.md` value (never MAX); the Significant flag and its response carry the elevated treatment. Any true IR deviation is a firm-principal call.
 
 ## Linked-risk references on AUD-8xx forms
 
-Each audit step on an AUD-8xx program form can be linked to one or more identified risks via the "LINK TO RISK" column. Standard rows seen so far:
+Each audit step on an AUD-8xx program form can be linked to one or more identified risks via the "LINK TO RISK" column. Standard rows:
 - `Management Override` — the always-present fraud risk per AU-C 240.
 - `RMM-EO`, `RMM-RO`, `RMM-CO`, `RMM-AV`, `RMM-CU`, `RMM-UC` — the per-assertion RMM rows from this program's risk grid.
 - Custom-named identified risks added on this engagement (e.g., "Revenue Recognition Cutoff").
 
-A step is "linked" when its inherent-risk-relevant assertion's RMM row is referenced from the LINK TO RISK cell. This is how CCH tracks coverage — every Significant or non-Low RMM assertion must have at least one linked step.
+A step is "linked" when its inherent-risk-relevant assertion's RMM row is referenced from the LINK TO RISK cell. Every Significant or non-Low RMM assertion must have at least one linked step.
 
 ## Audit-approach checkboxes (KBA-502, per-assertion row)
 
@@ -95,16 +98,22 @@ At least one must be checked per assertion. The selection drives which steps cch
 
 ## Data ownership (architectural note)
 
-**KBA-502 owns the editable per-assertion IR/CR/RMM/PlannedAuditApproach grid — write there**, with
-collectionKey `.{AREA}.RelevantAssertion` posted against **KBA-502's wpId**. The AUD-8xx program's grid is
-the **derived / read-through** view: a write aimed at the program's wpId lands in a working copy the
-KBA-502-owned recompute discards on refresh. KBA-502's bulk form GET does not embed the RelevantAssertion
-child rows (`OverallAuditAreas[].childObjectList` returns `[]`) and `inventory_form` over-filters the form,
-so a GET-only read shows just `Comment`. The grid is real (defined in KBA-502's `elements`) and the UI
-writes it against KBA-502's wpId. KBA-502 also owns `.KBA502.FinancialLevelRisks` (FS-level risk
-rows; only the row-level `Comment` is directly writable there — 14 of 15 properties are pt5-linked).
-
-The relevant-assertion **selection** happens upstream on **KBA-400** (`.KBA400.AuditareaRelevantAssertions`: AuditAreaName + Assertion + comment), which drives which assertion rows render (and are writable) per area on KBA-502. So the chain is: KBA-400 selects assertions → CCH recommends programs → IR/CR/RMM/approach written on **KBA-502** → the program grids read through; program step→assertion linkage + sign-off feeds back and clears KBA-502's "Relevant Assertion Unaddressed".
+1. **KBA-502 owns the editable per-assertion IR/CR/RMM/PlannedAuditApproach grid — write there**, with
+   collectionKey `.{AREA}.RelevantAssertion` posted against **KBA-502's wpId**.
+2. The AUD-8xx program's grid is the **derived / read-through** view: a write aimed at the program's wpId
+   lands in a working copy the KBA-502-owned recompute discards on refresh.
+3. KBA-502's bulk form GET does not embed the RelevantAssertion child rows
+   (`OverallAuditAreas[].childObjectList` returns `[]`) and `inventory_form` over-filters the form, so a
+   GET-only read shows just `Comment`. The grid is real (defined in KBA-502's `elements`) and the UI writes
+   it against KBA-502's wpId.
+4. KBA-502 also owns `.KBA502.FinancialLevelRisks` (FS-level risk rows; only the row-level `Comment` is
+   directly writable there — 14 of 15 properties are pt5-linked).
+5. The relevant-assertion **selection** happens upstream on **KBA-400**
+   (`.KBA400.AuditareaRelevantAssertions`: AuditAreaName + Assertion + comment), which drives which
+   assertion rows render (and are writable) per area on KBA-502.
+6. Chain: KBA-400 selects assertions → CCH recommends programs → IR/CR/RMM/approach written on **KBA-502**
+   → the program grids read through; program step→assertion linkage + sign-off feeds back and clears
+   KBA-502's "Relevant Assertion Unaddressed".
 
 ## Where the risk assessment is documented (supporting forms)
 

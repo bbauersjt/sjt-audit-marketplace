@@ -33,7 +33,7 @@
     }
   },
   "gotchas": [
-    "Move PRESERVES the index and the locationId is stable across moves - Move does NOT clear anything. There is no Set-Index-after-move requirement EXCEPT for genuinely new forms that arrived with a null/empty index; for those, Set-Index AFTER the move. The old 'Move CLEARS the index' claim is WRONG and was removed.",
+    "Move PRESERVES the index and the locationId is stable across moves - Move does NOT clear anything. There is no Set-Index-after-move requirement EXCEPT for genuinely new forms that arrived with a null/empty index; for those, Set-Index AFTER the move.",
     "Leadsheet moves trigger an auto-file cascade — other unfiled leadsheets with matching sub-folder indexes also get filed. One move can have wide effects.",
     "Folder-style payload returns 200 but is a silent no-op when objectType == 'KCForms'. Use LeadSheet-style swap for KCForms."
   ],

@@ -13,8 +13,8 @@
 
 ## How a program ties together (conceptual model)
 
-CCH's audit-program model links six collections per area. Understanding the chain is what lets this skill
-decide the right HANDOFF; the write mechanics themselves belong to `cch-axcess`.
+CCH's audit-program model links six collections per area. This skill decides the HANDOFF from this chain;
+the write mechanics themselves belong to `cch-axcess`.
 
 ```
 Tailoring Questions   ───► drive IsApplicable on each step
@@ -34,19 +34,12 @@ Planned approach per assertion: Combined / Substantive Analytical / Substantive 
    - Combined available only when CR < MAX
 ```
 
-**Linking a step to assertions** = set the step's Assertion set to the relevant codes (subset of EO, RO,
-CO, AV, CU, UC); the RelevantAssertion rollup updates automatically.
-
-**Linking RMMs to a step (Link to Risk)** = set the step's risk links to the matching `RMM-{assertion}` for
-each assertion on the step (skip N/A assertions like AV for Cash), preserving any existing FS-level risks.
-Full-state replacement, not incremental.
-
-**`IsApplicable` is computed, not set** — it's driven by the tailoring-question answers. Library steps with
-IsApplicable=False are gated until the relevant tailoring question is answered Yes. **`IsProgramStepRequired`**
-flags steps the firm/title considers mandatory when applicable.
-
-> The exact property keys, valueKey formats, the add-step mechanism, and the submit/verify cycle are
-> `cch-axcess`'s — read them there, don't restate them here.
+Rules:
+1. To link a step to assertions, set the step's Assertion set to the relevant codes (subset of EO, RO, CO, AV, CU, UC); the RelevantAssertion rollup updates automatically.
+2. To link RMMs to a step (Link to Risk), set the step's risk links to the matching `RMM-{assertion}` for each assertion on the step (skip N/A assertions like AV for Cash), preserving any existing FS-level risks. Write full-state, not incrementally.
+3. `IsApplicable` is computed, not set — it's driven by the tailoring-question answers. Library steps with IsApplicable=False are gated until the relevant tailoring question is answered Yes.
+4. `IsProgramStepRequired` flags steps the firm/title considers mandatory when applicable.
+5. Exact property keys, valueKey formats, the add-step mechanism, and the submit/verify cycle are `cch-axcess`'s — read them there, don't restate them here.
 
 ## Form anatomy (sections, in plain terms)
 
@@ -126,8 +119,8 @@ required when applicable. **App** = applicable (False means gated by a tailoring
 | UC | 7 Bank Recs, 13 Restrictions, 16 Agree to Support, 17 Disclosures |
 
 All 6 assertions have at least one step in the default-visible set. RO coverage relies entirely on step 13
-(Restrictions on Cash) — for engagements with no donor/legal restrictions, consider adding step 4
-(Confirmations-Prep) or 12 (Confirmations-Testing).
+(Restrictions on Cash) — for engagements with no donor/legal restrictions, add step 4 (Confirmations-Prep)
+or 12 (Confirmations-Testing) instead.
 
 ## Audit Approach (planned approach) — three choices per assertion
 
@@ -138,16 +131,16 @@ All 6 assertions have at least one step in the default-visible set. RO coverage 
 | **Substantive: In-depth** | Active program is tests-of-details based |
 
 **Firm default decision logic.** For each assertion, walk the active steps:
-1. **Any analytical-nature step active?** (step 0 / step 19) → mark Analytical.
-2. **Any tests-of-details step active?** (Account Summary, Bank Recs, Confirmations — most cash steps) → mark In-depth.
-3. **CR < MAX?** (controls tested) → optionally mark Combined alongside.
+1. Any analytical-nature step active? (step 0 / step 19) → mark Analytical.
+2. Any tests-of-details step active? (Account Summary, Bank Recs, Confirmations — most cash steps) → mark In-depth.
+3. CR < MAX (controls tested)? → optionally mark Combined alongside.
 
-For Cash with the firm's default 8-step set (no analytical steps, CR=MAX): **In-depth only on all 5
-applicable assertions** (EO, RO, CO, CU, UC). AV is N/A for Cash. If Q1 enables analytical steps (0/19),
-also mark Analytical.
+For Cash with the firm's default 8-step set (no analytical steps, CR=MAX): In-depth only on all 5
+applicable assertions (EO, RO, CO, CU, UC). AV is N/A for Cash. If Q1 enables analytical steps (0/19), also
+mark Analytical.
 
-> The approach valueKey codes and the write/confirm mechanics are in `cch-axcess`. Set `selected = Yes`
-> before IR or it resets on submit — `cch-axcess` enforces the write order.
+The approach valueKey codes and the write/confirm mechanics are in `cch-axcess`. Set `selected = Yes`
+before IR or it resets on submit — `cch-axcess` enforces the write order.
 
 ## Default Step Selection (firm defaults)
 

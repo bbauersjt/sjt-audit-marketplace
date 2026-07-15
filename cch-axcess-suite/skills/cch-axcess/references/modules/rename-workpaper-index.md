@@ -29,18 +29,18 @@ status: validated
 
 ## What this module does
 
-Re-indexes (renames the **Index** column of) one or more **Workpaper**-type items in a CCH Axcess binder folder via direct API calls. Handles bulk renames sequentially. **For KCForms-type items use `add-audit-programs.md` Step 8 instead** — the endpoint and payload shape are different.
+- Re-indexes (renames the **Index** column of) one or more **Workpaper**-type items in a CCH Axcess binder folder via direct API calls. Handles bulk renames sequentially.
+- **For KCForms-type items use `add-audit-programs.md` Step 8 instead** — the endpoint and payload shape are different.
 
 ## Why this is its own module
 
-The KC form set-index endpoint documented in `add-audit-programs.md`:
+- The KC form set-index endpoint (`add-audit-programs.md`) does NOT work for Workpaper items:
 ```
 PUT /v1/engagementview/{clientId}
 Body: {index, name, objectId, objectType: "KCForms"}
 ```
-**does not work for Workpaper items.** Hitting it with `objectType: "Workpaper"` returns 400 `"Supplied ObjectId and ObjectType does not exists."`
-
-Workpapers have their own endpoint with a different URL, a different payload shape, and a type-coercion trap on the `tags` field. Codified here so future sessions don't waste cycles rediscovering it.
+  Hitting it with `objectType: "Workpaper"` returns 400 `"Supplied ObjectId and ObjectType does not exists."`
+- Workpapers have their own endpoint, with a different URL, a different payload shape, and a type-coercion trap on the `tags` field.
 
 ## Endpoint
 

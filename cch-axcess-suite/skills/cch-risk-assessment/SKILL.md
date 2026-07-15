@@ -95,12 +95,10 @@ URLs, payload shapes, or submit/verify procedure. It names the form, the target 
 and the answer; `cch-axcess` resolves the writable surface and executes. If you're writing an HTTP body,
 stop — that belongs in `cch-axcess`.
 
-**Design rule (locked):** we **parse the cascade live**; we do **not** store field-level form dumps in the
-skill. The KBA/AUD planning forms re-version annually and are structurally uniform across titles by
-`dataBindingKey`, so dumping them would rot and duplicate `cch-axcess`. This skill stores only the
-judgment layer + compact, stable lookup tables. Scratch captures (drive the cascade open, snapshot every
-revealed object) are a legitimate input for developing judgment — write them to the engagement / working
-folder, mine them, discard. They must not land in `cch-risk-assessment/`.
+**Design rule (locked):** parse the cascade live — do not store field-level form dumps in the skill; store
+only the judgment layer + compact, stable lookup tables. Scratch captures (drive the cascade open, snapshot
+every revealed object) are a legitimate input for developing judgment — write them to the engagement /
+working folder, mine them, discard. They must not land in `cch-risk-assessment/`.
 
 ## The cascade (the spine of everything)
 
@@ -127,6 +125,58 @@ AUD-8xx  Audit Programs                            programs/{area}.md
          CCH recommends programs from the scoping; pull the steps, set the top Y/N tailoring
          questions, link each step to its assertions + RMM rows
 ```
+
+## Cascade completion contract — run before reporting the cascade done
+
+The cascade is not done when the last write lands; it is done when every check below verifies
+true **by read-back of the live forms/binder**, or the miss is enumerated with a named owner:
+
+1. **Programs landed.** Every significant area scoped on KBA-400 has its recommended AUD-8xx
+   program ACTUALLY ADDED to the binder — verify against the binder's form list, never the
+   recommendation output. A scoped area with no program in the file means the cascade run is
+   incomplete.
+2. **Risk answers are risk-specific, never blanket.** "Cannot be addressed by substantive
+   procedures alone" is Yes only for the risks where that is individually true (typically the
+   management-override class); the same answer applied across every risk is a defect. Any
+   per-area/per-risk toggle is decided per area/risk, never uniformly.
+3. **"Significant class of transactions" = Yes for every scoped-in area.** A uniform No
+   suppresses the recommended activity-level controls forms and programs.
+4. **Every identified risk is WRITTEN.** Enumerate the risks identified anywhere in the run
+   (intake, planning analytics, team-discussion notes, understanding forms) and match each to
+   an actual entry on KBA-502 (and KBA-400 where it belongs). A risk identified but never
+   written leaves permanently dirty diagnostics and an unlinked response — the enumerated
+   match list is the deliverable, not a "risks were carried through" assertion.
+5. **Fraud-presumption link-through.** A fraud-presumption question answered Yes (revenue
+   recognition due to fraud; significant estimates) must have a corresponding risk entry in
+   the risk summary tied to it. Checked-Yes with no risk row is the item-4 gap in its most
+   common form.
+6. **Diagnostics oracle clean** — refresh and read the live diagnostics endpoint (via
+   `cch-axcess`) on every cascade form and added program; clear each residual or enumerate it
+   with the named downstream owner that legitimately closes it.
+
+## Fraud-presumption significant risks — rebuttal doctrine
+
+1. **Default: the presumption STANDS** — management override + revenue recognition due to
+   fraud (plus significant estimates where the form asks). Add the risk entries and link each
+   to its targeted response steps (JE testing, estimates, the risk's own responses — a
+   handful, never every step).
+2. **Rebutting the revenue-recognition presumption is never a default and never this skill's
+   unilateral call.** If the prior-year file rebutted it, follow the prior year and carry the
+   same documented basis. Otherwise rebuttal is an engagement-partner decision — pend the
+   question; do not guess. (Exchange-revenue-heavy governmental engagements are a candidate
+   case for rebuttal, not a standing rule.)
+3. **Form state must be internally consistent either way:** presumption kept → the Yes answer
+   AND its risk entry AND linkage all exist; presumption rebutted → the answer reflects it
+   with the documented basis and no orphan risk row. A mismatch between the checkbox state
+   and the risk rows creates a diagnostic in both directions.
+
+## Known gap — KBA-400 downstream fan-out (open; being mapped)
+
+Certain KBA-400 answers (the fraud-presumption Yes among them) reveal additional KBA-400
+sections/forms whose full trigger→reveal map is not yet captured here. Until it is: after
+every KBA-400 answer batch, re-read the rendered form for newly revealed sections/required
+fields and fill them before calling the form done; append each newly observed trigger→reveal
+pair to this section so the map accretes.
 
 ## Where IR/CR/RMM is written (so the HANDOFF names the right form)
 

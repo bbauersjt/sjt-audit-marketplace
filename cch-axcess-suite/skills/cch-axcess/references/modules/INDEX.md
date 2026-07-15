@@ -1,17 +1,16 @@
 # CCH Axcess Module Catalogue
 
 > **GATE — every module below except `leg: none` (import-tb-format) makes platform calls.**
-> All of them require Step 0 (`session-bootstrap.md`) run THIS session + the page-context
-> transport (`transport.md`). **Reading this index — or any module, endpoint spec, or reference
-> datum — is NOT initialization.** If you have ALREADY made platform calls this session without
-> Step 0: **STOP now** — run Step 0 in full, switch to the page-context transport, RE-VERIFY BY
-> READ everything written while side-entered (200s may be silent no-ops), then resume from the
-> last verified step. A subagent you spawn to do platform work is a NEW session: it enters
-> through SKILL.md and runs its own Step 0 — never hand it a token. (SKILL.md → "Initialization gate".)
+1. All modules require Step 0 (`session-bootstrap.md`) run THIS session + the page-context transport (`transport.md`).
+2. Reading this index — or any module, endpoint spec, or reference datum — is NOT initialization.
+3. If platform calls were already made this session without Step 0: STOP now. Run Step 0 in full, switch to the page-context transport, RE-VERIFY BY READ everything written while side-entered (200s may be silent no-ops), then resume from the last verified step.
+4. A subagent spawned to do platform work is a NEW session: it enters through SKILL.md and runs its own Step 0 — never hand it a token. (SKILL.md → "Initialization gate".)
 
 Auto-generated dispatch table. Edit `scripts/regenerate_index.py` or a module's YAML front-matter to change rows here — never hand-edit between the markers.
 
-If no row below matches a user ask, STOP at the consent wall (SKILL.md routing) — say verbatim: "I haven't learned how to do that. Do you want me to attempt to figure it out? Warning: slow, heavy usage." Capture mode (`references/learn-protocol.md`) runs only on an explicit yes; its terminal state is a tested script + endpoint spec + thin module — not a prose how-to.
+1. If no row below matches a user ask, STOP at the consent wall (SKILL.md routing) — say verbatim: "I haven't learned how to do that. Do you want me to attempt to figure it out? Warning: slow, heavy usage."
+2. Capture mode (`references/learn-protocol.md`) runs only on an explicit yes.
+3. Capture mode's terminal state is a tested script + endpoint spec + thin module — not a prose how-to.
 
 <!-- INDEX_TABLE_START -->
 | File | Leg | Triggers | Inputs | Calls | Status |
@@ -40,18 +39,14 @@ If no row below matches a user ask, STOP at the consent wall (SKILL.md routing) 
 | `toggle-program-step.md` | kc | "add steps to the [Cash/Investments/AR/etc.] program"; "pull in steps for [area]"; "remove this step from the program"; "send this step back to the library"; "select these audit steps"; "tailor the program steps"; "build out the AUD-8xx step list"; "update visible steps on [AUD-8xx]" | Engagement GUID; AUD-8xx workpaperId; KC tab on form with KC tokens in localStorage; list of desired step keys | `scripts.kc.toggle_program_step` | validated |
 <!-- INDEX_TABLE_END -->
 
-> **fill-kc-form note (do not regenerate away):** the row above is `validated`, but writes are PENDING
-> until `kc.submit` commits them — **submit is REQUIRED to persist** (writes are discarded on reload
-> without it) and must be **per-workpaper scoped** (empty workpaperId silently discards other forms'
-> pending writes), and verify only AFTER submit+reload via the diagnostics endpoint. KC silently drops
-> a ROTATING subset of write→submit pairs even then (echo shows state 3; the commit loses them) — the
-> mandatory loop is the CONVERGE loop: write → ~1.2s → per-wp submit → re-read committed state →
-> rewrite only the dropped cells → iterate until committed matches intent, 2–4 rounds
-> (field-conventions.md §5 3a). valueKey conventions
-> come from the field/valueKey registry (`references/config/field-conventions.md`), not from the form
-> GET. **Cascade / control-matrix fills** (KBA-400/401/4xx-5xx per-area risk grids, KBA-302-class row
-> dropdowns) write to the **`*Findings` / `*TQ` flow collections** with UPPERCASE / `YESNONA` valueKeys
-> per the registry (NOT the `EntityEnv*` display collections). IR/CR/RMM/approach write to
-> **KBA-502's wpId** (`.{AREA}.RelevantAssertion`) — the AUD-8xx program grid is derived.
+> **fill-kc-form note (do not regenerate away):**
+1. The row above is `validated`, but writes are PENDING until `kc.submit` commits them.
+2. Submit is REQUIRED to persist — writes are discarded on reload without it.
+3. Submit must be per-workpaper scoped — empty workpaperId silently discards other forms' pending writes.
+4. Verify only AFTER submit+reload, via the diagnostics endpoint.
+5. KC silently drops a ROTATING subset of write→submit pairs even then (echo shows state 3; the commit loses them) — run the mandatory CONVERGE loop: write → ~1.2s → per-wp submit → re-read committed state → rewrite only the dropped cells → iterate until committed matches intent, 2–4 rounds (field-conventions.md §5 3a).
+6. valueKey conventions come from the field/valueKey registry (`references/config/field-conventions.md`), not from the form GET.
+7. Cascade / control-matrix fills (KBA-400/401/4xx-5xx per-area risk grids, KBA-302-class row dropdowns) write to the `*Findings` / `*TQ` flow collections with UPPERCASE / `YESNONA` valueKeys per the registry (NOT the `EntityEnv*` display collections).
+8. IR/CR/RMM/approach write to KBA-502's wpId (`.{AREA}.RelevantAssertion`) — the AUD-8xx program grid is derived.
 
 <!-- END -->

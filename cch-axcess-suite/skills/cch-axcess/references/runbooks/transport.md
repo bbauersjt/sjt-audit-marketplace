@@ -18,7 +18,7 @@ status: BRIDGE=primary for ALL origins — engagement/WPM/workbench/FP via in-pa
 
 ## Bounded execution — HARD RULES for every injected eval (any origin, any transport)
 
-These are not style preferences. Each one was paid for in a wedged or silently-failing agent.
+These are hard rules, not style preferences — skipping one wedges or silently fails the agent.
 They apply to every `chrome_eval` / `javascript_tool` payload that executes
 platform operations.
 
@@ -116,8 +116,7 @@ not status). Resolution used in-run: POST it via an **in-page same-origin XHR** 
 the KC origin (`chrome_eval`, controlling `JSON.stringify` yourself so the raw array — not a quoted
 string — hits the wire) with a freshly-captured KC bearer. **Flagged for revalidation / a proper
 `array_body` path** — until then, array-bodied writes take the in-page-XHR route, never a bare
-`chrome_api_call(body=[...])`. (This is the single most re-derived transport fact in delegated
-platform runs; it is a doc gap, not per-agent cleverness — read it, don't rediscover it.)
+`chrome_api_call(body=[...])`.
 
 ## curl-from-Bash with a wire-captured bearer — the preferred KC auth pattern
 

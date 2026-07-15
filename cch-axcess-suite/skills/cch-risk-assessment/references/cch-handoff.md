@@ -108,8 +108,8 @@ Module: populate-program.md
 Form: AUD-801 (Cash) — program workpaper
 Engagement: <guid>
 Writes:
-  - Activate + link targeted response steps for EO (wire-transfer testing expanded to the Aug–Oct window)
-Reason: Wire-transfer dual-control suspended Aug–Oct 2025 (CFO transition) — addressed via targeted
+  - Activate + link targeted response steps for EO (wire-transfer testing expanded to cover the exposure window)
+Reason: Wire-transfer dual-control suspended for a period during the year — addressed via targeted
         response, IR stays at the NPO default (MOD). Any IR override → queue to the firm principal.
 ```
 

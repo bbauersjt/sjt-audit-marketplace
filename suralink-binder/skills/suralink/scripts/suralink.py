@@ -22,11 +22,9 @@ def verify_audit_js(audit_id):
     auditId — not merely that "a Suralink page loaded".
 
     Why identity, not just liveness: a reused stale tab's login bounce carries
-    a `returnTo` pointing at whatever audit that tab was LAST on. Observed
-    2026-07-09 (SCDC 401k): requested auditId 2852254, but the stale tab's
-    bounce returnTo pointed at 2871416 — a naive "did a Suralink page load"
-    check green-lights against the WRONG audit. See architecture.md
-    "Session verification".
+    a `returnTo` pointing at whatever audit that tab was LAST on, not the one
+    requested — a naive "did a Suralink page load" check green-lights against
+    the WRONG audit. See architecture.md "Session verification".
 
     ok:true only when the tab is on app.suralink.com AND both the URL
     `auditId=` param and `window.auditId` equal the requested id. Otherwise
@@ -118,11 +116,10 @@ def get_request_js(audit_id, request_id):
 
     request_id = the canonical 8-digit id from list_requests_js().
     Run these sequentially (one fetch in flight at a time). `window.csrf`
-    does NOT rotate on `getRequest` in practice — confirmed across 28
-    sequential calls on a real engagement — but sequential is still required
-    because Suralink's session serializes concurrent calls. Whole-engagement
-    enumeration runs cleanly inside one `javascript_exec` with awaited
-    fetches in a for-loop.
+    does NOT rotate on `getRequest` in practice, but sequential is still
+    required because Suralink's session serializes concurrent calls.
+    Whole-engagement enumeration runs cleanly inside one `javascript_exec`
+    with awaited fetches in a for-loop.
     Parse the result with browser.parse_result(); files are at body['data']['files'].
     """
     return browser.js_gateway(CONTROLLER_AUDIT, "getRequest", {
@@ -435,7 +432,7 @@ def get_client_engagements_js(client_id):
     Sibling engagements under one client (e.g. Audit 2024 + Audit 2025) come
     back as separate rows - this is how prior-year vs current-year audits are
     told apart. Run sequentially (Suralink session serializes gateway calls —
-    see browser.js_gateway for the full story; "CSRF rotates" is outdated lore).
+    see browser.js_gateway; window.csrf is read live per call).
     """
     inner = browser.js_gateway(CONTROLLER_CLIENTS, "getClientInfo",
                                {"clientId": client_id})
@@ -465,7 +462,7 @@ def get_client_engagements_js(client_id):
 # Ferry — getting large data OUT of the tab and onto disk
 # --------------------------------------------------------------------------
 # The Cowork tool channel truncates JS return values around ~1 KB of display.
-# A whole-engagement enumeration (28-90 requests, files included) is many KB.
+# A whole-engagement enumeration (files included) is many KB.
 # Don't paginate through chunked JS reads — it's slow and brittle.
 #
 # Pattern: serialize on the JS side, save as a Blob to a download trigger,
@@ -480,7 +477,7 @@ def dump_to_download_js(payload_expr, filename):
 
     `payload_expr` is a JS expression evaluated inside the tab (e.g.
     `'window.__reqs'`, or any JS that produces a JSON-serializable value).
-    `filename` is the suggested download name (e.g. `'kymera_reqs.json'`).
+    `filename` is the suggested download name (e.g. `'client_reqs.json'`).
 
     Returns JSON string {ok, bytes, filename} on success.
 
@@ -492,9 +489,9 @@ def dump_to_download_js(payload_expr, filename):
     Example:
         # JS side — store the data first, then dump it
         run("window.__data = { categories: [...], files: [...] }")
-        run(suralink.dump_to_download_js("window.__data", "kymera_dump.json"))
+        run(suralink.dump_to_download_js("window.__data", "client_dump.json"))
         # Python side — read it back
-        data = json.load(open("/path/to/Downloads/kymera_dump.json"))
+        data = json.load(open("/path/to/Downloads/client_dump.json"))
     """
     fn = json.dumps(filename)
     return (

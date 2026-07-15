@@ -23,15 +23,9 @@ status: validated
 
 ## What this module does
 
-Given a list of workpaperIds in a KC binder, loop `GET /api/Workpaper/{eng}/{wpId}` for each, bundle the responses into a single JSON Blob, and trigger a Chrome download to disk. The downloaded file becomes the input to a local-Python pass (no per-form JSON ever passes through chat context).
-
-Pairs with `add-audit-programs.md` (to add the forms first) and `remove-kc-form.md` (to clean up after). The three together form the **capture-and-discard campaign** workflow that builds out program-library MDs in sister skills (e.g. `cch-risk-assessment/programs/*.md`).
-
-## Why disk, not context
-
-A 22-form bundle can weigh well over 10 MB. Each AUD-8xx response carries 50-200 KB of JSON — `collections`, `elements`, full step library with `childObjectList` sub-steps. Dragging that through chat context would burn budget for nothing, since the parsing is mechanical Python work, not Claude reasoning.
-
-The rule: **raw form JSON never enters Claude's context**. The browser writes one bundle file. Python parses it locally. Claude only reads the summarized step counts + file paths after the parse.
+- Given a list of workpaperIds in a KC binder, loop `GET /api/Workpaper/{eng}/{wpId}` for each, bundle the responses into a single JSON Blob, and trigger a Chrome download to disk.
+- The downloaded file becomes the input to a local-Python pass. **Raw form JSON never enters Claude's context** — the browser writes one bundle file, Python parses it locally, Claude only reads the summarized step counts + file paths after the parse.
+- Pairs with `add-audit-programs.md` (add the forms first) and `remove-kc-form.md` (clean up after). The three together form the **capture-and-discard campaign** workflow that builds out program-library MDs in sister skills (e.g. `cch-risk-assessment/programs/*.md`).
 
 ## Prerequisites
 
@@ -104,16 +98,11 @@ if ("programstep" in path_lower
     ...
 ```
 
-## Why this lives in `cch-axcess` (and not the sister skill)
-
-The mechanical bits — auth, bundling, Chrome download trigger, path-pattern matching — are CCH Axcess platform concerns. They apply to any campaign across any industry title (NPO / EBP / ASB / ALG).
-
-The *destination layout* — which MD file an AUD-8xx form maps to, what section structure to write — is domain-specific and lives in the calling skill (e.g. `cch-risk-assessment`).
-
 ## Cross-reference
 
 - `add-audit-programs.md` — Step 1 of the campaign: get the forms into the binder.
 - `remove-kc-form.md` — Step 3 of the campaign: clean up. **KC tokens (`kc.accessToken` + `IDToken` all-caps) work directly for WPM `DELETE` calls** — no separate WPM header capture needed when driving from a KC tab. Single Bearer is interchangeable; only the IdToken header-name case differs across the two subdomains.
+- The mechanical bits here (auth, bundling, download trigger, path-pattern matching) apply to any industry title (NPO/EBP/ASB/ALG). The *destination layout* — which MD file an AUD-8xx form maps to — is domain-specific and lives in the calling skill (e.g. `cch-risk-assessment`), not here.
 
 
 <!-- END -->

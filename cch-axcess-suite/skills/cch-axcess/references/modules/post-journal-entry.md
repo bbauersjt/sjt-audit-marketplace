@@ -19,11 +19,9 @@ status: validated
 # Module — Post Journal Entry (FinancialPrep)
 
 ## What this does
-Posts a real journal entry into the trial balance via FinancialPrep
-(`POST financialprep-api /v1.0/journalentry`). This is the gap that makes large JEs
-painful — they cannot be imported, so they get posted here line by line. **Not** the
-same as `run-reports` JE *reports* (`workbench-api /v1/JournalEntryReport`), which only
-build a report workpaper.
+- Posts a real journal entry into the trial balance via FinancialPrep (`POST financialprep-api /v1.0/journalentry`).
+- Use for large JEs that cannot be imported — they get posted here line by line.
+- **Not** the same as `run-reports` JE *reports* (`workbench-api /v1/JournalEntryReport`), which only build a report workpaper.
 
 ## Prerequisites
 - Leg: `wpm` warm (engagement/FP bearer). Rules 0–3 (SKILL.md).

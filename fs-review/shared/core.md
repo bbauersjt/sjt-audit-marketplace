@@ -2,23 +2,21 @@
 
 ## Narration and Commentary
 
-Keep chat output minimal. Do not narrate each procedure as it is performed, do not provide running commentary on findings or hypotheses, and do not summarize or editorialize on results at the end. Announce only the phase being started (e.g., "Phase 1 — deterministic pipeline", "Phase 2 — review fan-out"). Do not announce sub-steps or internal procedures. All findings and conclusions belong in the Excel report, not in chat. Clarifying questions to the user are permitted where the intake flow requires them.
+1. Keep chat output minimal — do not narrate each procedure as it runs, do not give running commentary on findings or hypotheses, do not summarize or editorialize on results at the end.
+2. Announce only the phase being started (e.g., "Phase 1 — deterministic pipeline", "Phase 2 — review fan-out"). Do not announce sub-steps or internal procedures.
+3. All findings and conclusions go in the Excel report, not chat.
+4. Clarifying questions to the user are permitted where the intake flow requires them.
 
 ## Excel Report Formatting — Strict Rules
 
-The deliverable is a plain Excel REPORT, not a workpaper. Keep it clean and readable. A few requirements:
+The deliverable is a plain Excel REPORT, not a workpaper.
 
-- Produce a valid .xlsx file that opens cleanly in Excel with no XML errors, no broken formulas, and no hidden corruption. Test by opening with openpyxl or similar after saving if uncertain.
-
-- Header block on every tab: three plain cells stacked vertically in column A — (1) client name, (2) report/tab name, (3) date of financials. No merging.
-
-- Size column widths so content fits readably. For tabular data (findings tables, cross-reference tables, math tables), put long narrative content in a dedicated wide column (roughly 60–80 character width). For standalone labeled rows at the top of a tab (e.g., "Limitation" with a long sentence next to it), do NOT apply wrap_text; let the text overflow visually into adjacent empty cells rather than wrapping into a tall multi-line row. Do not force long narrative into a cell expected to wrap into a giant multi-line row.
-
-- Do NOT use workpaper scaffolding: no Purpose/Procedure/Conclusion blocks, no "Note1>"/"Note2>" label cells, no manual-entry columns (Reviewer Notes, Management Response, Resolved, etc.). This is a report, not a workpaper.
-
-- Do NOT include a release-readiness banner, engagement-risk commentary, or overall "ready for release" assessment anywhere. The Executive Summary shows only the count of findings by severity and the findings themselves.
-
-- Cell fills, font colors, and light borders are fine where they aid readability (e.g., bold underlined headers, a light fill on header rows). Just keep it clean — no distracting palettes, no heavy grid lines, no neon.
+1. Produce a valid .xlsx file that opens cleanly in Excel — no XML errors, no broken formulas, no hidden corruption. Test by opening with openpyxl or similar after saving if uncertain.
+2. Header block on every tab: three plain cells stacked vertically in column A — (1) client name, (2) report/tab name, (3) date of financials. No merging.
+3. Size column widths so content fits readably. For tabular data (findings tables, cross-reference tables, math tables), put long narrative content in a dedicated wide column (roughly 60–80 character width). For standalone labeled rows at the top of a tab (e.g., "Limitation" with a long sentence next to it), do NOT apply wrap_text — let the text overflow visually into adjacent empty cells rather than wrapping into a tall multi-line row.
+4. Do NOT use workpaper scaffolding: no Purpose/Procedure/Conclusion blocks, no "Note1>"/"Note2>" label cells, no manual-entry columns (Reviewer Notes, Management Response, Resolved, etc.).
+5. Do NOT include a release-readiness banner, engagement-risk commentary, or overall "ready for release" assessment anywhere. The Executive Summary shows only the count of findings by severity and the findings themselves.
+6. Cell fills, font colors, and light borders are fine where they aid readability (e.g., bold underlined headers, a light fill on header rows) — keep it clean: no distracting palettes, no heavy grid lines, no neon.
 
 ## Findings
 
@@ -50,4 +48,6 @@ Every reviewer must emit its findings in this JSON contract:
 
 These fields map one-to-one to the findings table columns in the deliverable workbook (see `references/output-spec.md`).
 
-Do not opine on anything you could not verify. A procedure that cannot be performed because a document was not provided is marked "Limitation — [document] not provided" in its procedures row (result column), and the limitation is recorded in `meta.limitations` so it prints on the Executive Summary.
+1. Do not opine on anything you could not verify.
+2. A procedure that cannot be performed because a document was not provided is marked "Limitation — [document] not provided" in its procedures row (result column).
+3. Record the limitation in `meta.limitations` so it prints on the Executive Summary.

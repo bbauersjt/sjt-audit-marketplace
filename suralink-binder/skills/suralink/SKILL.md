@@ -5,19 +5,21 @@ description: Skill for navigating the Suralink auditor portal (app.suralink.com,
 
 # Suralink — Dispatcher
 
-## ⚠ Step 0 — transport: BRIDGE-FIRST (first browser call of the session)
+## Step 0 — transport (first browser call of the session, before any other browser op)
 
-**Before ANY other browser op — including merely listing or viewing tabs — call
-`chrome_bridge_status`.** Bridge up/reachable → **BRIDGE** transport for the WHOLE session:
-`chrome_list_tabs` to find the logged-in Suralink tab (not `list_connected_browsers`),
-`chrome_eval(code, target=tabId)` to run every JS builder, `chrome_navigate` to move the tab,
-`chrome_eval(..., out_path=...)` for large payloads. Absent/errors → **LINKED-TAB** transport
-(the Claude-in-Chrome tools: `javascript_tool`, `navigate`, `tabs_context_mcp`) — the fallback,
-unchanged and always works. The JS builders in `scripts/` are identical on both transports;
-only the tool that runs them differs. Verb map: `references/architecture.md` → "Transport".
-
-Route the request to ONE module below, read only that module, then call the
-`scripts/*.py` functions it names. Do not read everything.
+1. Call `chrome_bridge_status` before any other browser op — including merely listing or
+   viewing tabs.
+2. Bridge up/reachable → use **BRIDGE** transport for the WHOLE session: `chrome_list_tabs`
+   to find the logged-in Suralink tab (not `list_connected_browsers`), `chrome_eval(code,
+   target=tabId)` to run every JS builder, `chrome_navigate` to move the tab,
+   `chrome_eval(..., out_path=...)` for large payloads.
+3. Bridge absent/errors → use **LINKED-TAB** transport (the Claude-in-Chrome tools:
+   `javascript_tool`, `navigate`, `tabs_context_mcp`) — the fallback, unchanged and always
+   works.
+   - The JS builders in `scripts/` are identical on both transports; only the tool that runs
+     them differs. Verb map: `references/architecture.md` → "Transport".
+4. Route the request to ONE module below, read only that module, then call the
+   `scripts/*.py` functions it names. Do not read everything.
 
 ## Modules — match the row, read that one file
 
@@ -29,7 +31,8 @@ Route the request to ONE module below, read only that module, then call the
 | List clients / resolve a client / find its engagements | `references/modules/clients-and-engagements.md` | "list my clients", "what engagements", "find the client X", "which auditId is X" |
 | A new operation, none of the above | `references/training-mode.md` | capture the call, then codify it into a script |
 
-Prefer `binder-and-activity.md` for whole-engagement reads — one scrape, no per-request crawl.
+Guard: prefer `binder-and-activity.md` for whole-engagement reads — one scrape, no
+per-request crawl.
 
 ## Two rules
 
@@ -38,6 +41,8 @@ Prefer `binder-and-activity.md` for whole-engagement reads — one scrape, no pe
 
 ## Platform facts — don't rediscover
 
-`references/architecture.md` is the single source of truth: the two hosts; cookie auth (no bearer tokens — every call is JavaScript run inside the user's logged-in Chrome tab with `credentials:'include'`, via the session transport: `chrome_eval` on the bridge, `mcp__Claude_in_Chrome__javascript_tool` linked-tab); the transport verb map; the ID glossary and the request-`id`-vs-`requestId` trap; fileProxy; the static `aud1tMgr!` gateway secret. Read it before any novel work; modules cite it and do not repeat it. Endpoint shapes are in `references/endpoints/*.json`.
-
-Prerequisite for everything: a Chrome tab open and logged into `app.suralink.com` (needed on BOTH transports — the bridge runs its JS inside that same logged-in tab). Before working an audit, the cheap verification read must assert the page reflects the **requested** `auditId` — not merely that a Suralink page loaded (`suralink.verify_audit_js`; stale-tab `returnTo` hazard and the `logout=true` bounce signature: `references/architecture.md` → "Session verification").
+1. Read `references/architecture.md` before any novel work — it is the single source of truth: the two hosts; cookie auth (no bearer tokens — every call is JavaScript run inside the user's logged-in Chrome tab with `credentials:'include'`, via the session transport: `chrome_eval` on the bridge, `mcp__Claude_in_Chrome__javascript_tool` linked-tab); the transport verb map; the ID glossary and the request-`id`-vs-`requestId` trap; fileProxy; the static `aud1tMgr!` gateway secret.
+   - Modules cite it and do not repeat it. Endpoint shapes are in `references/endpoints/*.json`.
+2. Prerequisite for everything: a Chrome tab open and logged into `app.suralink.com` (needed on BOTH transports — the bridge runs its JS inside that same logged-in tab).
+3. Before working an audit, run the cheap verification read `suralink.verify_audit_js` and require it asserts the page reflects the **requested** `auditId` — not merely that a Suralink page loaded.
+   - Warning: stale-tab `returnTo` hazard and the `logout=true` bounce signature — see `references/architecture.md` → "Session verification".

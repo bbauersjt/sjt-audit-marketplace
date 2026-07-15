@@ -71,9 +71,9 @@ engagement yields a thin binder.
 sections exist for both client types — `0200 Planning` (strategy, materiality),
 `0300 Understanding the Entity/Plan` (entity overview, org charts, minutes),
 `0400 Internal Controls` (control memos, walkthroughs), `0500 Risk Assessment`
-(risk and fraud-risk docs). (An earlier version consolidated 0300/0500 into
-0200; overruled 2026-07-08 — the taxonomy conforms to the cch-axcess binder
-templates, which rule all four.)
+(risk and fraud-risk docs). The taxonomy conforms to the cch-axcess binder
+templates, which rule all four sections separately — do not consolidate
+0300/0500 into 0200.
 
 **Perm File is flat for standard clients; ruled subfolders for EBP.**
 `9000 Perm File` gets every permanent-file document. For EBP engagements the

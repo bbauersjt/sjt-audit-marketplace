@@ -17,14 +17,10 @@ never reaches Python and never crosses the tool channel. This is why the skill w
 Cowork's DLP: the thing DLP blocks (a raw token moving through the tool result) simply never
 happens, because the token stays in-page.
 
-**Kill the "Python layer is decorative / can't run in Cowork" misconception.** It is false.
-What cannot happen is *Python-side HTTP* — which this skill never does. The builders are the
-whole point: they encode the correct payload shapes, header casing, XHR-vs-fetch choice, and
-silent-200 defenses **once**, so callers don't hand-roll inline JS and breed the errors that
-hand-rolling breeds. **Builders are MANDATORY for writes; inline JS is allowed only for trivial
-reads.** Payload construction routes through the builders (see `build_write_payload`, which
-refuses a raw key). The two patterns that were previously improvised inline are now named
-helpers in `scripts/http_runner.py` (`build_relay_*`, `build_chunked_read_js`).
+Python-side HTTP never happens in this skill. Builders are MANDATORY for writes; inline JS is
+allowed only for trivial reads. Route payload construction through the builders (see
+`build_write_payload`, which refuses a raw key). `scripts/http_runner.py` carries the named
+helpers `build_relay_*` and `build_chunked_read_js` — do not re-improvise these inline.
 
 ## Subdomains
 
@@ -141,8 +137,7 @@ The Angular-interceptor monkey-patch (`scripts/auth_capture.py` →
 When a KC tab exists, **skip the monkey-patch entirely** and read tokens from
 localStorage. The patch wipes on every page reload, so it is never the steady-state
 mechanism. **Cleanup rule:** a session that stashed a `__cch_capture_dump`-style blob in
-localStorage must delete it when done (a 158KB stale artifact was found left on the KC
-origin).
+localStorage must delete it when done.
 
 #### `cap:<family>` sentinel — the engagement-only-tab leg
 
@@ -378,11 +373,11 @@ A decoded form's `collections[i].objectList[j]` is a ROW; its `renderProperties`
 
 - **`propertyType` (int) is the field-kind discriminator**, refined by `floatieType` + option-list length + a value sentinel:
   `0` = Answer (`select` if floatieType `Radio` / non-empty list / value sentinel `"Choose an item"` (valueKey `defaultanswer`); `multiselect` if `CheckBox` / sentinel `"Choose all that apply."`; else free text) · `1` = text (comment/description) · `2` = label (read-only Question/Name/HTML) · `3` = signoff (performedby/dates on program steps) · `5` = linked (system keys, IDs, cross-form values — read-only). Writable kinds: text, select, multiselect, signoff.
-- **`floatieItemList` is ALWAYS `{isCustomizable, list}`** — never a bare array — and is present on EVERY field, so presence ≠ dropdown. Options live at `.list`; an empty list usually means a **convention-driven prop**, NOT free text — the valueKey is DATA the code carries (see `config/field-conventions.md`), so do NOT treat an empty `floatieItemList` as free-text/unwritable. When the list IS populated, the item's `key` is the `valueKey`. **The valueKey convention is UPPERCASE/compound:** yes/no props take `YES`/`NO` (lowercase `yes` is REJECTED → `resetanswer` — the old "lowercase accepted, NOT a guess like YES" claim is DISPROVEN); yes/no/NA props take the compound `YESNONA-YES` / `YESNONA-NO` / `YESNONA-NA`.
+- **`floatieItemList` is ALWAYS `{isCustomizable, list}`** — never a bare array — and is present on EVERY field, so presence ≠ dropdown. Options live at `.list`; an empty list usually means a **convention-driven prop**, NOT free text — the valueKey is DATA the code carries (see `config/field-conventions.md`), so do NOT treat an empty `floatieItemList` as free-text/unwritable. When the list IS populated, the item's `key` is the `valueKey`. **The valueKey convention is UPPERCASE/compound:** yes/no props take `YES`/`NO` (lowercase `yes` is REJECTED → `resetanswer`); yes/no/NA props take the compound `YESNONA-YES` / `YESNONA-NO` / `YESNONA-NA`.
 - **Write payload by kind:** text → `value`=text, `valueKey=""`. select → one `valueKey` from the field's own options. multiselect → `value`+`valueKey` semicolon-joined in ONE POST, full-state replacement (server strips a trailing semicolon). **signoff → the token (initials) goes in `valueKey`, NOT `value`** — a free-text write (valueKey="") is silently ignored (state stays 0).
 - **Choice field with an EMPTY option list** (sentinel-detected select/multiselect, floatieType null, `.list` empty): options load only after a gating selection. Writing free text gets reset-rejected — **skip** it (or resolve options first). `build_write_payload` raises rather than emit free text.
 - **Addable / repeating-table template rows** (object keys like `…-1`, e.g. `Analysis-1`, some `FinancialStatementUsers-N`): **the seeded `-1` row IS writable** — write to it directly. Only ADDITIONAL rows beyond the seeded one need a `build_spawn_payload` add first (and **spawn IS REST** — the spawned new GUID arrives empty, then fill by GUID). Note `inventory_form`'s `addable_grids` detector MISSES seeded-template grids, so do not rely on it to tell you a seeded `-1` row exists — read the raw collections.
-- **Answered = `state==3 && isValueDefault==false`** (for signoff: `state==3 && valueKey!=""`). Fresh forms are `state 0` everywhere. **Writes land in a PENDING working copy — they are NOT committed until `POST /api/Workpaper/submit` (`{binderId, workpaperId:""}`), which is REQUIRED.** A reload/refresh DISCARDS any unsubmitted writes. So always verify AFTER reload (never the immediate post-write GET, which reads the pending working copy and gives false state-3 positives), and **settle ~1.5s** before that post-reload verify. (The old "persists without submit; submit only refreshes counts" note is WRONG.)
+- **Answered = `state==3 && isValueDefault==false`** (for signoff: `state==3 && valueKey!=""`). Fresh forms are `state 0` everywhere. **Writes land in a PENDING working copy — they are NOT committed until `POST /api/Workpaper/submit` (`{binderId, workpaperId:""}`), which is REQUIRED.** A reload/refresh DISCARDS any unsubmitted writes. So always verify AFTER reload (never the immediate post-write GET, which reads the pending working copy and gives false state-3 positives), and **settle ~1.5s** before that post-reload verify.
 - **Tailoring gating = `objectList[i].visible`, and it's RECURSIVE.** Writing a choice makes the server recompute `visible` on dependent rows AND can populate a previously-empty option list on another choice (e.g. a controls-testing multiselect whose options appear only after audit areas are set). A single "TQs first, then the rest" pass misses the second wave. Fill choices in a **fixed-point loop** (write visible unanswered choices with options → re-read → repeat until none) BEFORE writing text/sign-offs. Treat a `reset*` valueKey as not-answered so a reset checkbox is retried once its options exist.
 - **Silent rejection:** UpdateProperty returns 200 even when rejected; signature is a `valueKey` starting with `reset` — `resetanswer` (single-choice, state 2) or `resetcheckbox` (multi-choice, state 3). `scripts.kc.was_rejected` keys on the `reset` prefix.
 - **KBA-502 OWNS the IR/CR/RMM/approach grid and is the WRITE target.** Write `collectionKey ".{AREA}.RelevantAssertion"` against **KBA-502's wpId**; the AUD-8xx program's grid is the DERIVED view — program-targeted writes land in a working copy the KBA-502-owned recompute discards on refresh. The grid is invisible to the bulk GET (`OverallAuditAreas[].childObjectList: []`) and to `inventory_form` (66/68 columns dropped) — write blind per the registry and verify via the diagnostics oracle. KBA-502's FinancialLevelRisks rows remain mostly pt5-linked (only `Comment` directly writable).
@@ -455,7 +450,7 @@ the authoritative inventory of lists that actually exist on the engagement
 
 **`engagementId` body field carries clientId on all Fund endpoints.** Same misnaming as the rest of workbench-api.
 
-**Body-bearing writes need `Content-Type: application/json`.** Captured headers pulled from a recent GET don't carry Content-Type; replaying through `XHR.setRequestHeader` without it returns 415. `build_xhr_call` AND `build_fetch_call` auto-inject Content-Type when a body is present and the header isn't already set. **The gap:** `build_batch_xhr` — the path EVERY KC form write goes through via `update_properties_sequential` — did NOT inject it, so every KC write returned **415** (now fixed). Only the single-call builders had it before; the batch builder was the silent hole. Relevant whenever hand-rolling XHR outside the fixed helpers.
+**Body-bearing writes need `Content-Type: application/json`.** Captured headers pulled from a recent GET don't carry Content-Type; replaying through `XHR.setRequestHeader` without it returns 415. `build_xhr_call`, `build_fetch_call`, AND `build_batch_xhr` (the path every KC form write goes through via `update_properties_sequential`) all auto-inject Content-Type when a body is present and the header isn't already set. Set it yourself whenever hand-rolling XHR outside the fixed helpers.
 
 **The KC tab crashes on many sequential XHRs.** Looping N per-call XHRs through the
 `knowledgecoach.cchaxcess.com` tab (e.g. one PATCH per account assignment) reliably hangs it —
@@ -519,13 +514,11 @@ Helper: `scripts.kc.was_rejected(prop_before, prop_after)`.
 
 #### KBA-302-class row dropdowns — SOLVED (UPPERCASE valueKey + INPUT collection)
 
-These Radio properties tied to `floatieList: "global.yesno"` on **row-level table objects** were once
-believed unwritable (every tested write returned 200 + `resetanswer`). They are now **solved**: they
-write via standard `UpdateProperty` once you (a) use the **UPPERCASE / compound valueKey convention**
-(`YES`/`NO`, or `<OPTSET>-<VALUE>` such as `YESNONA-YES` — the earlier failures were all lowercase or
-invented keys), and (b) target the **INPUT collection** (`*Findings` / `*TQ`), NOT the display
-collection. The 200 + `resetanswer` was the wrong-key / wrong-collection signature, not a missing
-endpoint.
+These Radio properties tied to `floatieList: "global.yesno"` on **row-level table objects** write
+via standard `UpdateProperty` when you (a) use the **UPPERCASE / compound valueKey convention**
+(`YES`/`NO`, or `<OPTSET>-<VALUE>` such as `YESNONA-YES`), and (b) target the **INPUT collection**
+(`*Findings` / `*TQ`), NOT the display collection. A 200 + `resetanswer` on these means wrong key
+or wrong collection, not a missing endpoint.
 
 Affected collections in KBA-302 (NFP title `2026=Knowledge-Based Audits of Not-for-Profit Entities`)
 — all writable via the above:

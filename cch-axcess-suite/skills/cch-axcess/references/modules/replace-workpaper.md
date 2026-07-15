@@ -18,11 +18,8 @@ status: validated
 # Module — Replace Workpaper (in-place new version)
 
 ## What this does
-Overwrites a workpaper's content in place via `PUT /v1/Documents/file/{clientId}/{documentId}`
-(native "Upload new version"). Same documentId; the prior content survives ONLY in CCH version
-history. This is **distinct** from the default replace (soft-delete→evict→claim, which keeps the
-original as an independent recoverable document) — use that default unless the user explicitly wants
-a true in-place version.
+- Overwrites a workpaper's content in place via `PUT /v1/Documents/file/{clientId}/{documentId}` (native "Upload new version"). Same documentId; the prior content survives ONLY in CCH version history.
+- **Distinct** from the default replace (soft-delete→evict→claim, which keeps the original as an independent recoverable document) — use that default unless the user explicitly wants a true in-place version.
 
 ## ⛔ MANDATORY CONSENT GATE — every time, no exceptions
 This operation can **unrecoverably replace** a workpaper. Before ANY replace, you MUST:
